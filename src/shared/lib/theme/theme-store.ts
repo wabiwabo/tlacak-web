@@ -13,6 +13,6 @@ export const useThemeStore = create<ThemeState>()(
       mode: 'system',
       setMode: (mode) => set({ mode }),
     }),
-    { name: 'traccar-theme' },
+    { name: 'traccar-theme', partialize: (state) => ({ mode: state.mode }) },
   ),
 );

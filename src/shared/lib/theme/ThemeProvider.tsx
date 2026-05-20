@@ -6,6 +6,9 @@ const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const mode = useThemeStore((state) => state.mode);
+  // Known limitation: the dark class is applied in an effect after first paint,
+  // so a single-frame theme flash is possible on initial load. Acceptable for
+  // this SPA at this stage; revisit with an inline pre-hydration script if needed.
   const [systemPrefersDark, setSystemPrefersDark] = useState(
     () => window.matchMedia(DARK_QUERY).matches,
   );

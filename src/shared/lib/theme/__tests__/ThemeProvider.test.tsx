@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { ThemeProvider } from '../ThemeProvider';
 import { useThemeStore } from '../theme-store';
@@ -26,5 +26,35 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     );
     expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
+
+  describe('system mode resolving to dark', () => {
+    const originalMatchMedia = window.matchMedia;
+
+    afterEach(() => {
+      window.matchMedia = originalMatchMedia;
+      document.documentElement.classList.remove('dark');
+    });
+
+    it('applies the dark class when system preference is dark', () => {
+      window.matchMedia = (_query: string): MediaQueryList => ({
+        matches: true,
+        media: _query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      });
+
+      useThemeStore.setState({ mode: 'system' });
+      render(
+        <ThemeProvider>
+          <span>child</span>
+        </ThemeProvider>,
+      );
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
   });
 });
