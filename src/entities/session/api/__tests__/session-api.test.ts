@@ -71,6 +71,14 @@ describe('session-api', () => {
     expect(fetchSpy.mock.calls[0]![1].method).toBe('DELETE');
   });
 
+  it('fetchServer throws the body text on a non-ok response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      mockFetch({ ok: false, status: 503, text: async () => 'Service Unavailable' }),
+    );
+    await expect(fetchServer()).rejects.toThrow('Service Unavailable');
+  });
+
   it('requestPasswordReset posts the email form-encoded', async () => {
     const fetchSpy = mockFetch({ ok: true });
     vi.stubGlobal('fetch', fetchSpy);

@@ -49,7 +49,7 @@ export async function login(credentials: LoginCredentials): Promise<User> {
   throw new Error((await response.text()) || response.statusText);
 }
 
-/** DELETE /api/session — logout. */
+/** DELETE /api/session — logout. Intentionally ignores errors; the caller redirects regardless. */
 export async function logout(): Promise<void> {
   await fetch('/api/session', { method: 'DELETE' });
 }
