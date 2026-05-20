@@ -22,10 +22,7 @@ function isRestricted(user: User, server: Server, key: 'disableReports'): boolea
   if (user.administrator) {
     return false;
   }
-  return Boolean(
-    (server as unknown as Record<string, unknown>)[key] ||
-    (user as unknown as Record<string, unknown>)[key],
-  );
+  return Boolean(server[key]);
 }
 
 /** Filters the primary nav for the current user/server, applying parity rules. */

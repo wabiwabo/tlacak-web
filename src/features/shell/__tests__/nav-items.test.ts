@@ -32,4 +32,12 @@ describe('nav-items', () => {
     expect(ids).toContain('logout');
     expect(ids).not.toContain('account');
   });
+
+  it('handles an administrator who is also readonly', () => {
+    const adminReadonly = { ...baseUser, administrator: true, readonly: true } as User;
+    const ids = visibleNavItems(adminReadonly, baseServer).map((item) => item.id);
+    // readonly swap is NOT admin-exempt in the current code, so logout replaces account:
+    expect(ids).toContain('logout');
+    expect(ids).not.toContain('account');
+  });
 });
