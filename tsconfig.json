@@ -14,9 +14,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] }
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src", "e2e"],
   "exclude": ["legacy", "build", "node_modules"]
