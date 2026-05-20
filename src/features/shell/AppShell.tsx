@@ -12,7 +12,11 @@ export function AppShell() {
   const desktop = useMediaQuery('(min-width: 768px)');
 
   async function handleLogout() {
-    await logout.mutateAsync();
+    try {
+      await logout.mutateAsync();
+    } catch {
+      // Server-side session invalidation is best-effort; log out locally regardless.
+    }
     nativePostMessage('logout');
     navigate('/login');
   }

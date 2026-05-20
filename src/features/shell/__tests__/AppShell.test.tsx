@@ -54,4 +54,10 @@ describe('AppShell', () => {
     expect(await screen.findByRole('navigation')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /map/i })).toBeInTheDocument();
   });
+
+  it('shows the bottom nav on mobile viewports', async () => {
+    renderShell(false);
+    expect(await screen.findByRole('navigation')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /map/i })).toBeInTheDocument();
+  });
 });
