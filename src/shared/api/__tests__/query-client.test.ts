@@ -11,4 +11,12 @@ describe('createQueryClient', () => {
     const options = createQueryClient().getDefaultOptions();
     expect(options.queries?.refetchOnWindowFocus).toBe(false);
   });
+
+  it('sets staleTime to 30 seconds', () => {
+    expect(createQueryClient().getDefaultOptions().queries?.staleTime).toBe(30_000);
+  });
+
+  it('retries once on failure', () => {
+    expect(createQueryClient().getDefaultOptions().queries?.retry).toBe(1);
+  });
 });
