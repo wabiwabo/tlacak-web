@@ -40,6 +40,7 @@ export function BottomNav({ onLogout }: { onLogout: () => void }) {
         <button
           key={item.id}
           type="button"
+          aria-current={isActive(item.id, item.path) ? 'page' : undefined}
           onClick={() => handleSelect(item.id, item.path)}
           className={cn(
             'flex-1 py-2 text-xs',

@@ -38,7 +38,12 @@ export function TermsGate({ children }: { children: ReactNode }) {
 
   return (
     <Dialog open>
-      <DialogContent>
+      <DialogContent
+        showCloseButton={false}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{t('userTerms')}</DialogTitle>
           <DialogDescription>{t('userTermsPrompt')}</DialogDescription>
