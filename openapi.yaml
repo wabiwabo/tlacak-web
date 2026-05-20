@@ -1,3 +1,6 @@
+# Vendored snapshot of the Traccar backend openapi.yaml.
+# To update: copy the latest openapi.yaml from the backend repo into this file,
+# then run `npm run api:generate` to regenerate src/shared/api/schema.d.ts.
 openapi: 3.1.0
 info:
   title: Traccar
