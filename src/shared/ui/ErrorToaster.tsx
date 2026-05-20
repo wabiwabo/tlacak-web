@@ -6,7 +6,8 @@ import { useErrorsStore } from '@/shared/lib/errors/errors-store';
 /** Strips a leading Java exception class chain from a multi-line error message. */
 function formatMessage(raw: string): string {
   const firstLine = raw.split('\n')[0] ?? raw;
-  return firstLine.replace(/^(?:(?:[\w$]+\.)*[\w$]+(?:Exception|Error)?:\s*)+/i, '');
+  const stripped = firstLine.replace(/^(?:(?:[\w$]+\.)*[\w$]+(?:Exception|Error)?:\s*)+/i, '');
+  return stripped.length > 0 ? stripped : firstLine;
 }
 
 export function ErrorToaster() {
@@ -15,7 +16,7 @@ export function ErrorToaster() {
 
   useEffect(() => {
     if (next !== undefined) {
-      toast.error(formatMessage(next));
+      toast.error(formatMessage(next), { id: next });
       pop();
     }
   }, [next, pop]);

@@ -24,4 +24,15 @@ describe('ErrorToaster', () => {
     });
     expect(await screen.findByText('Bad input')).toBeInTheDocument();
   });
+
+  it('drains multiple queued errors in order', async () => {
+    render(<ErrorToaster />);
+    act(() => {
+      useErrorsStore.getState().push('First error');
+      useErrorsStore.getState().push('Second error');
+    });
+    expect(await screen.findByText('First error')).toBeInTheDocument();
+    expect(await screen.findByText('Second error')).toBeInTheDocument();
+    expect(useErrorsStore.getState().errors).toEqual([]);
+  });
 });
