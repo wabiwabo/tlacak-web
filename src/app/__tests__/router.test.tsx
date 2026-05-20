@@ -17,7 +17,7 @@ function renderRouter(initialEntries: string[]) {
 describe('router', () => {
   it('renders the main page at /', async () => {
     renderRouter(['/']);
-    expect(await screen.findByText('Main page')).toBeInTheDocument();
+    expect(await screen.findByText('Map placeholder')).toBeInTheDocument();
   });
 
   it('renders the login page at /login', async () => {
