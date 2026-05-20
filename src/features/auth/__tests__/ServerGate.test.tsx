@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ServerGate } from '../ServerGate';
 
@@ -36,5 +37,17 @@ describe('ServerGate', () => {
     renderGate();
     expect(await screen.findByText('Server unreachable')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+  });
+
+  it('retrying after an error eventually renders children', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, text: async () => 'Server unreachable' })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 1, attributes: {} }) });
+    vi.stubGlobal('fetch', fetchMock);
+    renderGate();
+    await screen.findByText('Server unreachable');
+    await userEvent.click(screen.getByRole('button', { name: /retry/i }));
+    expect(await screen.findByText('app body')).toBeInTheDocument();
   });
 });

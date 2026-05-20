@@ -19,7 +19,7 @@ export function ServerGate({ children }: { children: ReactNode }) {
   if (error || !data) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 p-row">
-        <p className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-destructive">
           {error instanceof Error ? error.message : t('errorGeneral')}
         </p>
         <Button variant="outline" size="sm" onClick={() => void refetch()}>
