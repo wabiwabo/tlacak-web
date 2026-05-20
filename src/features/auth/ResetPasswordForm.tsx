@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { usePasswordReset, usePasswordUpdate } from '@/entities/session';
 import { useErrorsStore } from '@/shared/lib/errors/errors-store';
 import { Button, Input, Label } from '@/shared/ui';
@@ -25,8 +26,10 @@ export function ResetPasswordForm() {
     try {
       if (token) {
         await updateMutation.mutateAsync({ token, password });
+        toast.success(t('loginUpdateSuccess', 'Password updated'));
       } else {
         await resetMutation.mutateAsync(email);
+        toast.success(t('loginResetSuccess', 'Password reset email sent'));
       }
       navigate('/login');
     } catch (error) {
@@ -42,6 +45,7 @@ export function ResetPasswordForm() {
       <div className="flex items-center gap-2">
         <button
           type="button"
+          aria-label={t('sharedBack', 'Back')}
           className="text-primary hover:underline"
           onClick={() => navigate('/login')}
         >
