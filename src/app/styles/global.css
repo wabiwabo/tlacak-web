@@ -49,6 +49,8 @@
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
   --color-input: #1e293b;
+  --color-primary: #3b82f6;
+  --color-primary-foreground: #ffffff;
   --color-ring: #3b82f6;
 }
 
