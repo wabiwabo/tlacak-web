@@ -42,6 +42,8 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-hooks/exhaustive-deps': 'error',
       'import-x/no-cycle': 'error',
+      // React Compiler is not used in this project (Vite + SWC); this advisory rule is noise.
+      'react-hooks/incompatible-library': 'off',
     },
   },
   prettierRecommended,
