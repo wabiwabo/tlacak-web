@@ -27,34 +27,42 @@ export function QueryParamGate({ children }: { children: ReactNode }) {
     }
     const next = new URLSearchParams(searchParams);
     async function run() {
-      try {
-        const locale = searchParams.get('locale');
-        if (locale) {
+      const locale = searchParams.get('locale');
+      if (locale) {
+        try {
           await i18n.changeLanguage(locale);
-          next.delete('locale');
+        } catch (error) {
+          pushError(error instanceof Error ? error.message : String(error));
         }
-        const token = searchParams.get('token');
-        if (token) {
+        next.delete('locale');
+      }
+      const token = searchParams.get('token');
+      if (token) {
+        try {
           const user = await loginWithToken(token);
           setUser(user);
-          next.delete('token');
+        } catch (error) {
+          pushError(error instanceof Error ? error.message : String(error));
         }
-        if (searchParams.has('uniqueId')) {
-          // uniqueId-based device pre-selection is handled by the Map subsystem;
-          // the param is consumed here so it does not leak into the address bar.
-          window.sessionStorage.setItem('pendingUniqueId', searchParams.get('uniqueId') ?? '');
-          next.delete('uniqueId');
-        }
-        if (searchParams.get('openid') === 'success') {
-          await generateLoginToken();
-        }
-        next.delete('openid');
-      } catch (error) {
-        pushError(error instanceof Error ? error.message : String(error));
-      } finally {
-        setSearchParams(next, { replace: true });
-        setProcessing(false);
+        next.delete('token');
       }
+      if (searchParams.has('uniqueId')) {
+        // uniqueId-based device pre-selection is handled by the Map subsystem;
+        // the param is consumed here so it does not leak into the address bar.
+        window.sessionStorage.setItem('pendingUniqueId', searchParams.get('uniqueId') ?? '');
+        next.delete('uniqueId');
+      }
+      if (searchParams.get('openid') === 'success') {
+        try {
+          await generateLoginToken();
+        } catch (error) {
+          pushError(error instanceof Error ? error.message : String(error));
+        }
+      }
+      // `openid` is stripped whether or not its value was 'success'.
+      next.delete('openid');
+      setSearchParams(next, { replace: true });
+      setProcessing(false);
     }
     void run();
     // searchParams identity changes after setSearchParams; run once per param set.

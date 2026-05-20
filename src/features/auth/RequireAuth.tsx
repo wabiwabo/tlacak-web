@@ -16,7 +16,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   // isPending: query in flight. Also wait if the query resolved with a user but
   // the store effect hasn't fired yet (effects run after render).
-  if (isPending || (sessionData !== undefined && sessionData !== null && !user)) {
+  if (isPending || (sessionData != null && !user)) {
     return <AuthLoader />;
   }
   if (!user) {
