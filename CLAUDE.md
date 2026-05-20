@@ -1,12 +1,12 @@
-# CLAUDE.md (traccar-web)
+# CLAUDE.md (tlacak-web)
 
-This file provides guidance to Claude Code (claude.ai/code) when working in the `traccar-web` submodule. The parent repo's `CLAUDE.md` covers the Java backend; this file covers only the frontend.
+This file provides guidance to Claude Code (claude.ai/code) when working in the `tlacak-web` repository — the standalone web frontend for the Traccar GPS tracking system. It talks to the Traccar Java backend (a separate project) over REST and WebSocket.
 
 ## Project
 
 Traccar web UI — currently undergoing a **big-bang rewrite** on the `rewrite/modern-frontend` branch. `master` still ships the legacy app (plain JavaScript, MUI, Redux Toolkit). The new stack is **TypeScript (strict) + React 19 + Vite 8 + Tailwind CSS v4 + shadcn/ui + TanStack Query v5 + Zustand v5 + React Router v7**. ESM, npm.
 
-Lives as a git submodule under the Java backend repo; pulled in only during release CI on the backend side.
+This is a standalone git repository (`wabiwabo/tlacak-web`). It was extracted from the original `traccar-web` git submodule, with full history preserved.
 
 ## Legacy code
 
