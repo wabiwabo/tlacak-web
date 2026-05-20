@@ -6,6 +6,8 @@ describe('rtl helpers', () => {
     expect(isRtlLanguage('ar')).toBe(true);
     expect(isRtlLanguage('fa')).toBe(true);
     expect(isRtlLanguage('he')).toBe(true);
+    expect(isRtlLanguage('ar-SA')).toBe(true);
+    expect(isRtlLanguage('en-US')).toBe(false);
   });
 
   it('treats other languages as LTR', () => {

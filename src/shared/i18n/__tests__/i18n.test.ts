@@ -13,6 +13,6 @@ describe('i18n', () => {
 
   it('loads the Arabic locale', async () => {
     await i18n.changeLanguage('ar');
-    expect(i18n.t('sharedSave')).not.toBe('sharedSave');
+    expect(i18n.t('sharedSave')).toBe('حفظ');
   });
 });

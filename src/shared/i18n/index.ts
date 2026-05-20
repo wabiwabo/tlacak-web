@@ -9,7 +9,7 @@ const modules = import.meta.glob('./locales/*.json', {
 
 const resources = Object.fromEntries(
   Object.entries(modules).map(([path, translation]) => {
-    const code = path.replace('./locales/', '').replace('.json', '');
+    const code = path.replace('./locales/', '').replace('.json', '').replace(/_/g, '-');
     return [code, { translation }];
   }),
 );
