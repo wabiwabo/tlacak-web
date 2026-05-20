@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest';
+import '@/shared/i18n';
 
 // jsdom does not implement window.matchMedia — stub it for tests.
 Object.defineProperty(window, 'matchMedia', {
