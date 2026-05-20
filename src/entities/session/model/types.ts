@@ -15,6 +15,8 @@ export interface Server extends Omit<SchemaServer, 'attributes'> {
   emailEnabled?: boolean;
   /** Server-wide announcement banner text. */
   announcement?: string;
+  /** Disables the Reports section for non-admin users. */
+  disableReports?: boolean;
 }
 
 /** Authenticated user as returned by GET/POST /api/session. */

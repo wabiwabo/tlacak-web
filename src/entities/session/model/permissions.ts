@@ -32,8 +32,8 @@ export function useDeviceReadonly(): boolean {
 export function useRestriction(key: RestrictionKey): boolean {
   return useSessionStore((state) => {
     const admin = Boolean(state.user?.administrator);
-    const serverValue = (state.server as Server | null)?.[key as keyof Server];
-    const userValue = (state.user as User | null)?.[key as keyof User];
+    const serverValue = state.server?.[key as keyof Server];
+    const userValue = state.user?.[key as keyof User];
     return !admin && Boolean(serverValue || userValue);
   });
 }
