@@ -23,8 +23,8 @@ function isRestricted(user: User, server: Server, key: 'disableReports'): boolea
     return false;
   }
   return Boolean(
-    (server as unknown as Record<string, unknown>)[key]
-    || (user as unknown as Record<string, unknown>)[key],
+    (server as unknown as Record<string, unknown>)[key] ||
+    (user as unknown as Record<string, unknown>)[key],
   );
 }
 
