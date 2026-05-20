@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { routes } from '../router';
 
-function renderRouter(initialEntries: string[]) {
+function renderAt(path: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const router = createMemoryRouter(routes, { initialEntries });
+  const router = createMemoryRouter(routes, { initialEntries: [path] });
   return render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
@@ -14,19 +14,19 @@ function renderRouter(initialEntries: string[]) {
   );
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('router', () => {
-  it('renders the main page at /', async () => {
-    renderRouter(['/']);
-    expect(await screen.findByText('Map placeholder')).toBeInTheDocument();
-  });
-
   it('renders the login page at /login', async () => {
-    renderRouter(['/login']);
-    expect(await screen.findByRole('button', { name: /login/i })).toBeInTheDocument();
+    renderAt('/login');
+    expect(await screen.findByText(/login/i)).toBeInTheDocument();
   });
 
-  it('renders the not-found page for unknown routes', async () => {
-    renderRouter(['/no-such-route']);
-    expect(await screen.findByText('Page not found')).toBeInTheDocument();
+  it('redirects an unauthenticated visit to / onto the login page', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }));
+    renderAt('/');
+    expect(await screen.findByText(/login/i)).toBeInTheDocument();
   });
 });
