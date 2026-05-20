@@ -6,3 +6,4 @@ export * from './dialog';
 export * from './select';
 export * from './data-table/DataTable';
 export { Loader } from './Loader';
+export { ErrorToaster } from './ErrorToaster';
