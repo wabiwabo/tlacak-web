@@ -110,7 +110,7 @@ From `traccar-web/CLAUDE.md` — these are non-negotiable:
 
 ## 11. Cutover Strategy
 
-- Built in the `traccar-web` repo on a long-lived dedicated branch. The new `src/` replaces the old one; old code remains in git history for reference.
+- Built in the `traccar-web` repo on the long-lived dedicated branch `rewrite/modern-frontend`. The new `src/` replaces the old one; old code remains in git history for reference.
 - **Parity checklist:** every one of the 60+ routes/features is enumerated as an explicit acceptance criterion — the primary safety net alongside tests.
 - Cutover: when parity is reached **and** all tests are green → merge the branch → a single release.
 - Template placeholders and the NativeInterface bridge are verified specifically before cutover (highest silent-regression risk).
