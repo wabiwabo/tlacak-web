@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLogin, useSessionStore, loginWithToken, TotpRequiredError } from '@/entities/session';
 import {
@@ -80,7 +79,11 @@ export function LoginForm() {
   }, [navigate, setUser, pushError]);
 
   return (
-    <>
+    <form
+      onSubmit={handlePasswordLogin}
+      className="flex w-full max-w-sm flex-col gap-4 p-6"
+      noValidate
+    >
       {!openIdForced && (
         <>
           <div className="flex flex-col gap-1.5">
@@ -119,10 +122,13 @@ export function LoginForm() {
               />
             </div>
           )}
-          {failed && <p className="text-sm text-destructive">{t('loginFailed')}</p>}
+          {failed && (
+            <p role="alert" className="text-sm text-destructive">
+              {t('loginFailed')}
+            </p>
+          )}
           <Button
             type="submit"
-            onClick={handlePasswordLogin}
             disabled={!email || !password || (codeEnabled && !code) || loginMutation.isPending}
           >
             {t('loginLogin')}
@@ -137,25 +143,17 @@ export function LoginForm() {
       {!openIdForced && (
         <div className="flex justify-center gap-6 text-xs">
           {registrationEnabled && (
-            <button
-              type="button"
-              className="text-primary hover:underline"
-              onClick={() => navigate('/register')}
-            >
+            <Link to="/register" className="text-primary hover:underline">
               {t('loginRegister')}
-            </button>
+            </Link>
           )}
           {emailEnabled && (
-            <button
-              type="button"
-              className="text-primary hover:underline"
-              onClick={() => navigate('/reset-password')}
-            >
+            <Link to="/reset-password" className="text-primary hover:underline">
               {t('loginReset')}
-            </button>
+            </Link>
           )}
         </div>
       )}
-    </>
+    </form>
   );
 }

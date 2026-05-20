@@ -66,4 +66,16 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /login/i }));
     expect(await screen.findByLabelText(/code/i)).toBeInTheDocument();
   });
+
+  it('submits when Enter is pressed in the password field', async () => {
+    window.sessionStorage.setItem('postLogin', '/dashboard');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 1, attributes: {} }) }),
+    );
+    renderForm();
+    await userEvent.type(screen.getByLabelText(/email/i), 'a@b.co');
+    await userEvent.type(screen.getByLabelText(/password/i), 'secret{Enter}');
+    expect(navigate).toHaveBeenCalledWith('/dashboard', { replace: true });
+  });
 });
