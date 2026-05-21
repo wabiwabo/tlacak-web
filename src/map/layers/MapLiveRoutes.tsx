@@ -2,7 +2,6 @@ import { useEffect, useId } from 'react';
 import type { GeoJSONSource } from 'maplibre-gl';
 import { map } from '../core/map-instance';
 import { useLiveStore } from '@/features/main/model/live-store';
-import { useSelectionStore } from '@/features/main/model/selection-store';
 
 const GEOMETRY_COLOR = '#3bb2d0';
 
@@ -10,7 +9,6 @@ export function MapLiveRoutes({ deviceIds }: { deviceIds: number[] }) {
   const sourceId = useId().replace(/:/g, '_');
   const history = useLiveStore((state) => state.history);
   const devices = useLiveStore((state) => state.devices);
-  const selectedDeviceId = useSelectionStore((state) => state.selectedDeviceId);
 
   useEffect(() => {
     map.addSource(sourceId, {
@@ -54,7 +52,7 @@ export function MapLiveRoutes({ deviceIds }: { deviceIds: number[] }) {
       type: 'FeatureCollection',
       features,
     });
-  }, [sourceId, deviceIds, history, devices, selectedDeviceId]);
+  }, [sourceId, deviceIds, history, devices]);
 
   return null;
 }
