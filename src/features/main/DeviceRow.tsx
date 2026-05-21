@@ -35,10 +35,16 @@ function batteryIcon(level: number) {
 
 export function DeviceRow({ index, style, devices }: DeviceRowProps) {
   const { t } = useTranslation();
-  const device = devices[index]!;
-  const position = useLiveStore((state) => state.positions[device.id as number]);
+  const device = devices[index];
+  const position = useLiveStore((state) =>
+    device ? state.positions[device.id as number] : undefined,
+  );
   const selectedDeviceId = useSelectionStore((state) => state.selectedDeviceId);
   const select = useSelectionStore((state) => state.select);
+
+  if (!device) {
+    return null;
+  }
 
   const secondary =
     device.status === 'online' || !device.lastUpdate
@@ -73,7 +79,7 @@ export function DeviceRow({ index, style, devices }: DeviceRowProps) {
           </span>
         </span>
         {position && 'alarm' in attributes ? (
-          <AlertCircle className="h-4 w-4 text-rose-600" aria-label={t('eventAlarm')} />
+          <AlertCircle className="h-4 w-4 text-rose-600" role="img" aria-label={t('eventAlarm')} />
         ) : null}
         {position && 'ignition' in attributes ? (
           <Power
@@ -81,6 +87,7 @@ export function DeviceRow({ index, style, devices }: DeviceRowProps) {
               'h-4 w-4',
               attributes.ignition ? 'text-emerald-600' : 'text-muted-foreground',
             )}
+            role="img"
             aria-label={t('positionIgnition')}
           />
         ) : null}
