@@ -47,10 +47,11 @@ export class SwitcherControl implements maplibregl.IControl {
   }
 
   private render(): void {
-    if (!this.container) {
+    const container = this.container;
+    if (!container) {
       return;
     }
-    this.container.replaceChildren();
+    container.replaceChildren();
     for (const style of this.styles) {
       const button = document.createElement('button');
       button.type = 'button';
@@ -60,7 +61,7 @@ export class SwitcherControl implements maplibregl.IControl {
         button.classList.add('active');
       }
       button.addEventListener('click', () => this.switch(style.id));
-      this.container!.appendChild(button);
+      container.appendChild(button);
     }
   }
 

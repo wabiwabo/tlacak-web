@@ -52,7 +52,6 @@ export const ICON_CATEGORIES = Object.keys(mapIcons);
 const STATUS_COLORS: Record<string, string> = {
   success: '#4caf50',
   error: '#f44336',
-  info: '#2196f3',
   neutral: '#9e9e9e',
 };
 
@@ -70,9 +69,10 @@ export function mapIconKey(category: string | undefined): string {
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load map image: ${url}`));
     image.src = url;
   });
 }
