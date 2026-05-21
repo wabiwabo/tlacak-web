@@ -6,6 +6,7 @@ const fakeMap = {
   removeControl: vi.fn(),
   setStyle: vi.fn(),
   once: vi.fn(),
+  off: vi.fn(),
   loaded: vi.fn(() => true),
   resize: vi.fn(),
   hasImage: vi.fn(() => true),
@@ -26,9 +27,13 @@ vi.mock('maplibre-gl', () => ({
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}));
 
 describe('MapView', () => {
-  it('renders its container', async () => {
+  it('renders its container and hides children until the map is ready', async () => {
     const { MapView } = await import('../MapView');
-    render(<MapView />);
+    render(
+      <MapView>
+        <div data-testid="layer" />
+      </MapView>,
+    );
     expect(document.querySelector('.map-view')).not.toBeNull();
     expect(screen.queryByTestId('layer')).toBeNull();
   });

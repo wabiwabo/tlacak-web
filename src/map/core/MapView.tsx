@@ -92,22 +92,27 @@ export function MapView({ children }: { children?: ReactNode }) {
   useEffect(() => {
     switcher.updateStyles(mapStyles, selectedMapStyle);
     const active = switcher.getActiveStyle();
-    if (active) {
-      map.setStyle(active.style);
-      map.once('styledata', () => {
-        const waitForLoad = () => {
-          if (!map.loaded()) {
-            setTimeout(waitForLoad, 33);
-          } else {
-            void ensureImages().then((images) => {
-              addMapImages(map, images);
-              setReady(true);
-            });
-          }
-        };
-        waitForLoad();
-      });
+    if (!active) {
+      return;
     }
+    const handler = () => {
+      const waitForLoad = () => {
+        if (!map.loaded()) {
+          setTimeout(waitForLoad, 33);
+        } else {
+          void ensureImages().then((images) => {
+            addMapImages(map, images);
+            setReady(true);
+          });
+        }
+      };
+      waitForLoad();
+    };
+    map.setStyle(active.style);
+    map.once('styledata', handler);
+    return () => {
+      map.off('styledata', handler);
+    };
   }, [mapStyles, selectedMapStyle, switcher]);
 
   useEffect(() => addReadyListener(setMapReady), []);
