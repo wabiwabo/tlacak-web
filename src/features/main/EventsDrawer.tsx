@@ -20,6 +20,7 @@ export function EventsDrawer({ open, onClose }: EventsDrawerProps) {
   return (
     <aside
       aria-hidden={!open}
+      inert={!open}
       className={cn(
         'fixed inset-y-0 end-0 z-20 w-80 border-s border-border bg-background shadow-lg transition-transform',
         open ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full',
@@ -37,8 +38,8 @@ export function EventsDrawer({ open, onClose }: EventsDrawerProps) {
         </div>
       </div>
       <ul className="divide-y divide-border overflow-auto">
-        {events.map((event) => (
-          <li key={event.id} className="flex items-center gap-2 p-2 text-sm">
+        {events.map((event, index) => (
+          <li key={event.id ?? `event-${index}`} className="flex items-center gap-2 p-2 text-sm">
             <button
               type="button"
               className="min-w-0 flex-1 text-left"
@@ -52,7 +53,11 @@ export function EventsDrawer({ open, onClose }: EventsDrawerProps) {
             <button
               type="button"
               aria-label={t('sharedRemove')}
-              onClick={() => deleteEvent(event.id as number)}
+              onClick={() => {
+                if (event.id !== undefined) {
+                  deleteEvent(event.id);
+                }
+              }}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
