@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import dayjs from 'dayjs';
 import { useSessionStore } from '@/entities/session';
+import { apiClient } from '@/shared/api/client';
 import { useMotionStore } from './motion-store';
 import { buildMotionSegments, type MotionEvent } from '@/features/main/lib/motion-segments';
 
@@ -28,16 +29,19 @@ export function MotionController() {
     const refresh = async () => {
       const to = dayjs();
       const from = to.subtract(24, 'hour');
-      const query = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() });
-      query.append('type', 'deviceMoving');
-      query.append('type', 'deviceStopped');
-      const response = await fetch(`/api/reports/events?${query.toString()}`, {
-        headers: { Accept: 'application/json' },
+      const { data, error } = await apiClient.GET('/reports/events', {
+        params: {
+          query: {
+            from: from.toISOString(),
+            to: to.toISOString(),
+            type: ['deviceMoving', 'deviceStopped'],
+          },
+        },
       });
-      if (!response.ok) {
+      if (error || !data) {
         return;
       }
-      const events = (await response.json()) as ReportEvent[];
+      const events = data as ReportEvent[];
       const grouped = new Map<number, ReportEvent[]>();
       for (const event of events) {
         const list = grouped.get(event.deviceId) ?? [];

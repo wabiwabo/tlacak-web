@@ -18,6 +18,11 @@ export function SocketController() {
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const liveConfigRef = useRef({ liveRoutes: 'none', limit: 10 });
+  const includeLogsRef = useRef(includeLogs);
+
+  useEffect(() => {
+    includeLogsRef.current = includeLogs;
+  }, [includeLogs]);
 
   useEffect(() => {
     liveConfigRef.current = {
@@ -37,6 +42,7 @@ export function SocketController() {
       return;
     }
     const live = useLiveStore.getState();
+    let unmounted = false;
 
     const clearReconnect = () => {
       if (reconnectRef.current) {
@@ -51,7 +57,12 @@ export function SocketController() {
       const socket = new WebSocket(`${protocol}//${window.location.host}/api/socket`);
       socketRef.current = socket;
 
-      socket.onopen = () => live.setSocketOpen(true);
+      socket.onopen = () => {
+        live.setSocketOpen(true);
+        if (includeLogsRef.current) {
+          socket.send(JSON.stringify({ logs: true }));
+        }
+      };
 
       socket.onmessage = (event) => {
         const data = parseSocketMessage(event.data as string);
@@ -85,6 +96,9 @@ export function SocketController() {
         } catch {
           navigate('/login');
         }
+        if (unmounted) {
+          return;
+        }
         clearReconnect();
         reconnectRef.current = setTimeout(connect, RECONNECT_DELAY);
       };
@@ -94,6 +108,7 @@ export function SocketController() {
     connect();
 
     return () => {
+      unmounted = true;
       clearReconnect();
       socketRef.current?.close(LOGOUT_CODE);
     };
