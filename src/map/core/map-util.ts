@@ -43,7 +43,10 @@ export function geofenceToFeature(geofence: Geofence, fallbackColor: string): Ge
     });
     geometry = polygon.geometry;
   } else {
-    const parsed = parse(geofence.area ?? '') as Geometry;
+    const parsed = parse(geofence.area ?? '');
+    if (!parsed) {
+      throw new Error(`Invalid geofence WKT: ${geofence.area ?? ''}`);
+    }
     geometry = {
       ...parsed,
       coordinates: reverseCoordinates((parsed as { coordinates: Coordinates }).coordinates),
