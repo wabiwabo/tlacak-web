@@ -1,6 +1,15 @@
 import '@testing-library/jest-dom/vitest';
 import '@/shared/i18n';
 
+// jsdom does not implement ResizeObserver — stub it for tests (react-window needs it).
+if (!('ResizeObserver' in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  };
+}
+
 // jsdom does not implement window.matchMedia — stub it for tests.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

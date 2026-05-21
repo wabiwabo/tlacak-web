@@ -5,6 +5,7 @@ import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
 import { TermsGate } from './TermsGate';
 import { NativeBridge, nativePostMessage } from '@/features/native-bridge';
+import { SocketController, CachingController, MotionController } from '@/features/live';
 
 export function AppShell() {
   const navigate = useNavigate();
@@ -23,7 +24,9 @@ export function AppShell() {
 
   return (
     <TermsGate>
-      {/* SocketController / CachingController / UpdateController attach here in later plans. */}
+      <SocketController />
+      <CachingController />
+      <MotionController />
       <NativeBridge />
       <div className="flex h-full flex-col md:flex-row">
         {desktop && <Sidebar onLogout={handleLogout} />}

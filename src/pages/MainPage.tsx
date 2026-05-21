@@ -1,3 +1,5 @@
+import { MainPage as MainPageView } from '@/features/main';
+
 export default function MainPage() {
-  return <div className="p-row text-muted-foreground">Map placeholder</div>;
+  return <MainPageView />;
 }

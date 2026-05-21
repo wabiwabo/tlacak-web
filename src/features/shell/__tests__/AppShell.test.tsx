@@ -5,6 +5,13 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { AppShell } from '../AppShell';
 import { useSessionStore } from '@/entities/session';
 
+// The live controllers run real socket/fetch side-effects — out of scope for shell layout tests.
+vi.mock('@/features/live', () => ({
+  SocketController: () => null,
+  CachingController: () => null,
+  MotionController: () => null,
+}));
+
 function renderShell(matchesDesktop: boolean) {
   vi.stubGlobal(
     'matchMedia',
