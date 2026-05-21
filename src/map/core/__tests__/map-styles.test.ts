@@ -22,4 +22,11 @@ describe('buildMapStyles', () => {
     const ids = buildMapStyles({}).map((s) => s.id);
     expect(ids).toEqual(expect.arrayContaining(['openFreeMap', 'locationIqStreets', 'osm']));
   });
+
+  it('credits both OpenStreetMap and CARTO on the carto style', () => {
+    const carto = buildMapStyles({}).find((s) => s.id === 'carto');
+    const spec = carto?.style as import('maplibre-gl').StyleSpecification;
+    const source = spec.sources['custom'] as import('maplibre-gl').RasterSourceSpecification;
+    expect(source?.attribution).toContain('carto.com');
+  });
 });

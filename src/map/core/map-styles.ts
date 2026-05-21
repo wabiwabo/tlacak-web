@@ -49,6 +49,8 @@ export function buildMapStyles(keys: MapStyleKeys): MapStyle[] {
   const locationIqKey = keys.locationIqKey || 'pk.0f147952a41c555a5b70614039fd148b';
   const osmAttribution =
     '© <a target="_top" rel="noopener" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  const cartoAttribution =
+    '© <a target="_top" rel="noopener" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, © <a target="_top" rel="noopener" href="https://carto.com/attribution">CARTO</a>';
 
   return [
     {
@@ -96,7 +98,7 @@ export function buildMapStyles(keys: MapStyleKeys): MapStyle[] {
           (i) => `https://${i}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png`,
         ),
         maxZoom: 22,
-        attribution: osmAttribution,
+        attribution: cartoAttribution,
       }),
       available: true,
     },
