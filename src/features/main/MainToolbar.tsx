@@ -76,6 +76,7 @@ export function MainToolbar() {
             size="icon"
             aria-label={t('sharedFilter')}
             data-active={filterActive}
+            className="data-[active=true]:bg-accent data-[active=true]:text-accent-foreground"
           >
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
