@@ -4,6 +4,7 @@ export * from './input';
 export * from './label';
 export * from './dialog';
 export * from './select';
+export * from './popover';
 export * from './data-table/DataTable';
 export { Loader } from './Loader';
 export { ErrorToaster } from './ErrorToaster';
