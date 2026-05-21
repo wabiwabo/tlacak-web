@@ -1,4 +1,4 @@
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import type { GeoJSONSource, MapMouseEvent } from 'maplibre-gl';
 import { map } from '../core/map-instance';
 import { findFonts } from '../core/map-util';
@@ -20,6 +20,20 @@ export function MapPositions({ positions, onMarkerClick }: MapPositionsProps) {
 
   const devices = useLiveStore((state) => state.devices);
   const selectedDeviceId = useSelectionStore((state) => state.selectedDeviceId);
+
+  const onMarkerClickRef = useRef(onMarkerClick);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    onMarkerClickRef.current = onMarkerClick;
+  });
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     map.addSource(baseId, {
@@ -43,17 +57,24 @@ export function MapPositions({ positions, onMarkerClick }: MapPositionsProps) {
     const onMarker = (event: MapMouseEvent & { features?: GeoJSON.Feature[] }) => {
       event.preventDefault();
       const feature = event.features?.[0];
-      if (feature && onMarkerClick) {
-        onMarkerClick(feature.properties?.deviceId as number);
+      if (feature) {
+        onMarkerClickRef.current?.(feature.properties?.deviceId as number);
       }
     };
     const onCluster = async (event: MapMouseEvent) => {
       event.preventDefault();
       const features = map.queryRenderedFeatures(event.point, { layers: [clustersId] });
-      const clusterId = features[0]?.properties?.cluster_id as number;
+      const feature = features[0];
+      if (!feature) {
+        return;
+      }
+      const clusterId = feature.properties?.cluster_id as number;
       const source = map.getSource(baseId) as GeoJSONSource;
       const zoom = await source.getClusterExpansionZoom(clusterId);
-      const geometry = features[0]?.geometry;
+      if (!mountedRef.current) {
+        return;
+      }
+      const geometry = feature.geometry;
       if (geometry?.type === 'Point') {
         map.easeTo({ center: geometry.coordinates as [number, number], zoom });
       }
@@ -135,7 +156,7 @@ export function MapPositions({ positions, onMarkerClick }: MapPositionsProps) {
         }
       });
     };
-  }, [baseId, clustersId, selectedId, onMarkerClick]);
+  }, [baseId, clustersId, selectedId]);
 
   useEffect(() => {
     [baseId, selectedId].forEach((sourceId) => {
