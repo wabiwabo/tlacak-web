@@ -21,3 +21,26 @@ export function usePositionsQuery() {
     staleTime: Infinity,
   });
 }
+
+/** Positions for one device over a time range — backs the Route report. */
+export function usePositionsRangeQuery(deviceId: number | undefined, from: string, to: string) {
+  return useQuery({
+    queryKey: ['positions-range', deviceId, from, to],
+    queryFn: () => fetchPositionsRange(deviceId as number, from, to),
+    enabled: Boolean(deviceId && from && to),
+  });
+}
+
+export async function fetchPositionsRange(
+  deviceId: number,
+  from: string,
+  to: string,
+): Promise<Position[]> {
+  const { data, error } = await apiClient.GET('/positions', {
+    params: { query: { deviceId, from, to } },
+  });
+  if (error || !data) {
+    throw new Error('Failed to load positions');
+  }
+  return data as Position[];
+}
