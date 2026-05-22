@@ -118,14 +118,22 @@ export function SelectField<T extends Record<string, unknown>>({
               const key = optionKey(item);
               return (
                 <li key={String(key)}>
-                  <button
-                    type="button"
+                  <div
+                    role="option"
+                    aria-selected={selected.includes(key)}
+                    tabIndex={0}
                     onClick={() => toggle(key)}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-muted"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        if (event.key === ' ') event.preventDefault();
+                        toggle(key);
+                      }
+                    }}
+                    className="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:bg-muted"
                   >
                     {multiple ? <Checkbox checked={selected.includes(key)} /> : null}
                     {optionLabel(item)}
-                  </button>
+                  </div>
                 </li>
               );
             })}

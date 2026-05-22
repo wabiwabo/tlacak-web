@@ -34,4 +34,14 @@ describe('SelectField', () => {
     await userEvent.click(screen.getByText('Beta'));
     expect(onChange).toHaveBeenCalledWith([1, 2]);
   });
+
+  it('clears the selection when the selected option is clicked again', async () => {
+    const onChange = vi.fn();
+    render(<SelectField label="Group" data={data} value={2} onChange={onChange} />, {
+      wrapper,
+    });
+    await userEvent.click(screen.getByRole('button', { name: /group/i }));
+    await userEvent.click(screen.getByRole('option', { name: 'Beta' }));
+    expect(onChange).toHaveBeenCalledWith(undefined);
+  });
 });
