@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/shared/api/client';
+import { createCrudHooks } from '@/shared/api/crud';
 import type { Group } from '../model/types';
 
 export const groupKeys = {
@@ -21,3 +22,8 @@ export function useGroupsQuery() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+const groupCrud = createCrudHooks<Group>('groups');
+export const useSaveGroup = groupCrud.useSave;
+export const useRemoveGroup = groupCrud.useRemove;
+export const groupsApi = groupCrud.api;

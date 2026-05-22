@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/shared/api/client';
+import { createCrudHooks } from '@/shared/api/crud';
 import type { Geofence } from '../model/types';
 
 export const geofenceKeys = {
@@ -21,3 +22,8 @@ export function useGeofencesQuery() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+const geofenceCrud = createCrudHooks<Geofence>('geofences');
+export const useSaveGeofence = geofenceCrud.useSave;
+export const useRemoveGeofence = geofenceCrud.useRemove;
+export const geofencesApi = geofenceCrud.api;

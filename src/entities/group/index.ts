@@ -1,2 +1,9 @@
 export type { Group, GroupAttributes } from './model/types';
-export { groupKeys, fetchGroups, useGroupsQuery } from './api/queries';
+export {
+  groupKeys,
+  fetchGroups,
+  useGroupsQuery,
+  useSaveGroup,
+  useRemoveGroup,
+  groupsApi,
+} from './api/queries';
