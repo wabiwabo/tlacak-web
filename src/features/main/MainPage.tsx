@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useMediaQuery } from '@/shared/lib/use-media-query';
 import { useGroupsQuery } from '@/entities/group';
 import { MainMap } from './MainMap';
@@ -27,7 +27,8 @@ export function MainPage() {
   const filterMap = useFilterStore((state) => state.filterMap);
 
   const devicesOpen = useMapUiStore((state) => state.devicesOpen);
-  const [eventsOpen, setEventsOpen] = useState(false);
+  const eventsOpen = useMapUiStore((state) => state.eventsOpen);
+  const setEventsOpen = useMapUiStore((state) => state.setEventsOpen);
 
   const filteredDevices = useMemo(
     () =>

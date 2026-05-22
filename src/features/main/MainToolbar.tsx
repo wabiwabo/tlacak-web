@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { List as ListIcon, Map as MapIcon, Plus, SlidersHorizontal } from 'lucide-react';
+import { Bell, List as ListIcon, Map as MapIcon, Plus, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/shared/ui';
 import { Input } from '@/shared/ui';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
@@ -33,6 +33,7 @@ export function MainToolbar() {
 
   const devicesOpen = useMapUiStore((state) => state.devicesOpen);
   const setDevicesOpen = useMapUiStore((state) => state.setDevicesOpen);
+  const setEventsOpen = useMapUiStore((state) => state.setEventsOpen);
 
   const statusCount = (status: string) =>
     Object.values(devices).filter((device) => device.status === status).length;
@@ -133,6 +134,15 @@ export function MainToolbar() {
           </label>
         </PopoverContent>
       </Popover>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label={t('reportEvents')}
+        onClick={() => setEventsOpen(true)}
+      >
+        <Bell className="h-4 w-4" />
+      </Button>
       <Button
         type="button"
         variant="ghost"
