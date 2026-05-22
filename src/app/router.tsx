@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType, type ReactElement } from 'react';
-import { createBrowserRouter, type RouteObject } from 'react-router-dom';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom';
 import { Loader } from '@/shared/ui';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { QueryParamGate } from '@/features/auth/QueryParamGate';
@@ -30,6 +30,8 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: lazyRoute(() => import('@/pages/MainPage')) },
+
+      { path: 'settings', element: <Navigate to="/settings/preferences" replace /> },
 
       {
         path: 'settings/preferences',

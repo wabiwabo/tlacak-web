@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { request } from '@/shared/api/crud';
 import type { CrudEntity } from '@/shared/api/crud';
 import { useErrorsStore } from '@/shared/lib/errors/errors-store';
@@ -39,6 +40,7 @@ export function EditItemView<T extends CrudEntity>({
   const navigate = useNavigate();
   const { id } = useParams();
   const push = useErrorsStore((state) => state.push);
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -66,6 +68,7 @@ export function EditItemView<T extends CrudEntity>({
         body: JSON.stringify(item),
       });
       onSaved?.(saved);
+      await queryClient.invalidateQueries({ queryKey: [resource] });
       navigate(-1);
     } catch (error) {
       push((error as Error).message);
