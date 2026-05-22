@@ -176,6 +176,53 @@ export const routes: RouteObject[] = [
         path: 'settings/:type/:id/share',
         element: lazyRoute(() => import('@/pages/settings/SharePage')),
       },
+
+      { path: 'reports', element: <Navigate to="/reports/combined" replace /> },
+      {
+        path: 'reports/combined',
+        element: lazyRoute(() => import('@/pages/reports/CombinedReportPage')),
+      },
+      {
+        path: 'reports/events',
+        element: lazyRoute(() => import('@/pages/reports/EventReportPage')),
+      },
+      {
+        path: 'reports/geofences',
+        element: lazyRoute(() => import('@/pages/reports/GeofenceReportPage')),
+      },
+      {
+        path: 'reports/trips',
+        element: lazyRoute(() => import('@/pages/reports/TripReportPage')),
+      },
+      {
+        path: 'reports/stops',
+        element: lazyRoute(() => import('@/pages/reports/StopReportPage')),
+      },
+      {
+        path: 'reports/summary',
+        element: lazyRoute(() => import('@/pages/reports/SummaryReportPage')),
+      },
+      {
+        path: 'reports/chart',
+        element: lazyRoute(() => import('@/pages/reports/ChartReportPage')),
+      },
+      {
+        path: 'reports/route',
+        element: lazyRoute(() => import('@/pages/reports/PositionsReportPage')),
+      },
+      {
+        path: 'reports/statistics',
+        element: lazyRoute(() => import('@/pages/reports/StatisticsPage')),
+      },
+      {
+        path: 'reports/audit',
+        element: lazyRoute(() => import('@/pages/reports/AuditPage')),
+      },
+      { path: 'reports/logs', element: lazyRoute(() => import('@/pages/reports/LogsPage')) },
+      {
+        path: 'reports/scheduled',
+        element: lazyRoute(() => import('@/pages/reports/ScheduledPage')),
+      },
     ],
   },
   { path: '*', element: lazyRoute(() => import('@/pages/NotFoundPage')) },

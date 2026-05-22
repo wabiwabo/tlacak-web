@@ -49,6 +49,20 @@ describe('settings routes', () => {
   });
 });
 
+describe('reports routes', () => {
+  it('registers the core reports routes', () => {
+    const paths = collectPaths(routes);
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        '/reports/combined',
+        '/reports/trips',
+        '/reports/route',
+        '/reports/scheduled',
+      ]),
+    );
+  });
+});
+
 describe('router', () => {
   it('renders the login page at /login', async () => {
     renderAt('/login');
