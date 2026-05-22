@@ -20,7 +20,7 @@ function ensureImages(): Promise<Record<string, ImageData>> {
 }
 
 export function MapView({ children }: { children?: ReactNode }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
 
@@ -41,8 +41,11 @@ export function MapView({ children }: { children?: ReactNode }) {
   }, [server]);
 
   const mapStyles = useMemo(
-    () => buildMapStyles(styleKeys).filter((style) => style.available),
-    [styleKeys],
+    () =>
+      buildMapStyles(styleKeys)
+        .filter((style) => style.available)
+        .map((style) => ({ ...style, title: t(style.titleKey) })),
+    [styleKeys, t],
   );
 
   const switcher = useMemo(

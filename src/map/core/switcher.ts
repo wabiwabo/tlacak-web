@@ -55,7 +55,7 @@ export class SwitcherControl implements maplibregl.IControl {
     for (const style of this.styles) {
       const button = document.createElement('button');
       button.type = 'button';
-      button.textContent = style.titleKey;
+      button.textContent = style.title ?? style.titleKey;
       button.dataset.styleId = style.id;
       if (style.id === this.currentStyle) {
         button.classList.add('active');

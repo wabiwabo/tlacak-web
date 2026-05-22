@@ -13,6 +13,7 @@ export interface MapStyleKeys {
 export interface MapStyle {
   id: string;
   titleKey: string;
+  title?: string;
   style: string | StyleSpecification;
   available: boolean;
 }
