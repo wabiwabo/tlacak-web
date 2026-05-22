@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -37,5 +37,16 @@ describe('DataTable', () => {
   it('renders an empty state when there are no rows', () => {
     render(<DataTable columns={columns} data={[]} />);
     expect(screen.getByText(/no data/i)).toBeInTheDocument();
+  });
+
+  it('invokes onRowClick with the clicked row', async () => {
+    const onRowClick = vi.fn();
+    const rows = [
+      { name: 'A', status: 'x' },
+      { name: 'B', status: 'y' },
+    ];
+    render(<DataTable columns={columns} data={rows} onRowClick={onRowClick} />);
+    await userEvent.click(screen.getByText('B'));
+    expect(onRowClick).toHaveBeenCalledWith(rows[1]);
   });
 });

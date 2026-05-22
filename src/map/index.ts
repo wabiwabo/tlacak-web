@@ -4,6 +4,8 @@ export { MapPositions } from './layers/MapPositions';
 export { MapGeofence } from './layers/MapGeofence';
 export { MapAccuracy } from './layers/MapAccuracy';
 export { MapLiveRoutes } from './layers/MapLiveRoutes';
+export { MapRoutePath } from './layers/MapRoutePath';
+export { MapReportMarkers } from './layers/MapReportMarkers';
 export { MapSelectedDevice } from './layers/MapSelectedDevice';
 export { MapDefaultCamera } from './layers/MapDefaultCamera';
 export { mapIconKey, mapIcons } from './core/preload-images';

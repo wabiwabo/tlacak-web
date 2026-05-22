@@ -15,9 +15,20 @@ interface DataTableProps<T> {
   data: T[];
   emptyMessage?: string;
   className?: string;
+  /** Called when a body row is clicked. */
+  onRowClick?: (row: T) => void;
+  /** Marks a row visually selected; compared by reference identity. */
+  selectedRow?: T;
 }
 
-export function DataTable<T>({ columns, data, emptyMessage, className }: DataTableProps<T>) {
+export function DataTable<T>({
+  columns,
+  data,
+  emptyMessage,
+  className,
+  onRowClick,
+  selectedRow,
+}: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
     data,
@@ -68,7 +79,15 @@ export function DataTable<T>({ columns, data, emptyMessage, className }: DataTab
           </tr>
         ) : (
           rows.map((row) => (
-            <tr key={row.id} className="border-b border-border">
+            <tr
+              key={row.id}
+              className={cn(
+                'border-b border-border',
+                onRowClick && 'cursor-pointer',
+                row.original === selectedRow && 'bg-muted',
+              )}
+              onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+            >
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-row py-row">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
