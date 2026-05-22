@@ -100,7 +100,11 @@ export default function DevicePage() {
             type="date"
             disabled={!manager}
             value={(item?.expirationTime ?? '').slice(0, 10)}
-            onChange={(e) => set({ expirationTime: e.target.value })}
+            onChange={(e) =>
+              set({
+                expirationTime: e.target.value ? new Date(e.target.value).toISOString() : null,
+              })
+            }
           />
         )}
       </Field>
