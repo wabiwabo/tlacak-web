@@ -18,5 +18,6 @@ export {
   usePasswordUpdate,
   useUpdateUser,
   usePatchServer,
+  useUpdateServer,
 } from './api/queries';
 export { loginWithToken, createSessionToken, generateTotpKey } from './api/session-api';

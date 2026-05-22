@@ -8,6 +8,7 @@ import {
   registerUser,
   requestPasswordReset,
   updatePassword,
+  updateServer,
   updateUser,
 } from './session-api';
 import { useSessionStore } from '../model/session-store';
@@ -122,4 +123,17 @@ export function usePatchServer() {
       setServer(next);
     }
   };
+}
+
+/** PUT /api/server — persists full server config and updates the cache. */
+export function useUpdateServer() {
+  const queryClient = useQueryClient();
+  const setServer = useSessionStore((state) => state.setServer);
+  return useMutation({
+    mutationFn: (server: Server) => updateServer(server),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(sessionKeys.server, updated);
+      setServer(updated);
+    },
+  });
 }

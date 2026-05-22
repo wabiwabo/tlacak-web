@@ -79,6 +79,16 @@ export async function generateTotpKey(): Promise<string> {
   return await response.text();
 }
 
+/** PUT /api/server — persist server configuration changes. */
+export async function updateServer(server: Server): Promise<Server> {
+  const response = await fetchOrThrow('/api/server', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(server),
+  });
+  return (await response.json()) as Server;
+}
+
 /** PUT /api/users/{id} — update a user (terms acceptance, notification tokens). */
 export async function updateUser(user: User): Promise<User> {
   const response = await fetchOrThrow(`/api/users/${user.id}`, {
