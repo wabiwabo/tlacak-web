@@ -3,6 +3,7 @@ export { SettingsMenu } from './ui/SettingsMenu';
 export { SettingsListPage } from './ui/SettingsListPage';
 export { EditItemView } from './ui/EditItemView';
 export { SelectField } from './ui/SelectField';
+export { BaseCommandView } from './ui/BaseCommandView';
 export { AttributesAccordion } from './ui/AttributesAccordion';
 export { CollectionActions } from './ui/CollectionActions';
 export type { CustomAction } from './ui/CollectionActions';
