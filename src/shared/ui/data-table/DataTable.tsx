@@ -8,6 +8,8 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 
+import { cn } from '@/shared/lib/cn';
+
 interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
@@ -29,7 +31,7 @@ export function DataTable<T>({ columns, data, emptyMessage, className }: DataTab
   const rows = table.getRowModel().rows;
 
   return (
-    <table className={['w-full border-collapse text-sm', className].filter(Boolean).join(' ')}>
+    <table className={cn('w-full border-collapse text-sm', className)}>
       <thead>
         {table.getHeaderGroups().map((group) => (
           <tr key={group.id} className="border-b border-border">
