@@ -11,9 +11,11 @@ import {
 interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
+  emptyMessage?: string;
+  className?: string;
 }
 
-export function DataTable<T>({ columns, data }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, emptyMessage, className }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
     data,
@@ -27,7 +29,7 @@ export function DataTable<T>({ columns, data }: DataTableProps<T>) {
   const rows = table.getRowModel().rows;
 
   return (
-    <table className="w-full border-collapse text-sm">
+    <table className={['w-full border-collapse text-sm', className].filter(Boolean).join(' ')}>
       <thead>
         {table.getHeaderGroups().map((group) => (
           <tr key={group.id} className="border-b border-border">
@@ -59,7 +61,7 @@ export function DataTable<T>({ columns, data }: DataTableProps<T>) {
         {rows.length === 0 ? (
           <tr>
             <td colSpan={columns.length} className="p-row text-muted-foreground">
-              No data
+              {emptyMessage ?? 'No data'}
             </td>
           </tr>
         ) : (
