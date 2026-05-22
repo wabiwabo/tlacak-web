@@ -110,6 +110,7 @@
     "sharedEmulator": "Emulator",
     "sharedQrCode": "QR Code",
     "sharedActionType": "Action",
+    "sharedObjectType": "Object",
     "sharedQbjectType": "Object",
     "sharedShare": "Share",
     "calendarSimple": "Simple",
