@@ -22,4 +22,18 @@ describe('appendHistory', () => {
       [4, 4],
     ]);
   });
+
+  it('keeps only the newest coordinate when the limit is 1', () => {
+    expect(
+      appendHistory(
+        [
+          [1, 1],
+          [2, 2],
+        ],
+        3,
+        3,
+        1,
+      ),
+    ).toEqual([[3, 3]]);
+  });
 });

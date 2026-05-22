@@ -34,5 +34,6 @@ export function appendHistory(
   if (last && last[0] === longitude && last[1] === latitude) {
     return route;
   }
-  return [...route.slice(1 - limit), [longitude, latitude]];
+  const trimmed = route.slice(Math.max(0, route.length - (limit - 1)));
+  return [...trimmed, [longitude, latitude]];
 }
