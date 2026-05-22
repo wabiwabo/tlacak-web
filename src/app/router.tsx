@@ -93,6 +93,15 @@ export const routes: RouteObject[] = [
       },
 
       {
+        path: 'settings/geofence',
+        element: lazyRoute(() => import('@/pages/settings/GeofencePage')),
+      },
+      {
+        path: 'settings/geofence/:id',
+        element: lazyRoute(() => import('@/pages/settings/GeofencePage')),
+      },
+
+      {
         path: 'settings/calendars',
         element: lazyRoute(() => import('@/pages/settings/CalendarsPage')),
       },
