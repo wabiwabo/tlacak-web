@@ -8,4 +8,6 @@ export type UserAttributes = Record<string, unknown>;
 /** A user as returned by GET /api/users. */
 export interface User extends Omit<SchemaUser, 'attributes'> {
   attributes: UserAttributes;
+  /** Augments generated schema — real backend field: prevents user from viewing reports. */
+  disableReports?: boolean;
 }
