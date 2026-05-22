@@ -1,3 +1,4 @@
+export * from './accordion';
 export * from './button';
 export * from './card';
 export * from './checkbox';
@@ -6,6 +7,8 @@ export * from './label';
 export * from './dialog';
 export * from './select';
 export * from './switch';
+export * from './table';
+export * from './tabs';
 export * from './textarea';
 export * from './popover';
 export * from './data-table/DataTable';
