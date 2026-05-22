@@ -28,7 +28,144 @@ export const routes: RouteObject[] = [
         </RequireAuth>
       </QueryParamGate>
     ),
-    children: [{ index: true, element: lazyRoute(() => import('@/pages/MainPage')) }],
+    children: [
+      { index: true, element: lazyRoute(() => import('@/pages/MainPage')) },
+
+      {
+        path: 'settings/preferences',
+        element: lazyRoute(() => import('@/pages/settings/PreferencesPage')),
+      },
+      { path: 'settings/server', element: lazyRoute(() => import('@/pages/settings/ServerPage')) },
+      {
+        path: 'settings/announcement',
+        element: lazyRoute(() => import('@/pages/settings/AnnouncementPage')),
+      },
+
+      {
+        path: 'settings/devices',
+        element: lazyRoute(() => import('@/pages/settings/DevicesPage')),
+      },
+      { path: 'settings/device', element: lazyRoute(() => import('@/pages/settings/DevicePage')) },
+      {
+        path: 'settings/device/:id',
+        element: lazyRoute(() => import('@/pages/settings/DevicePage')),
+      },
+      {
+        path: 'settings/device/:id/connections',
+        element: lazyRoute(() => import('@/pages/settings/DeviceConnectionsPage')),
+      },
+      {
+        path: 'settings/device/:id/command',
+        element: lazyRoute(() => import('@/pages/settings/CommandDevicePage')),
+      },
+
+      { path: 'settings/groups', element: lazyRoute(() => import('@/pages/settings/GroupsPage')) },
+      { path: 'settings/group', element: lazyRoute(() => import('@/pages/settings/GroupPage')) },
+      {
+        path: 'settings/group/:id',
+        element: lazyRoute(() => import('@/pages/settings/GroupPage')),
+      },
+      {
+        path: 'settings/group/:id/connections',
+        element: lazyRoute(() => import('@/pages/settings/GroupConnectionsPage')),
+      },
+      {
+        path: 'settings/group/:id/command',
+        element: lazyRoute(() => import('@/pages/settings/CommandGroupPage')),
+      },
+
+      { path: 'settings/users', element: lazyRoute(() => import('@/pages/settings/UsersPage')) },
+      { path: 'settings/user', element: lazyRoute(() => import('@/pages/settings/UserPage')) },
+      { path: 'settings/user/:id', element: lazyRoute(() => import('@/pages/settings/UserPage')) },
+      {
+        path: 'settings/user/:id/connections',
+        element: lazyRoute(() => import('@/pages/settings/UserConnectionsPage')),
+      },
+
+      {
+        path: 'settings/drivers',
+        element: lazyRoute(() => import('@/pages/settings/DriversPage')),
+      },
+      { path: 'settings/driver', element: lazyRoute(() => import('@/pages/settings/DriverPage')) },
+      {
+        path: 'settings/driver/:id',
+        element: lazyRoute(() => import('@/pages/settings/DriverPage')),
+      },
+
+      {
+        path: 'settings/calendars',
+        element: lazyRoute(() => import('@/pages/settings/CalendarsPage')),
+      },
+      {
+        path: 'settings/calendar',
+        element: lazyRoute(() => import('@/pages/settings/CalendarPage')),
+      },
+      {
+        path: 'settings/calendar/:id',
+        element: lazyRoute(() => import('@/pages/settings/CalendarPage')),
+      },
+
+      {
+        path: 'settings/attributes',
+        element: lazyRoute(() => import('@/pages/settings/ComputedAttributesPage')),
+      },
+      {
+        path: 'settings/attribute',
+        element: lazyRoute(() => import('@/pages/settings/ComputedAttributePage')),
+      },
+      {
+        path: 'settings/attribute/:id',
+        element: lazyRoute(() => import('@/pages/settings/ComputedAttributePage')),
+      },
+
+      {
+        path: 'settings/maintenances',
+        element: lazyRoute(() => import('@/pages/settings/MaintenancesPage')),
+      },
+      {
+        path: 'settings/maintenance',
+        element: lazyRoute(() => import('@/pages/settings/MaintenancePage')),
+      },
+      {
+        path: 'settings/maintenance/:id',
+        element: lazyRoute(() => import('@/pages/settings/MaintenancePage')),
+      },
+
+      {
+        path: 'settings/commands',
+        element: lazyRoute(() => import('@/pages/settings/CommandsPage')),
+      },
+      {
+        path: 'settings/command',
+        element: lazyRoute(() => import('@/pages/settings/CommandPage')),
+      },
+      {
+        path: 'settings/command/:id',
+        element: lazyRoute(() => import('@/pages/settings/CommandPage')),
+      },
+
+      {
+        path: 'settings/notifications',
+        element: lazyRoute(() => import('@/pages/settings/NotificationsPage')),
+      },
+      {
+        path: 'settings/notification',
+        element: lazyRoute(() => import('@/pages/settings/NotificationPage')),
+      },
+      {
+        path: 'settings/notification/:id',
+        element: lazyRoute(() => import('@/pages/settings/NotificationPage')),
+      },
+
+      {
+        path: 'settings/accumulators/:deviceId',
+        element: lazyRoute(() => import('@/pages/settings/AccumulatorsPage')),
+      },
+      {
+        path: 'settings/:type/:id/share',
+        element: lazyRoute(() => import('@/pages/settings/SharePage')),
+      },
+    ],
   },
   { path: '*', element: lazyRoute(() => import('@/pages/NotFoundPage')) },
 ];

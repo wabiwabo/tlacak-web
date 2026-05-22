@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom';
 import { routes } from '../router';
 
 function renderAt(path: string) {
@@ -16,6 +16,37 @@ function renderAt(path: string) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+});
+
+/** Flattens nested route objects into a flat path list. */
+function collectPaths(input: RouteObject[], prefix = ''): string[] {
+  const result: string[] = [];
+  for (const route of input) {
+    const segment = route.path ?? '';
+    // Join parent and child with '/', then normalise double-slashes
+    const full = `${prefix}/${segment}`.replace(/\/+/g, '/');
+    if (segment) {
+      result.push(full);
+    }
+    if (route.children) {
+      result.push(...collectPaths(route.children as RouteObject[], full));
+    }
+  }
+  return result;
+}
+
+describe('settings routes', () => {
+  it('registers the core settings routes', () => {
+    const paths = collectPaths(routes);
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        '/settings/preferences',
+        '/settings/devices',
+        '/settings/device/:id',
+        '/settings/user/:id/connections',
+      ]),
+    );
+  });
 });
 
 describe('router', () => {
