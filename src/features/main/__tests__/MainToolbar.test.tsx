@@ -7,9 +7,17 @@ import { I18nextProvider } from 'react-i18next';
 import { i18n } from '@/shared/i18n';
 import { MainToolbar } from '../MainToolbar';
 import { useFilterStore } from '../model/filter-store';
+import { useLiveStore } from '../model/live-store';
 
 beforeEach(() => {
   useFilterStore.setState({ keyword: '', statuses: [], groups: [], sort: '', filterMap: false });
+  useLiveStore.setState({
+    devices: {
+      1: { id: 1, name: 'Truck 1', status: 'online' },
+      2: { id: 2, name: 'Truck 2', status: 'offline' },
+    } as never,
+    positions: { 1: { deviceId: 1, speed: 12 } as never },
+  });
 });
 
 function renderToolbar() {
@@ -26,9 +34,16 @@ function renderToolbar() {
 }
 
 describe('MainToolbar', () => {
-  it('writes the search keyword to the filter store', async () => {
+  it('renders the status filter chips with counts', () => {
     renderToolbar();
-    await userEvent.type(screen.getByPlaceholderText(/search/i), 'truck');
-    expect(useFilterStore.getState().keyword).toBe('truck');
+    expect(screen.getByRole('button', { name: /ALL · 2/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /MOVING · 1/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /OFFLINE · 1/i })).toBeInTheDocument();
+  });
+
+  it('toggles the offline status filter when its chip is clicked', async () => {
+    renderToolbar();
+    await userEvent.click(screen.getByRole('button', { name: /OFFLINE · 1/i }));
+    expect(useFilterStore.getState().statuses).toEqual(['offline']);
   });
 });

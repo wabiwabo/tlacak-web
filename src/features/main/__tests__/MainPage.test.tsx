@@ -24,7 +24,7 @@ beforeEach(async () => {
 });
 
 describe('MainPage', () => {
-  it('renders the toolbar search box', async () => {
+  it('renders the FLEET header and the filter chip row', async () => {
     const { MainPage } = await import('../MainPage');
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
@@ -36,6 +36,7 @@ describe('MainPage', () => {
         </I18nextProvider>
       </QueryClientProvider>,
     );
-    expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+    expect(screen.getByText(/FLEET/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ALL · 0/i })).toBeInTheDocument();
   });
 });

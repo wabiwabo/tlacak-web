@@ -1,17 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Bell, List as ListIcon, Map as MapIcon, Plus, SlidersHorizontal } from 'lucide-react';
-import { Button } from '@/shared/ui';
-import { Input } from '@/shared/ui';
+import { Plus, SlidersHorizontal } from 'lucide-react';
+import { Button, Badge, Switch, Label } from '@/shared/ui';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { useGroupsQuery } from '@/entities/group';
 import { useDeviceReadonly } from '@/entities/session';
 import { useFilterStore } from './model/filter-store';
-import { useMapUiStore } from './model/map-ui-store';
 import { useLiveStore } from './model/live-store';
+import { cn } from '@/shared/lib/cn';
 import type { DeviceSort } from './lib/filter-devices';
 
-const STATUSES = ['online', 'offline', 'unknown'] as const;
+interface ChipDef {
+  id: string;
+  label: string;
+  count: number;
+  variant: 'moving' | 'idle' | 'stopped' | 'offline' | 'outline';
+}
 
 export function MainToolbar() {
   const navigate = useNavigate();
@@ -19,9 +23,8 @@ export function MainToolbar() {
   const deviceReadonly = useDeviceReadonly();
   const { data: groups = [] } = useGroupsQuery();
   const devices = useLiveStore((state) => state.devices);
+  const positions = useLiveStore((state) => state.positions);
 
-  const keyword = useFilterStore((state) => state.keyword);
-  const setKeyword = useFilterStore((state) => state.setKeyword);
   const statuses = useFilterStore((state) => state.statuses);
   const setStatuses = useFilterStore((state) => state.setStatuses);
   const groupFilter = useFilterStore((state) => state.groups);
@@ -31,128 +34,143 @@ export function MainToolbar() {
   const filterMap = useFilterStore((state) => state.filterMap);
   const setFilterMap = useFilterStore((state) => state.setFilterMap);
 
-  const devicesOpen = useMapUiStore((state) => state.devicesOpen);
-  const setDevicesOpen = useMapUiStore((state) => state.setDevicesOpen);
-  const setEventsOpen = useMapUiStore((state) => state.setEventsOpen);
+  const list = Object.values(devices);
+  const total = list.length;
+  let moving = 0;
+  let idle = 0;
+  let stopped = 0;
+  let offline = 0;
+  for (const d of list) {
+    if (d.status !== 'online') offline += 1;
+    else if ((positions[d.id as number]?.speed ?? 0) > 1) moving += 1;
+    else if (positions[d.id as number]) idle += 1;
+    else stopped += 1;
+  }
 
-  const statusCount = (status: string) =>
-    Object.values(devices).filter((device) => device.status === status).length;
+  // Chips are "additive filters" — clicking toggles statuses[] in the store.
+  // 'all' is selected when statuses[] is empty (the canonical empty-filter state).
+  const isAll = statuses.length === 0;
+  const has = (s: string) => statuses.includes(s);
 
-  const toggleStatus = (status: string) =>
-    setStatuses(
-      statuses.includes(status)
-        ? statuses.filter((value) => value !== status)
-        : [...statuses, status],
-    );
+  function toggleStatus(status: string) {
+    setStatuses(has(status) ? statuses.filter((value) => value !== status) : [...statuses, status]);
+  }
 
-  const toggleGroup = (id: number) =>
-    setGroups(
-      groupFilter.includes(id) ? groupFilter.filter((value) => value !== id) : [...groupFilter, id],
-    );
+  function clearStatuses() {
+    setStatuses([]);
+  }
+
+  const chips: ChipDef[] = [
+    { id: 'all', label: 'ALL', count: total, variant: 'outline' },
+    { id: 'online', label: 'MOVING', count: moving, variant: 'moving' },
+    { id: 'idle', label: 'IDLE', count: idle, variant: 'idle' },
+    { id: 'unknown', label: 'STOPPED', count: stopped, variant: 'stopped' },
+    { id: 'offline', label: 'OFFLINE', count: offline, variant: 'offline' },
+  ];
 
   const filterActive = statuses.length > 0 || groupFilter.length > 0;
 
   return (
-    <div className="flex items-center gap-2 border-b border-border p-2">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={t('mapTitle')}
-        onClick={() => setDevicesOpen(!devicesOpen)}
-      >
-        {devicesOpen ? <MapIcon className="h-4 w-4" /> : <ListIcon className="h-4 w-4" />}
-      </Button>
-      <Input
-        value={keyword}
-        onChange={(event) => setKeyword(event.target.value)}
-        placeholder={t('sharedSearchDevices')}
-        className="flex-1"
-      />
-      <Popover>
-        <PopoverTrigger asChild>
+    <div className="flex flex-col gap-2 border-b border-border px-3 py-2">
+      <div className="flex items-center gap-1.5 overflow-x-auto">
+        {chips.map((chip) => {
+          const active = chip.id === 'all' ? isAll : has(chip.id);
+          return (
+            <button
+              key={chip.id}
+              type="button"
+              onClick={() => (chip.id === 'all' ? clearStatuses() : toggleStatus(chip.id))}
+              className={cn(
+                'shrink-0 transition-all',
+                active
+                  ? 'ring-1 ring-primary/50 ring-offset-0'
+                  : 'opacity-60 hover:opacity-100',
+              )}
+            >
+              <Badge variant={chip.variant} size="sm" bracketed>
+                {chip.label} · {chip.count}
+              </Badge>
+            </button>
+          );
+        })}
+
+        <div className="ms-auto flex items-center gap-1.5">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t('sharedFilter')}
+                data-active={filterActive}
+                className={cn(filterActive && 'border-primary/60 text-primary')}
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="flex w-64 flex-col gap-3">
+              <fieldset className="flex max-h-40 flex-col gap-1 overflow-auto">
+                <legend className="cyber-label text-[10px]">{t('settingsGroups')}</legend>
+                {[...groups]
+                  .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+                  .map((group) => (
+                    <label
+                      key={group.id}
+                      className="flex items-center gap-2 font-mono text-xs tracking-wide"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={groupFilter.includes(group.id as number)}
+                        onChange={() =>
+                          setGroups(
+                            groupFilter.includes(group.id as number)
+                              ? groupFilter.filter((value) => value !== (group.id as number))
+                              : [...groupFilter, group.id as number],
+                          )
+                        }
+                        className="accent-primary"
+                      />
+                      {group.name}
+                    </label>
+                  ))}
+              </fieldset>
+              <label className="flex flex-col gap-1 cyber-label text-[10px]">
+                {t('sharedSortBy')}
+                <select
+                  className="border border-border bg-card font-mono text-xs tracking-wide p-1 text-foreground"
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value as DeviceSort)}
+                >
+                  <option value="">&nbsp;</option>
+                  <option value="name">{t('sharedName')}</option>
+                  <option value="lastUpdate">{t('deviceLastUpdate')}</option>
+                </select>
+              </label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="filter-map" className="cyber-label text-[10px]">
+                  {t('sharedFilterMap')}
+                </Label>
+                <Switch
+                  id="filter-map"
+                  checked={filterMap}
+                  onCheckedChange={setFilterMap}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            aria-label={t('sharedFilter')}
-            data-active={filterActive}
-            className="data-[active=true]:bg-accent data-[active=true]:text-accent-foreground"
+            size="icon-sm"
+            aria-label={t('sharedAdd')}
+            disabled={deviceReadonly}
+            onClick={() => navigate('/settings/device')}
           >
-            <SlidersHorizontal className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="flex w-64 flex-col gap-3">
-          <fieldset className="flex flex-col gap-1">
-            <legend className="text-xs font-medium">{t('deviceStatus')}</legend>
-            {STATUSES.map((status) => (
-              <label key={status} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={statuses.includes(status)}
-                  onChange={() => toggleStatus(status)}
-                />
-                {t(`deviceStatus${status[0]!.toUpperCase()}${status.slice(1)}`)} (
-                {statusCount(status)})
-              </label>
-            ))}
-          </fieldset>
-          <fieldset className="flex max-h-40 flex-col gap-1 overflow-auto">
-            <legend className="text-xs font-medium">{t('settingsGroups')}</legend>
-            {[...groups]
-              .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-              .map((group) => (
-                <label key={group.id} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={groupFilter.includes(group.id as number)}
-                    onChange={() => toggleGroup(group.id as number)}
-                  />
-                  {group.name}
-                </label>
-              ))}
-          </fieldset>
-          <label className="flex flex-col gap-1 text-xs font-medium">
-            {t('sharedSortBy')}
-            <select
-              className="rounded border border-border bg-background p-1 text-sm"
-              value={sort}
-              onChange={(event) => setSort(event.target.value as DeviceSort)}
-            >
-              <option value="">&nbsp;</option>
-              <option value="name">{t('sharedName')}</option>
-              <option value="lastUpdate">{t('deviceLastUpdate')}</option>
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={filterMap}
-              onChange={(event) => setFilterMap(event.target.checked)}
-            />
-            {t('sharedFilterMap')}
-          </label>
-        </PopoverContent>
-      </Popover>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={t('reportEvents')}
-        onClick={() => setEventsOpen(true)}
-      >
-        <Bell className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={t('sharedAdd')}
-        disabled={deviceReadonly}
-        onClick={() => navigate('/settings/device')}
-      >
-        <Plus className="h-4 w-4" />
-      </Button>
+        </div>
+      </div>
     </div>
   );
 }

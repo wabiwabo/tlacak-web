@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useLogout } from '@/entities/session';
 import { useMediaQuery } from '@/shared/lib/use-media-query';
-import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
 import { BottomNav } from './BottomNav';
 import { TermsGate } from './TermsGate';
 import { NativeBridge, nativePostMessage } from '@/features/native-bridge';
@@ -28,9 +28,9 @@ export function AppShell() {
       <CachingController />
       <MotionController />
       <NativeBridge />
-      <div className="flex h-full flex-col md:flex-row">
-        {desktop && <Sidebar onLogout={handleLogout} />}
-        <div className="flex-1 overflow-auto">
+      <div className="flex h-full flex-col bg-background">
+        {desktop && <TopBar onLogout={handleLogout} />}
+        <div className="flex-1 min-h-0 overflow-auto">
           <Outlet />
         </div>
         {!desktop && <BottomNav onLogout={handleLogout} />}
