@@ -1,0 +1,1476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>onefleet@control:~$ — fleet/live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=VT323&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     ONEFLEET · TERMINAL THEATRE
+     extreme round-2 · direction 3
+     the entire application is a terminal session.
+     no gui. no chrome. only the terminal.
+     ============================================================ */
+
+  :root {
+    /* === phosphor palette ============================== */
+    --bg:            #0a0e0d;            /* near-black, very slight green tint */
+    --bg-soft:       #0d1413;
+    --bg-inset:      #06090a;
+    --bg-deeper:     #04070a;
+
+    --phos:          #00ffc8;            /* primary cyan-mint phosphor */
+    --phos-pale:     #a0ffd6;            /* paler cyan */
+    --phos-bright:   #d8fff2;            /* near-white phosphor for emphasis */
+    --phos-dim:      #5a8a7f;            /* dim cyan-gray */
+    --phos-deep:     #2a4a44;            /* hairline */
+    --phos-deeper:   #18302c;            /* very dark hairline */
+
+    --amber:         #ffaa00;
+    --amber-pale:    #ffd87a;
+    --amber-deep:    #5a3a00;
+
+    --red:           #ff3864;
+    --red-pale:      #ff8aa3;
+    --red-deep:      #5a0e1c;
+
+    --purple:        #b026ff;
+    --purple-pale:   #d986ff;
+
+    --comment:       #4a6660;            /* dimmer than phos-dim */
+    --inverse-bg:    #00ffc8;
+    --inverse-fg:    #06120f;
+    --selection-bg:  rgba(0, 255, 200, 0.22);
+
+    /* === typography ==================================== */
+    --mono:          "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --figlet:        "VT323", "JetBrains Mono", monospace;
+
+    /* === glow helpers ================================== */
+    --glow:          0 0 0.5px currentColor, 0 0 6px rgba(0, 255, 200, 0.18);
+    --glow-strong:   0 0 0.5px currentColor, 0 0 8px rgba(0, 255, 200, 0.42);
+    --glow-amber:    0 0 0.5px currentColor, 0 0 6px rgba(255, 170, 0, 0.24);
+    --glow-red:      0 0 0.5px currentColor, 0 0 6px rgba(255, 56, 100, 0.22);
+    --glow-purple:   0 0 0.5px currentColor, 0 0 6px rgba(176, 38, 255, 0.20);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--phos);
+    font-family: var(--mono);
+    font-variant-ligatures: none;
+    font-feature-settings: "calt" 0, "liga" 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+    overflow: hidden;
+  }
+
+  body {
+    width: 100vw;
+    min-height: 100vh;
+    font-size: 12px;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    text-shadow: var(--glow);
+    position: relative;
+  }
+
+  ::selection { background: var(--selection-bg); color: var(--phos-pale); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-inset); }
+  ::-webkit-scrollbar-thumb { background: var(--phos-deep); border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--phos-dim); }
+
+  /* =============================================================
+     CRT overlay stack — scanlines, grain, flicker, vignette,
+     phosphor bloom. always on top, never interactive.
+     ============================================================= */
+  .crt-scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9000;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    2px,
+      rgba(0, 0, 0, 0.18) 3px,
+      rgba(0, 0, 0, 0)    4px
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.55;
+  }
+  .crt-curve {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9004;
+    box-shadow:
+      inset 0 0 80px rgba(0, 0, 0, 0.45),
+      inset 0 0 220px rgba(0, 0, 0, 0.55);
+  }
+  .crt-vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9001;
+    background: radial-gradient(ellipse at center,
+      transparent 55%,
+      rgba(0, 0, 0, 0.35) 88%,
+      rgba(0, 0, 0, 0.70) 100%);
+  }
+  .crt-flicker {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9002;
+    background: rgba(0, 255, 200, 0.012);
+    animation: flicker 7.3s infinite steps(60);
+  }
+  @keyframes flicker {
+    0%, 100% { opacity: 1.0;  }
+    7%       { opacity: 0.82; }
+    14%      { opacity: 1.0;  }
+    33%      { opacity: 0.95; }
+    34%      { opacity: 1.0;  }
+    71%      { opacity: 0.88; }
+    72%      { opacity: 1.0;  }
+  }
+  .crt-grain {
+    position: fixed; inset: -50%; pointer-events: none; z-index: 9003;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 1  0 0 0 0 0.78  0 0 0 1 0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
+  }
+
+  /* tiny phosphor color helpers ============================== */
+  .c-phos     { color: var(--phos); }
+  .c-pale     { color: var(--phos-pale);   text-shadow: var(--glow); }
+  .c-bright   { color: var(--phos-bright); text-shadow: var(--glow); }
+  .c-dim      { color: var(--phos-dim);    text-shadow: none; }
+  .c-comment  { color: var(--comment);     text-shadow: none; }
+  .c-amber    { color: var(--amber);       text-shadow: var(--glow-amber); }
+  .c-amber-p  { color: var(--amber-pale);  text-shadow: var(--glow-amber); }
+  .c-red      { color: var(--red);         text-shadow: var(--glow-red); }
+  .c-red-p    { color: var(--red-pale);    text-shadow: var(--glow-red); }
+  .c-purple   { color: var(--purple);      text-shadow: var(--glow-purple); }
+
+  /* =============================================================
+     ROOT SCREEN — 1440 x 900 viewport
+     ============================================================= */
+  .screen {
+    width: 1440px;
+    height: 900px;
+    margin: 0 auto;
+    position: relative;
+    display: grid;
+    grid-template-rows:
+      26px       /* 1 · tmux tab bar           */
+      22px       /* 2 · path / breadcrumb      */
+      1fr        /* 3 · main area              */
+      176px      /* 4 · event log + prompt     */
+      22px;      /* 5 · vim status line        */
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  /* ───────────────────────────────────────────────────────────
+     1. TMUX-STYLE TAB BAR
+     ─────────────────────────────────────────────────────────── */
+  .tab-bar {
+    display: flex;
+    align-items: stretch;
+    height: 26px;
+    padding: 0 8px;
+    background: var(--bg-inset);
+    border-bottom: 1px solid var(--phos-deep);
+    font-size: 12px;
+    gap: 0;
+  }
+  .tab-bar .session {
+    padding: 5px 10px 5px 12px;
+    color: var(--phos-pale);
+    background: linear-gradient(180deg, rgba(0, 255, 200, 0.10), rgba(0, 255, 200, 0.02));
+    border-right: 1px solid var(--phos-deep);
+    letter-spacing: 0.04em;
+  }
+  .tab-bar .session::before {
+    content: "▎";
+    color: var(--phos);
+    margin-right: 6px;
+  }
+  .tab {
+    padding: 5px 12px;
+    color: var(--phos-dim);
+    border-right: 1px solid var(--phos-deep);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    user-select: none;
+  }
+  .tab .num { color: var(--amber); margin-right: 6px; }
+  .tab.active {
+    background: var(--inverse-bg);
+    color: var(--inverse-fg);
+    text-shadow: none;
+  }
+  .tab.active .num { color: var(--inverse-fg); }
+  .tab:hover:not(.active) { color: var(--phos-pale); }
+  .tab-bar .spacer { flex: 1; }
+  .tab-bar .right-cluster {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-right: 4px;
+    color: var(--phos-dim);
+  }
+  .tab-bar .right-cluster span { white-space: nowrap; }
+  .tab-bar .pill {
+    color: var(--bg-inset);
+    background: var(--phos);
+    padding: 1px 8px;
+    text-shadow: none;
+    letter-spacing: 0.08em;
+  }
+  .tab-bar .alerts-pill {
+    background: var(--red);
+    color: #1a0207;
+  }
+
+  /* ───────────────────────────────────────────────────────────
+     2. PATH / BREADCRUMB BAR
+     ─────────────────────────────────────────────────────────── */
+  .path-bar {
+    display: flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 12px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--phos-deep);
+    color: var(--phos-dim);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+    gap: 14px;
+  }
+  .path-bar .user { color: var(--phos-pale); }
+  .path-bar .host { color: var(--amber); }
+  .path-bar .path { color: var(--phos); }
+  .path-bar .sep  { color: var(--comment); }
+  .path-bar .right { margin-left: auto; display: flex; gap: 14px; }
+  .path-bar .key { color: var(--phos-dim); }
+  .path-bar .key b { color: var(--phos-pale); font-weight: 500; }
+
+  /* ───────────────────────────────────────────────────────────
+     3. MAIN AREA  ·  figlet row + 3 panes + metrics strip
+     ─────────────────────────────────────────────────────────── */
+  .main {
+    display: grid;
+    grid-template-columns: 348px 1fr 372px;
+    grid-template-rows: 110px 1fr 74px;
+    gap: 0;
+    background: var(--bg);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* figlet banner spans the top of all three columns ========== */
+  .figlet-row {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: 348px 1fr 372px;
+    border-bottom: 1px solid var(--phos-deep);
+    background:
+      linear-gradient(180deg, rgba(0, 255, 200, 0.04), transparent 70%),
+      var(--bg);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .figlet {
+    padding: 6px 12px 4px 12px;
+    grid-column: 1 / span 2;
+    overflow: hidden;
+    position: relative;
+  }
+  .figlet pre {
+    margin: 0;
+    color: var(--phos);
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.0;
+    letter-spacing: 0;
+    text-shadow:
+      0 0 1px var(--phos),
+      0 0 8px rgba(0, 255, 200, 0.45),
+      0 0 18px rgba(0, 255, 200, 0.16);
+    white-space: pre;
+    font-weight: 600;
+  }
+  .figlet .tagline {
+    margin-top: 4px;
+    font-size: 10.5px;
+    color: var(--phos-dim);
+    letter-spacing: 0.18em;
+    text-shadow: none;
+  }
+  .figlet .tagline .dot { color: var(--phos); }
+  .figlet .underline {
+    margin-top: 3px;
+    color: var(--phos-deep);
+    letter-spacing: 0;
+    font-size: 10px;
+  }
+
+  /* session-strip on the right of figlet row ================== */
+  .session-strip {
+    grid-column: 3;
+    padding: 6px 12px;
+    border-left: 1px solid var(--phos-deep);
+    font-size: 11px;
+    color: var(--phos-dim);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .session-strip .line { display: flex; justify-content: space-between; gap: 8px; }
+  .session-strip .line b { color: var(--phos-pale); font-weight: 500; }
+  .session-strip .led {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--phos);
+    box-shadow: 0 0 6px var(--phos);
+    margin-right: 6px;
+    animation: led-blink 1.6s infinite;
+  }
+  .session-strip .led.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); animation-duration: 2.2s; }
+  .session-strip .led.red   { background: var(--red);   box-shadow: 0 0 6px var(--red);   animation-duration: 0.9s; }
+  @keyframes led-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+
+  /* ───────────────────────────────────────────────────────────
+     PANE BASE
+     ─────────────────────────────────────────────────────────── */
+  .pane {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    min-height: 0;
+    min-width: 0;
+  }
+  .pane.left  { grid-column: 1; grid-row: 2; border-right: 1px solid var(--phos-deep); }
+  .pane.mid   { grid-column: 2; grid-row: 2; }
+  .pane.right { grid-column: 3; grid-row: 2; border-left: 1px solid var(--phos-deep); }
+
+  /* metrics strip across all three columns =================== */
+  .metrics-row {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    border-top: 1px solid var(--phos-deep);
+    background: var(--bg-soft);
+    padding: 8px 14px 10px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    gap: 18px;
+    font-size: 11.5px;
+    overflow: hidden;
+  }
+  .metric .row1 {
+    display: flex;
+    justify-content: space-between;
+    color: var(--phos-dim);
+    letter-spacing: 0.1em;
+    font-size: 10.5px;
+    margin-bottom: 2px;
+  }
+  .metric .row1 .v { color: var(--phos-pale); letter-spacing: 0.04em; }
+  .metric .row1 .v b { color: var(--phos); font-weight: 500; font-size: 13px; margin-right: 4px; }
+  .metric .bar {
+    font-size: 11px;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  .metric .bar .fill { color: var(--phos); }
+  .metric .bar .empty { color: var(--phos-deep); }
+  .metric.amber .bar .fill { color: var(--amber); text-shadow: var(--glow-amber); }
+  .metric.purple .bar .fill { color: var(--purple); text-shadow: var(--glow-purple); }
+  .metric.red .bar .fill { color: var(--red); text-shadow: var(--glow-red); }
+  .metric.dim .bar .fill { color: var(--phos-dim); text-shadow: none; }
+  .metric .row3 {
+    color: var(--comment);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  /* ───────────────────────────────────────────────────────────
+     LEFT PANE  ·  FLEET LIST  (htop-flavored ascii table)
+     ─────────────────────────────────────────────────────────── */
+  .pane.left { display: flex; flex-direction: column; padding: 6px 8px 6px 8px; }
+  .panel-title {
+    color: var(--phos-pale);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .panel-title .meta { color: var(--phos-dim); letter-spacing: 0.08em; font-size: 10.5px; }
+
+  .box {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: var(--phos);
+    white-space: pre;
+  }
+  .box .line { display: block; }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    margin: 6px 2px 6px 2px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .chip {
+    color: var(--phos-dim);
+    border: 1px dashed var(--phos-deep);
+    padding: 1px 7px;
+    cursor: pointer;
+    background: transparent;
+    user-select: none;
+  }
+  .chip .k { color: var(--amber); margin-right: 4px; }
+  .chip:hover { color: var(--phos-pale); border-color: var(--phos-dim); }
+  .chip.active {
+    background: var(--inverse-bg);
+    color: var(--inverse-fg);
+    border-color: var(--phos);
+    text-shadow: none;
+  }
+  .chip.active .k { color: var(--inverse-fg); }
+  .chip .n { color: var(--phos); margin-left: 4px; }
+  .chip.active .n { color: var(--inverse-fg); }
+  .chip.amber .n { color: var(--amber); }
+  .chip.purple .n { color: var(--purple); }
+  .chip.red .n { color: var(--red); }
+  .chip.dim .n { color: var(--phos-dim); }
+
+  .search-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--phos-deep);
+    padding: 2px 8px;
+    margin: 2px 2px 6px 2px;
+    font-size: 11.5px;
+    color: var(--phos-pale);
+  }
+  .search-line .prompt { color: var(--amber); }
+  .search-line .ph { color: var(--comment); }
+  .search-line .csr {
+    display: inline-block;
+    width: 7px; height: 12px;
+    background: var(--phos);
+    margin-left: 2px;
+    animation: blink 1.0s steps(2) infinite;
+    vertical-align: -2px;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .devices {
+    flex: 1;
+    overflow: hidden;
+    padding: 0 2px;
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  .dev-table { white-space: pre; line-height: 1.35; }
+  .dev-row { display: block; }
+  .dev-row.sel {
+    background: var(--inverse-bg);
+    color: var(--inverse-fg);
+    text-shadow: none;
+  }
+  .dev-row.sel * { color: inherit; text-shadow: none; }
+  .dev-row.sel .marker { color: var(--inverse-fg); }
+  .dev-row .pill-status { color: var(--phos); }
+  .dev-row.idle  .pill-status { color: var(--amber); text-shadow: var(--glow-amber); }
+  .dev-row.stop  .pill-status { color: var(--purple); text-shadow: var(--glow-purple); }
+  .dev-row.off   .pill-status { color: var(--phos-dim); text-shadow: none; }
+  .dev-row.warn  .pill-status { color: var(--red); text-shadow: var(--glow-red); }
+
+  /* ───────────────────────────────────────────────────────────
+     MIDDLE PANE  ·  ASCII WIREFRAME MAP
+     ─────────────────────────────────────────────────────────── */
+  .pane.mid { padding: 0; display: flex; flex-direction: column; }
+  .map-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px 4px 12px;
+    color: var(--phos-pale);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+  }
+  .map-titlebar .right {
+    display: flex; gap: 14px;
+    color: var(--phos-dim);
+    letter-spacing: 0.08em;
+    font-size: 10.5px;
+  }
+  .map-titlebar .right b { color: var(--phos-pale); font-weight: 500; }
+
+  .map-wrap {
+    flex: 1;
+    position: relative;
+    margin: 0 12px 4px 12px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(0, 255, 200, 0.04), transparent 70%),
+      var(--bg-inset);
+  }
+  .map-ascii {
+    position: absolute; inset: 0;
+    color: var(--phos-deep);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.05;
+    letter-spacing: 0;
+    white-space: pre;
+    padding: 8px 12px;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .map-ascii .road      { color: var(--phos-dim); }
+  .map-ascii .road-hi   { color: var(--phos); text-shadow: var(--glow); }
+  .map-ascii .label     { color: var(--phos-pale); letter-spacing: 0.1em; }
+  .map-ascii .label-d   { color: var(--phos-dim); }
+  .map-ascii .water     { color: #1a4a55; }
+  .map-ascii .water-hi  { color: #2d6675; }
+  .map-ascii .terrain   { color: #16302c; }
+  .map-ascii .mountain  { color: #1a3a35; }
+  .map-ascii .trail     { color: var(--phos); text-shadow: var(--glow); }
+  .map-ascii .trail-d   { color: var(--phos-pale); text-shadow: var(--glow); }
+  .map-ascii .veh       { color: var(--phos); text-shadow: 0 0 4px rgba(0,255,200,0.6); }
+  .map-ascii .veh-sel   { color: var(--amber); text-shadow: var(--glow-amber); }
+  .map-ascii .veh-idle  { color: var(--amber); text-shadow: 0 0 4px rgba(255,170,0,0.5); }
+  .map-ascii .veh-stop  { color: var(--purple); text-shadow: var(--glow-purple); }
+  .map-ascii .veh-off   { color: var(--phos-dim); }
+  .map-ascii .veh-alt   { color: var(--red); text-shadow: var(--glow-red); }
+  .map-ascii .geofence  { color: var(--phos-dim); }
+  .map-ascii .geo-active{ color: var(--phos); text-shadow: var(--glow); }
+  .map-ascii .compass   { color: var(--phos-pale); }
+  .map-ascii .scale     { color: var(--phos-dim); }
+  .map-ascii .tag       { color: var(--comment); }
+  .map-ascii .tag-am    { color: var(--amber-pale); text-shadow: var(--glow-amber); }
+  .map-ascii .tag-re    { color: var(--red-pale); text-shadow: var(--glow-red); }
+
+  /* lock-on cinematic for selected device ==================== */
+  .lock-on {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    color: var(--amber);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1;
+    text-shadow: var(--glow-amber);
+  }
+  .lock-on .pulse {
+    display: inline-block;
+    animation: lock-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes lock-pulse {
+    0%, 100% { transform: scale(1.00); opacity: 1; }
+    50%      { transform: scale(1.18); opacity: 0.55; }
+  }
+  .lock-on .ringspin {
+    position: absolute;
+    inset: -10px;
+    border: 1px dashed rgba(255, 170, 0, 0.55);
+    border-radius: 50%;
+    animation: ringspin 6s linear infinite;
+  }
+  @keyframes ringspin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .map-legend {
+    border-top: 1px dashed var(--phos-deep);
+    padding: 6px 12px 8px 12px;
+    margin: 0 12px;
+    font-size: 10.5px;
+    color: var(--phos-dim);
+    letter-spacing: 0.06em;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .map-legend .swatch { color: var(--phos); margin-right: 4px; }
+  .map-legend .amber  { color: var(--amber); }
+  .map-legend .purple { color: var(--purple); }
+  .map-legend .red    { color: var(--red); }
+  .map-legend .dim    { color: var(--phos-dim); }
+  .map-legend .trail-s{ color: var(--phos); text-shadow: var(--glow); }
+
+  /* radar sweep — subtle conic gradient that rotates ========= */
+  .radar-sweep {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.55;
+    overflow: hidden;
+  }
+  .radar-sweep .arc {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 1600px; height: 1600px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+      rgba(0, 255, 200, 0.16) 0deg,
+      rgba(0, 255, 200, 0.06) 8deg,
+      rgba(0, 255, 200, 0.00) 22deg,
+      rgba(0, 255, 200, 0.00) 360deg);
+    animation: spin 7s linear infinite;
+  }
+  @keyframes spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* center crosshair as decorative element =================== */
+  .crosshair {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--phos-deep);
+    font-family: var(--mono);
+    font-size: 13px;
+    white-space: pre;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  /* mini hud widgets pinned in map corners =================== */
+  .mini-compass {
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--phos-pale);
+    line-height: 1.1;
+    text-align: center;
+    white-space: pre;
+  }
+  .mini-scale {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--phos-dim);
+    line-height: 1.1;
+    letter-spacing: 0;
+    white-space: pre;
+  }
+  .mini-coord {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--phos-dim);
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    text-align: right;
+    white-space: pre;
+  }
+  .mini-coord b { color: var(--phos-pale); font-weight: 400; }
+  .map-watermark {
+    position: absolute;
+    left: 12px;
+    top: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--phos-deep);
+    letter-spacing: 0.2em;
+  }
+
+  /* ───────────────────────────────────────────────────────────
+     RIGHT PANE  ·  STATUSCARD AS MAN-PAGE
+     ─────────────────────────────────────────────────────────── */
+  .pane.right { padding: 6px 10px 6px 10px; display: flex; flex-direction: column; }
+  .manpage-strip {
+    color: var(--phos-dim);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2px 4px 2px;
+    border-bottom: 1px dashed var(--phos-deep);
+  }
+  .manpage-strip b { color: var(--phos-pale); font-weight: 500; }
+  .manbox {
+    flex: 1;
+    overflow: hidden;
+    padding: 4px 2px 2px 2px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    white-space: pre;
+    color: var(--phos);
+  }
+  .manbox .row     { display: block; white-space: pre; }
+  .manbox .h       { color: var(--phos-pale); letter-spacing: 0.12em; }
+  .manbox .k       { color: var(--phos-dim); letter-spacing: 0.06em; }
+  .manbox .v       { color: var(--phos); }
+  .manbox .v-pale  { color: var(--phos-pale); }
+  .manbox .v-am    { color: var(--amber); text-shadow: var(--glow-amber); }
+  .manbox .v-re    { color: var(--red); text-shadow: var(--glow-red); }
+  .manbox .v-dim   { color: var(--phos-dim); text-shadow: none; }
+  .manbox .v-pu    { color: var(--purple); text-shadow: var(--glow-purple); }
+  .manbox .comment { color: var(--comment); }
+  .manbox .bar-fill  { color: var(--phos); }
+  .manbox .bar-empty { color: var(--phos-deep); }
+  .manbox .bar-am    { color: var(--amber); text-shadow: var(--glow-amber); }
+
+  .manbox .spark    { color: var(--phos); text-shadow: var(--glow); letter-spacing: 0; font-size: 13px; }
+  .manbox .spark .lo { color: var(--phos-dim); text-shadow: none; }
+  .manbox .spark .hi { color: var(--phos-pale); text-shadow: var(--glow); }
+  .manbox .spark .pk { color: var(--amber); text-shadow: var(--glow-amber); }
+
+  .manbox .actions .k { color: var(--amber); }
+  .manbox .actions .l { color: var(--phos-pale); }
+
+  .manbox .badge {
+    display: inline-block;
+    background: rgba(0, 255, 200, 0.12);
+    color: var(--phos-pale);
+    padding: 0 6px;
+    margin-right: 4px;
+  }
+  .manbox .badge.amber { background: rgba(255, 170, 0, 0.14);  color: var(--amber-pale); }
+  .manbox .badge.red   { background: rgba(255,  56, 100, 0.16); color: var(--red-pale); }
+
+  /* ───────────────────────────────────────────────────────────
+     4. EVENT LOG + PROMPT BLOCK
+     ─────────────────────────────────────────────────────────── */
+  .console {
+    grid-row: 4;
+    background: var(--bg-inset);
+    border-top: 1px solid var(--phos-deep);
+    padding: 6px 12px 6px 12px;
+    display: grid;
+    grid-template-rows: 18px 1fr 22px;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .console .title {
+    color: var(--phos-dim);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed var(--phos-deep);
+    padding-bottom: 3px;
+  }
+  .console .title b { color: var(--phos-pale); font-weight: 500; }
+  .console .title .right { display: flex; gap: 16px; }
+  .log {
+    overflow: hidden;
+    padding-top: 4px;
+    font-size: 11.5px;
+    line-height: 1.18;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+  }
+  .log .row { display: block; }
+  .log .t  { color: var(--comment); }
+  .log .ev-dev   { color: var(--phos); }
+  .log .ev-alt   { color: var(--red); text-shadow: var(--glow-red); }
+  .log .ev-geo   { color: var(--amber); text-shadow: var(--glow-amber); }
+  .log .ev-sys   { color: var(--phos-dim); }
+  .log .ev-net   { color: var(--purple); text-shadow: var(--glow-purple); }
+  .log .ev-ok    { color: var(--phos-pale); }
+  .log .ph       { color: var(--comment); }
+  .log .id       { color: var(--phos-pale); }
+  .log .val      { color: var(--phos-pale); }
+  .log .new      { color: var(--phos); background: rgba(0, 255, 200, 0.06); }
+
+  .prompt-line {
+    display: flex;
+    align-items: center;
+    border-top: 1px dashed var(--phos-deep);
+    padding-top: 4px;
+    font-size: 13px;
+    letter-spacing: 0;
+    color: var(--phos);
+  }
+  .prompt-line .user  { color: var(--phos-pale); }
+  .prompt-line .at    { color: var(--phos-dim); }
+  .prompt-line .host  { color: var(--amber); text-shadow: var(--glow-amber); }
+  .prompt-line .colon { color: var(--phos-dim); }
+  .prompt-line .pth   { color: var(--phos); }
+  .prompt-line .sym   { color: var(--amber); margin: 0 6px; }
+  .prompt-line .typed { color: var(--phos-pale); }
+  .prompt-line .flag  { color: var(--phos); }
+  .prompt-line .ghost { color: var(--comment); margin-left: 6px; font-style: italic; }
+  .prompt-line .csr {
+    display: inline-block;
+    width: 9px; height: 15px;
+    background: var(--phos);
+    box-shadow: 0 0 8px var(--phos);
+    margin-left: 2px;
+    animation: blink 1.0s steps(2) infinite;
+    vertical-align: -2px;
+  }
+
+  /* ───────────────────────────────────────────────────────────
+     5. VIM-STYLE STATUS LINE
+     ─────────────────────────────────────────────────────────── */
+  .vim-status {
+    grid-row: 5;
+    height: 22px;
+    display: grid;
+    grid-template-columns: auto auto 1fr auto auto auto auto auto;
+    background: var(--phos);
+    color: var(--bg);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+  }
+  .vim-status > div {
+    padding: 3px 10px;
+    display: flex;
+    align-items: center;
+    text-shadow: none;
+  }
+  .vim-mode {
+    background: var(--inverse-bg);
+    color: var(--inverse-fg);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+  .vim-buf {
+    background: #0d8060;
+    color: #001a14;
+    position: relative;
+  }
+  .vim-buf::after {
+    content: "";
+    display: inline-block;
+    width: 0; height: 0;
+    margin-left: 10px;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    border-left: 7px solid #0d8060;
+    transform: translateX(10px);
+  }
+  .vim-fill {
+    background: var(--bg-soft);
+    color: var(--phos-pale);
+    text-shadow: var(--glow);
+    padding-left: 18px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .vim-seg {
+    background: #0d8060;
+    color: #001a14;
+    position: relative;
+  }
+  .vim-seg::before {
+    content: "";
+    display: inline-block;
+    width: 0; height: 0;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    border-right: 7px solid #0d8060;
+    transform: translateX(-17px);
+    margin-right: -7px;
+  }
+  .vim-seg-alt {
+    background: var(--phos);
+    color: var(--bg);
+    font-weight: 600;
+    position: relative;
+  }
+  .vim-seg-alt::before {
+    content: "";
+    display: inline-block;
+    width: 0; height: 0;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    border-right: 7px solid var(--phos);
+    transform: translateX(-17px);
+    margin-right: -7px;
+  }
+  .vim-seg-warn {
+    background: var(--amber);
+    color: #1a0e00;
+    font-weight: 600;
+    position: relative;
+  }
+  .vim-seg-warn::before {
+    content: "";
+    display: inline-block;
+    width: 0; height: 0;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    border-right: 7px solid var(--amber);
+    transform: translateX(-17px);
+    margin-right: -7px;
+  }
+  .vim-seg-clock {
+    background: #00ffc8;
+    color: #001a14;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+  }
+  .vim-seg-clock::before {
+    content: "";
+    display: inline-block;
+    width: 0; height: 0;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    border-right: 7px solid #00ffc8;
+    transform: translateX(-17px);
+    margin-right: -7px;
+  }
+
+  /* ───────────────────────────────────────────────────────────
+     OSCILLOSCOPE strip (websocket throughput visualizer)
+     ─────────────────────────────────────────────────────────── */
+  .osc {
+    height: 28px;
+    width: 100%;
+    color: var(--phos);
+  }
+  .osc path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    filter: drop-shadow(0 0 2px rgba(0, 255, 200, 0.6));
+  }
+
+  /* device list marker chevron for selected row =============== */
+  .dev-row .marker { color: var(--amber); }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     CRT overlay stack — fixed, non-interactive, top z-index
+     ========================================================= -->
+<div class="crt-grain"></div>
+<div class="crt-scanlines"></div>
+<div class="crt-flicker"></div>
+<div class="crt-vignette"></div>
+<div class="crt-curve"></div>
+
+<div class="screen">
+
+  <!-- ============================================================
+       1. TMUX-STYLE TAB BAR
+       ============================================================ -->
+  <div class="tab-bar">
+    <div class="session">onefleet</div>
+    <div class="tab active"><span class="num">1</span>map</div>
+    <div class="tab"><span class="num">2</span>devices</div>
+    <div class="tab"><span class="num">3</span>reports</div>
+    <div class="tab"><span class="num">4</span>geofences</div>
+    <div class="tab"><span class="num">5</span>notifications<span style="color: var(--red); margin-left: 6px;">3</span></div>
+    <div class="tab"><span class="num">6</span>settings</div>
+    <div class="spacer"></div>
+    <div class="right-cluster">
+      <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--phos);box-shadow:0 0 6px var(--phos);margin-right:6px;"></span>WS · live</span>
+      <span><span class="c-dim">load</span> <span class="c-pale">0.32 0.41 0.39</span></span>
+      <span><span class="c-dim">jkt</span> <span class="c-pale">03:47:21 WIB</span></span>
+      <span class="pill alerts-pill">ALERTS · 3</span>
+      <span><span class="c-dim">user</span> <span class="c-pale">ahmad.r@ops</span></span>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       2. PATH / BREADCRUMB BAR
+       ============================================================ -->
+  <div class="path-bar">
+    <span>
+      <span class="user">ahmad.r</span><span class="sep">@</span><span class="host">control</span><span class="sep">:</span><span class="path">~/fleet/live</span>
+      <span class="sep"> · </span>
+      <span class="c-dim">sector 07 · jkt–bdg corridor · 247 units · gps 11/12 sats · 3 alerts</span>
+    </span>
+    <div class="right">
+      <span class="key"><b>/</b> find</span>
+      <span class="key"><b>j</b><b>k</b> nav</span>
+      <span class="key"><b>:c</b> cmd</span>
+      <span class="key"><b>:h</b> history</span>
+      <span class="key"><b>:w</b> save view</span>
+      <span class="key"><b>?</b> help</span>
+      <span class="key"><b>q</b> quit</span>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       3. MAIN AREA
+       ============================================================ -->
+  <div class="main">
+
+    <!-- ─────────────────────────────────────────────────────
+         FIGLET BANNER ROW
+         ───────────────────────────────────────────────────── -->
+    <div class="figlet-row">
+      <div class="figlet">
+<pre> ██████╗ ███╗   ██╗███████╗███████╗██╗     ███████╗███████╗████████╗
+██╔═══██╗████╗  ██║██╔════╝██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝
+██║   ██║██╔██╗ ██║█████╗  █████╗  ██║     █████╗  █████╗     ██║
+██║   ██║██║╚██╗██║██╔══╝  ██╔══╝  ██║     ██╔══╝  ██╔══╝     ██║
+╚██████╔╝██║ ╚████║███████╗██║     ███████╗███████╗███████╗   ██║
+ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝     ╚══════╝╚══════╝╚══════╝   ╚═╝</pre>
+        <div class="tagline">
+          FLEET CONTROL TERMINAL
+          <span class="dot">·</span> v4.7.2-stable
+          <span class="dot">·</span> build 20260523.a91
+          <span class="dot">·</span> tty/pts/0
+          <span class="dot">·</span> uptime 13d 04:18:55
+          <span class="dot">·</span> tz Asia/Jakarta
+        </div>
+        <div class="underline">────────────────────────────────────────────────────────────────────────────────────────────────────</div>
+      </div>
+      <div class="session-strip">
+        <div class="line"><span><span class="led"></span>websocket</span><b>↑ 12.4 kb/s</b></div>
+        <div class="line"><span><span class="led"></span>telemetry</span><b>247/247 sync</b></div>
+        <div class="line"><span><span class="led amber"></span>queue</span><b>3 pending</b></div>
+        <div class="line"><span><span class="led red"></span>alerts</span><b>3 active</b></div>
+        <div class="line">
+          <svg class="osc" viewBox="0 0 280 28" preserveAspectRatio="none">
+            <path d="M0,14 L10,14 L14,8 L18,18 L22,10 L26,16 L30,14 L40,14 L44,5 L48,22 L52,11 L56,15 L64,14 L70,14 L74,12 L78,9 L82,18 L86,14 L94,14 L100,14 L104,4 L108,20 L112,9 L116,17 L120,12 L128,14 L134,14 L138,11 L142,15 L150,14 L156,7 L160,21 L164,10 L168,16 L172,14 L180,14 L186,8 L190,18 L194,13 L198,14 L206,14 L212,12 L216,9 L220,17 L224,14 L232,14 L238,5 L242,23 L246,12 L250,15 L258,14 L264,14 L268,11 L272,16 L280,14" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────
+         LEFT PANE · FLEET LIST
+         ───────────────────────────────────────────────────── -->
+    <div class="pane left">
+
+      <h2 class="panel-title">
+        ╔ FLEET
+        <span class="meta">· 247 units · 3 sectors · sort by last_ping ▾</span>
+      </h2>
+
+      <div class="filter-chips">
+        <div class="chip"><span class="k">a</span>ll<span class="n">247</span></div>
+        <div class="chip active"><span class="k">m</span>oving<span class="n">184</span></div>
+        <div class="chip amber"><span class="k">i</span>dle<span class="n">41</span></div>
+        <div class="chip purple"><span class="k">s</span>topped<span class="n">18</span></div>
+        <div class="chip dim"><span class="k">o</span>ffline<span class="n">4</span></div>
+        <div class="chip red"><span class="k">!</span>alerts<span class="n">3</span></div>
+      </div>
+
+      <div class="search-line">
+        <span class="prompt">/</span>
+        <span class="ph">Find vehicle, plate, driver…</span>
+        <span class="csr"></span>
+      </div>
+
+      <div class="devices">
+<pre class="box dev-table"><span class="c-dim">┌────┬──────────────┬────────────┬─────────┬───────────────┬──────┐
+│  # │ DEVICE       │ PLATE      │ STATUS  │ DRIVER        │  AGO │
+├────┼──────────────┼────────────┼─────────┼───────────────┼──────┤</span>
+<span class="dev-row sel"> <span class="marker">▶</span> 1│ TRUCK-247    │ B 9421 KGV │ <span class="pill-status">●</span> 67km/h │ Ahmad Wijaya  │  12s </span>
+<span class="dev-row"><span class="c-dim"> </span>  2<span class="c-dim">│</span> VAN-118      <span class="c-dim">│</span> B 2284 PCD <span class="c-dim">│</span> <span class="pill-status">●</span> 48km/h <span class="c-dim">│</span> Siti Nuraini  <span class="c-dim">│</span>  24s </span>
+<span class="dev-row warn"><span class="c-dim"> </span>  3<span class="c-dim">│</span> TRUCK-189    <span class="c-dim">│</span> B 5571 ABC <span class="c-dim">│</span> <span class="pill-status">●</span> 92km/h <span class="c-dim">│</span> Budi Hartono  <span class="c-dim">│</span>   8s <span class="c-red"> !</span></span>
+<span class="dev-row"><span class="c-dim"> </span>  4<span class="c-dim">│</span> PICKUP-042   <span class="c-dim">│</span> B 7138 KMN <span class="c-dim">│</span> <span class="pill-status">●</span> 31km/h <span class="c-dim">│</span> Rina Kusuma   <span class="c-dim">│</span>  41s </span>
+<span class="dev-row idle"><span class="c-dim"> </span>  5<span class="c-dim">│</span> VAN-203      <span class="c-dim">│</span> B 1102 JKL <span class="c-dim">│</span> <span class="pill-status">●</span> IDLE   <span class="c-dim">│</span> Dewi Lestari  <span class="c-dim">│</span>  1m  </span>
+<span class="dev-row"><span class="c-dim"> </span>  6<span class="c-dim">│</span> TRUCK-156    <span class="c-dim">│</span> B 8847 GHJ <span class="c-dim">│</span> <span class="pill-status">●</span> 55km/h <span class="c-dim">│</span> Eko Prasetyo  <span class="c-dim">│</span>  19s </span>
+<span class="dev-row stop"><span class="c-dim"> </span>  7<span class="c-dim">│</span> PICKUP-088   <span class="c-dim">│</span> B 3340 RTY <span class="c-dim">│</span> <span class="pill-status">●</span> STOP   <span class="c-dim">│</span> Anton Saputra <span class="c-dim">│</span>  4m  </span>
+<span class="dev-row idle"><span class="c-dim"> </span>  8<span class="c-dim">│</span> VAN-141      <span class="c-dim">│</span> B 6612 WER <span class="c-dim">│</span> <span class="pill-status">●</span> IDLE   <span class="c-dim">│</span> Maya Anggraini<span class="c-dim">│</span>  2m  </span>
+<span class="dev-row"><span class="c-dim"> </span>  9<span class="c-dim">│</span> TRUCK-312    <span class="c-dim">│</span> B 9908 PQR <span class="c-dim">│</span> <span class="pill-status">●</span> 74km/h <span class="c-dim">│</span> Joko Susilo   <span class="c-dim">│</span>  17s </span>
+<span class="dev-row off"><span class="c-dim"> </span> 10<span class="c-dim">│</span> TRUCK-095    <span class="c-dim">│</span> B 4456 STU <span class="c-dim">│</span> <span class="pill-status">○</span> OFFLN  <span class="c-dim">│</span> Rudi Hidayat  <span class="c-dim">│</span> 47m  </span>
+<span class="dev-row"><span class="c-dim"> </span> 11<span class="c-dim">│</span> VAN-079      <span class="c-dim">│</span> B 2255 VWX <span class="c-dim">│</span> <span class="pill-status">●</span> 62km/h <span class="c-dim">│</span> Lina Sari     <span class="c-dim">│</span>  28s </span>
+<span class="dev-row"><span class="c-dim"> </span> 12<span class="c-dim">│</span> TRUCK-220    <span class="c-dim">│</span> B 7791 BNM <span class="c-dim">│</span> <span class="pill-status">●</span> 39km/h <span class="c-dim">│</span> Yusuf Rahman  <span class="c-dim">│</span>  35s </span>
+<span class="dev-row idle"><span class="c-dim"> </span> 13<span class="c-dim">│</span> PICKUP-115   <span class="c-dim">│</span> B 5530 CVB <span class="c-dim">│</span> <span class="pill-status">●</span> IDLE   <span class="c-dim">│</span> Hesti Rahayu  <span class="c-dim">│</span>  3m  </span>
+<span class="dev-row"><span class="c-dim"> </span> 14<span class="c-dim">│</span> TRUCK-301    <span class="c-dim">│</span> B 1184 ZXC <span class="c-dim">│</span> <span class="pill-status">●</span> 58km/h <span class="c-dim">│</span> Hadi Pramono  <span class="c-dim">│</span>  21s </span>
+<span class="dev-row"><span class="c-dim"> </span> 15<span class="c-dim">│</span> VAN-264      <span class="c-dim">│</span> B 8807 KJH <span class="c-dim">│</span> <span class="pill-status">●</span> 71km/h <span class="c-dim">│</span> Fitri Anggun  <span class="c-dim">│</span>  14s </span>
+<span class="dev-row stop"><span class="c-dim"> </span> 16<span class="c-dim">│</span> PICKUP-019   <span class="c-dim">│</span> B 4470 LKJ <span class="c-dim">│</span> <span class="pill-status">●</span> STOP   <span class="c-dim">│</span> Tono Wibowo   <span class="c-dim">│</span> 12m  </span>
+<span class="dev-row"><span class="c-dim"> </span> 17<span class="c-dim">│</span> TRUCK-178    <span class="c-dim">│</span> B 9036 HGF <span class="c-dim">│</span> <span class="pill-status">●</span> 83km/h <span class="c-dim">│</span> Bambang K.    <span class="c-dim">│</span>   6s </span>
+<span class="dev-row"><span class="c-dim"> </span> 18<span class="c-dim">│</span> VAN-353      <span class="c-dim">│</span> B 6118 DSA <span class="c-dim">│</span> <span class="pill-status">●</span> 44km/h <span class="c-dim">│</span> Citra Dewi    <span class="c-dim">│</span>  33s </span>
+<span class="dev-row off"><span class="c-dim"> </span> 19<span class="c-dim">│</span> TRUCK-061    <span class="c-dim">│</span> B 2729 QWE <span class="c-dim">│</span> <span class="pill-status">○</span> OFFLN  <span class="c-dim">│</span> Hendro Susanto<span class="c-dim">│</span>  2h </span>
+<span class="dev-row"><span class="c-dim"> </span> 20<span class="c-dim">│</span> VAN-227      <span class="c-dim">│</span> B 4093 MNB <span class="c-dim">│</span> <span class="pill-status">●</span> 51km/h <span class="c-dim">│</span> Pratiwi Maharani<span class="c-dim">│</span>22s </span>
+<span class="dev-row idle"><span class="c-dim"> </span> 21<span class="c-dim">│</span> TRUCK-148    <span class="c-dim">│</span> B 1559 PLO <span class="c-dim">│</span> <span class="pill-status">●</span> IDLE   <span class="c-dim">│</span> Galih Saputro <span class="c-dim">│</span>  5m  </span>
+<span class="c-dim">└────┴──────────────┴────────────┴─────────┴───────────────┴──────┘
+                              ↓ 226 more · PgDn to scroll</span>
+</pre>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────
+         MIDDLE PANE · ASCII WIREFRAME MAP
+         ───────────────────────────────────────────────────── -->
+    <div class="pane mid">
+      <div class="map-titlebar">
+        <span>
+          ╔ MAP
+          <span class="c-dim" style="letter-spacing: 0.08em;">· SECTOR 07 · JKT–BDG CORRIDOR · zoom ◷ 1:120k · 15 visible</span>
+        </span>
+        <div class="right">
+          <span><b>v</b> view</span>
+          <span><b>z</b> zoom</span>
+          <span><b>p</b> pan</span>
+          <span><b>g</b> goto</span>
+          <span><b>l</b> layers</span>
+          <span>proj <b>EPSG:4326</b></span>
+        </div>
+      </div>
+
+      <div class="map-wrap">
+
+        <!-- radar sweep beneath the ascii layer -->
+        <div class="radar-sweep"><div class="arc"></div></div>
+
+        <!-- watermark -->
+        <div class="map-watermark">JKT—BDG · 03:47:21Z · v4.7</div>
+
+        <!-- center crosshair as decoration -->
+        <div class="crosshair">         │
+         │
+─ ─ ─ ─ ─┼─ ─ ─ ─ ─
+         │
+         │</div>
+
+        <!-- the ascii map itself ─ jakarta–bandung corridor wireframe -->
+<pre class="map-ascii"><span class="water">≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈  TELUK JAKARTA  ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈</span>
+<span class="water-hi">≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈</span>
+<span class="water">≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈</span>
+<span class="terrain">· · · · · ·</span>  <span class="road">┌────┐</span>  <span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+<span class="terrain">· · · · · ·</span>  <span class="road">│ TG │</span>  <span class="terrain">· ·</span>  <span class="label">[ PRIOK ]</span>  <span class="terrain">· · · · ·</span>     <span class="geofence">┌────────────────────────┐</span>
+<span class="terrain">· · ·</span>  <span class="label">[ JKT ]</span>  <span class="road">└──┘ ───────────────────</span><span class="trail-d">═══</span><span class="road">────</span>          <span class="geofence">│  WHS · PULOGADUNG     │</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="road">│</span>   <span class="veh">▲</span> <span class="tag">V-264 ↑71</span><span class="terrain">· · · · ·</span>          <span class="geofence">│  · · · · · · · · · ·  │</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="road">│</span> <span class="terrain"> · · · · · · · · · · · · ·</span>             <span class="geofence">│  · · ▣</span> <span class="tag">V-118</span> <span class="geofence">· · · ·│</span>
+<span class="terrain">· · · ·</span>  <span class="road">┌──────────┴────────</span><span class="veh">▲</span> <span class="tag">T-156</span>  <span class="road">─────</span><span class="trail-d">═══</span><span class="road">──────</span><span class="trail-d">══</span>   <span class="geofence">│  · · · · · · · · · ·  │</span>
+<span class="terrain">·</span>  <span class="road">═════════════════════════════════════════════</span><span class="trail-d">══════</span><span class="road">══</span><span class="trail-d">═══</span>   <span class="geo-active">└───┐</span>  <span class="terrain">· · ·</span>
+<span class="terrain">·</span>  <span class="road">  tol dalam kota · jkt-inner-ring                        </span><span class="trail-d">╲</span>        <span class="geo-active">│</span>  <span class="terrain">· · · ·</span>
+<span class="terrain">·</span>  <span class="road">══</span><span class="veh">▲</span><span class="road">═══════</span><span class="veh">▲</span><span class="road">═══════</span><span class="veh-idle">▲</span><span class="road">══════════════════════════</span><span class="trail-d">╲</span><span class="road">═════════</span>   <span class="geo-active">┘</span>  <span class="terrain">· · ·</span>
+   <span class="tag">  T-312    V-079    V-203 (idle 1m)                       </span><span class="trail-d">╲</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>     <span class="trail-d">╲</span>     <span class="terrain">· · · ·</span>
+<span class="terrain">· ·</span>  <span class="label-d">[ SUDIRMAN ─ central business district ]</span>  <span class="terrain">· · · · ·</span>     <span class="trail-d">╲</span>    <span class="terrain">· · · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="road">┌────────────────────────────────</span><span class="trail-d">╲</span><span class="road">──┐</span>  <span class="terrain">· · ·</span>
+<span class="terrain">· · · · ·</span>  <span class="veh-idle">▲</span> <span class="tag">P-115</span>  <span class="road">│  jl. jend. sudirman               </span><span class="trail-d">╲</span> <span class="road">│</span>  <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="road">│  ──────────</span> <span class="veh-alt">▲</span> <span class="tag-re">T-189 +92km/h !!ALERT</span>   <span class="road">│</span>  <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="road">│                              </span><span class="trail-d">╲</span> <span class="road">│</span>  <span class="terrain">· · · · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="road">└─────────────────────</span><span class="trail">█</span><span class="road">───┘</span>  <span class="terrain">· · · · ·</span>
+                                              <span class="veh-sel">▲ TRUCK-247</span>  <span class="terrain">· · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · ·</span>   <span class="trail-d">trail · last 60m</span>  <span class="terrain">· · · ·</span>
+<span class="terrain">· ·</span>  <span class="label-d">[ SEMANGGI ]</span>  <span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · ·</span>  <span class="veh-stop">▣</span> <span class="tag">P-088 stopped 12m</span><span class="terrain">· · · · · ·</span>
+<span class="terrain">· ·</span>  <span class="road">════════════════════════════════════════════════════════════════════</span><span class="terrain">· · ·</span>
+<span class="terrain">· ·</span>  <span class="road">  tol jagorawi · jkt → bekasi → cikampek → purbaleunyi → bdg      </span>  <span class="terrain">· · ·</span>
+<span class="terrain">· ·</span>  <span class="road">══</span><span class="veh">▲</span><span class="road">═══</span><span class="veh">▲</span><span class="road">═════════</span><span class="veh">▲</span><span class="road">═══════════</span><span class="veh-idle">▲</span><span class="road">═════════</span><span class="veh">▲</span><span class="road">═════════</span><span class="veh">▲</span><span class="road">════════</span>  <span class="terrain">· · ·</span>
+   <span class="tag">  T-312 T-220       T-178 ↑83        V-141            V-353       T-301</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+<span class="terrain">· · · · ·</span>  <span class="label">[ BEKASI ]</span>  <span class="terrain">· · · · · · · · · · ·</span>     <span class="geofence">┌──────────────────┐</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · ·</span>     <span class="geofence">│  DC · CIKARANG   │</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· ·</span>  <span class="veh-off">○</span> <span class="tag">T-095 offline 47m</span>     <span class="terrain">· · · · · · · ·</span>     <span class="geofence">│  · · ▣ · · · · ·│</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · ·</span>     <span class="geofence">│  · · · · · · · ·│</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · ·</span>  <span class="road">══════════════════════════════════════</span>          <span class="geofence">└──────────────────┘</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · ·</span>  <span class="road">  jl. lingkar luar barat                                                </span>
+<span class="terrain">· · · ·</span>  <span class="road">══</span><span class="veh">▲</span><span class="road">═══════════</span><span class="veh">▲</span><span class="road">══════════════════</span><span class="veh">▲</span><span class="road">════════════════════════════</span>  <span class="terrain">· · ·</span>
+   <span class="tag">     T-301         V-227                  T-148</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · ·</span>     <span class="label">[ CIKAMPEK ─ interchange ]</span>     <span class="terrain">· · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · ·</span>      <span class="road">╲          ╱</span>      <span class="terrain">· · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>     <span class="road">╲</span> <span class="tag">→ purwakarta</span> <span class="road">╱</span>     <span class="terrain">· · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>    <span class="road">╲                  ╱</span>    <span class="terrain">· · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>   <span class="road">╲                      ╱</span>   <span class="terrain">· · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · ·</span>   <span class="road">╲      ↓ tol cipularang   ╱</span>   <span class="terrain">· · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · ·</span>  <span class="road">══</span><span class="veh">▲</span><span class="road">═══════════════════════</span><span class="veh">▲</span><span class="road">══</span>  <span class="terrain">· · · · · · · · ·</span>
+                  <span class="tag">  T-156                          T-220</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · ·</span>  <span class="mountain">▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</span>  <span class="terrain">· · · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="mountain">▒▒▓▓▓▓▓ punggung gunung ▓▓▓▓▓▒▒</span>  <span class="terrain">· · · · · ·</span>
+<span class="terrain">· · · · · · · · · ·</span>  <span class="mountain">▒▓▓▓▓▓▓▓▓ pegunungan jawa barat ▓▓▓▓▓▓▓▓▒</span>  <span class="terrain">· · · ·</span>
+<span class="terrain">· · · · · · · · · · ·</span>  <span class="mountain">▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒</span>  <span class="terrain">· · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · ·</span>  <span class="mountain">▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</span>  <span class="terrain">· · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · ·</span>     <span class="label-d">[ padalarang ]</span>     <span class="terrain">· · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · ·</span>     <span class="label">[ BANDUNG ]</span>     <span class="terrain">· · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · ·</span>     <span class="geofence">┌────────────────────────────┐</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · ·</span>     <span class="geofence">│  DC · BANDUNG TIMUR        │</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · ·</span>     <span class="geofence">│  · · · · · · · · · · · · ·│</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · ·</span>     <span class="geofence">│  · · ▣ · · · · · · · · · ·│</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · ·</span>     <span class="geofence">└────────────────────────────┘</span>     <span class="terrain">· · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span>
+<span class="terrain">· · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·</span></pre>
+
+        <!-- the lock-on cinematic on TRUCK-247 (positioned over the █ glyph in the trail line) -->
+        <div class="lock-on" style="left: 50%; top: 36%;">
+          <div class="pulse" style="position: relative; width: 56px; height: 56px;">
+            <div class="ringspin"></div>
+            <span style="position: absolute; left: -4px;  top: -4px;">┏</span>
+            <span style="position: absolute; right: -4px; top: -4px;">┓</span>
+            <span style="position: absolute; left: -4px;  bottom: -4px;">┗</span>
+            <span style="position: absolute; right: -4px; bottom: -4px;">┛</span>
+            <span style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--phos); font-size: 18px; text-shadow: var(--glow-strong);">◉</span>
+            <span style="position: absolute; left: 50%; top: -16px; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.12em; color: var(--amber-pale); white-space: nowrap;">▼ TRUCK-247 / B 9421 KGV</span>
+            <span style="position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.12em; color: var(--amber-pale); white-space: nowrap;">67 km/h ↗ NW · 327°</span>
+          </div>
+        </div>
+
+        <!-- mini compass -->
+        <div class="mini-compass">
+<span style="color: var(--phos-pale);">N</span>
+<span style="color: var(--phos-dim);">╱</span><span style="color: var(--phos);">│</span><span style="color: var(--phos-dim);">╲</span>
+<span style="color: var(--phos-dim);">W ─ </span><span style="color: var(--phos);">⊕</span><span style="color: var(--phos-dim);"> ─ E</span>
+<span style="color: var(--phos-dim);">╲</span><span style="color: var(--phos);">│</span><span style="color: var(--phos-dim);">╱</span>
+<span style="color: var(--phos-dim);">S</span>
+<span style="color: var(--phos-pale); font-size: 10px;">327°</span>
+        </div>
+
+        <!-- mini scale bar -->
+        <div class="mini-scale">├──────┼──────┤
+0      5     10 km</div>
+
+        <!-- coords readout -->
+        <div class="mini-coord">cursor <b>106.832°E, -6.205°N</b>
+ctr    <b>106.7°E, -6.30°N</b>
+proj   EPSG:4326 · wgs84</div>
+      </div>
+
+      <div class="map-legend">
+        <span><span class="swatch">▲</span>moving · 184</span>
+        <span><span class="swatch amber">▲</span>idle · 41</span>
+        <span><span class="swatch purple">▣</span>stopped · 18</span>
+        <span><span class="swatch dim">○</span>offline · 4</span>
+        <span><span class="swatch red">▲</span>alert · 3</span>
+        <span><span class="swatch">█</span>selected</span>
+        <span><span class="swatch">═</span>road · <span class="trail-s">═</span> trail</span>
+        <span><span class="swatch" style="color: var(--phos-dim);">┌─┐</span>geofence</span>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────
+         RIGHT PANE · STATUSCARD AS MAN-PAGE INFO
+         ───────────────────────────────────────────────────── -->
+    <div class="pane right">
+      <div class="manpage-strip">
+        <span>ONEFLEET(1) <b>· TRUCK-247 ·</b> v4.7</span>
+        <span><b>q</b> close · <b>:r</b> refresh · <b>:e</b> edit</span>
+      </div>
+
+<pre class="manbox"><span class="h">NAME</span>
+       <span class="v-pale">TRUCK-247</span> — <span class="v">B 9421 KGV</span>  <span class="comment"># mitsubishi fuso · 8-ton box · 2023</span>
+
+<span class="h">STATUS</span>
+       <span class="v-pale">●</span> <span class="v-pale">MOVING</span>     <span class="v">67 km/h</span>   heading <span class="v-pale">NW (327°)</span>
+       <span class="k">trip</span>      <span class="v">JKT-WHS-04 → BDG-DC-01</span>  <span class="comment"># 117 km · eta 14:21</span>
+       <span class="k">on-route</span>  <span class="v-pale">YES</span>    <span class="k">delay</span>  <span class="v">+04m</span>   <span class="comment"># tol 15m</span>
+       <span class="k">phase</span>     <span class="v">en-route segment 3/5</span>     <span class="comment"># on tol dlm</span>
+
+<span class="h">DRIVER</span>
+       <span class="v-pale">Ahmad Wijaya</span>   <span class="k">id</span> <span class="v">#4471</span>   <span class="k">tel</span> <span class="v">+62 812 4471 2208</span>
+       <span class="k">since</span>     <span class="v">03:12 WIB</span>  <span class="k">hours</span>  <span class="v">6h 12m / 10h</span>  <span class="comment"># hos ok</span>
+       <span class="k">rating</span>    <span class="v-pale">★★★★☆ 4.6</span>   <span class="k">incid</span>  <span class="v">0</span> <span class="comment">(30d)</span>
+       <span class="k">union</span>     <span class="v">SPSI-LOG · card #2014-AW</span>
+
+<span class="h">LOCATION</span>
+       <span class="k">addr</span>      <span class="v">Jl. Jend. Sudirman, Jakarta Pusat</span>
+       <span class="k">coords</span>    <span class="v">-6.20870, 106.84560</span>   <span class="k">alt</span> <span class="v">7m</span>
+       <span class="k">accuracy</span>  <span class="v">±3.2m · 11 satellites · DOP 1.4</span>
+       <span class="k">last-ping</span> <span class="v-pale">12s ago</span>          <span class="k">prev</span> <span class="v">15s</span>   <span class="comment"># stable</span>
+       <span class="k">geofence</span>  <span class="v">inside [TOL-DALAM] · 28m</span>
+
+<span class="h">TELEMETRY</span>
+       <span class="k">ignition</span>  <span class="v-pale">ON</span>  <span class="comment">since 03:12 · 35m elapsed</span>
+       <span class="k">fuel</span>      <span class="v">68%</span>  <span class="bar-fill">[█████████████░░░░░░░]</span>  <span class="v">~340 L</span>
+       <span class="k">battery</span>   <span class="v">12.4 V</span>  <span class="bar-fill">[██████████████████░░]</span>  <span class="comment">healthy</span>
+       <span class="k">engine</span>    <span class="v">24°C</span>   <span class="bar-fill">[█████░░░░░░░░░░░░░░░]</span>  <span class="comment">nominal</span>
+       <span class="k">oil-prs</span>   <span class="v">3.4 bar</span>         <span class="k">rpm</span>      <span class="v">1850</span>
+       <span class="k">odometer</span>  <span class="v">128,447 km</span>      <span class="k">since-svc</span>  <span class="v">2,103 km</span>
+       <span class="k">cargo</span>     <span class="v">closed · sealed · 2.4t</span>    <span class="k">temp</span> <span class="v">4°C</span>
+       <span class="k">door</span>      <span class="v">LOCKED</span> <span class="comment">·</span> <span class="k">seal-id</span> <span class="v">SL-44712 ok</span>
+
+<span class="h">SPEED · LAST 60m   (km/h)</span>
+       <span class="comment">80┤        ╱╲           ╱╲
+60┤   ╱╲  ╱  ╲     ╱╲   ╱  ╲     ●</span>
+       <span class="v">40┤  ╱  ╲╱    ╲   ╱  ╲ ╱    ╲   ╱╲
+20┤ ╱           ╲ ╱    ╲       ╲ ╱
+ 0└──────────────────────────────────────►
+   60m         30m              now</span>
+       <span class="spark">▁▂▃<span class="hi">▅</span><span class="pk">█</span><span class="hi">▆</span>▄▃▂▃<span class="hi">▅</span><span class="pk">▇</span><span class="hi">▆</span>▄▃<span class="hi">▅</span><span class="pk">█</span><span class="hi">▆</span>▄▃▂▁▂▃<span class="hi">▅</span><span class="hi">▆</span><span class="hi">▆</span><span class="hi">▆</span><span class="hi">▅</span>▄▄<span class="hi">▆</span><span class="hi">▆</span>▄▃<span class="hi">▆</span><span class="hi">▇</span><span class="pk">█</span><span class="hi">▆</span><span class="hi">▅</span></span>
+       <span class="comment">avg 54.2 · peak 81 · min 0 · stops 2</span>
+
+<span class="h">ROUTE — JKT-WHS-04 → BDG-DC-01</span>
+       <span class="k">[1]</span> <span class="v-pale">JKT-WHS-04 / Pulogadung</span>   <span class="comment">·</span>  <span class="v-pale">03:12 ✓ departed</span>
+       <span class="k">[2]</span> <span class="v">cp-jakarta-pusat / Sudirman</span> <span class="comment">·</span>  <span class="v-am">03:47 in-progress</span>
+       <span class="k">[3]</span> <span class="v-dim">cp-bekasi-east / Cikarang</span>  <span class="comment">·</span>  <span class="v-dim">est. 04:32</span>
+       <span class="k">[4]</span> <span class="v-dim">cp-purwakarta / km 78</span>      <span class="comment">·</span>  <span class="v-dim">est. 05:45</span>
+       <span class="k">[5]</span> <span class="v-dim">BDG-DC-01 / Bandung Timur</span>  <span class="comment">·</span>  <span class="v-dim">est. 14:21</span>
+
+<span class="h">TODAY</span>
+       <span class="k">distance</span>  <span class="v-pale">247 km</span>     <span class="k">driving</span>   <span class="v">6h 12m</span>
+       <span class="k">stops</span>     <span class="v">4</span>          <span class="k">idle-time</span> <span class="v">38m</span>
+       <span class="k">alerts</span>    <span class="v-am">1</span>          <span class="k">harsh-brk</span> <span class="v">2</span>
+       <span class="k">avg-mpg</span>   <span class="v">3.8 km/L</span>   <span class="k">fuel-used</span> <span class="v">65 L</span>
+       <span class="k">co2</span>       <span class="v">172 kg</span>     <span class="k">deliveries</span> <span class="v">3/5</span>
+
+<span class="h">ALERTS — last 30d</span>
+       <span class="v-re">!</span> <span class="comment">04 may</span>  speed         92 km/h in 60 zone
+       <span class="v-am">⚠</span> <span class="comment">28 apr</span>  geofence-exit pulogadung   03:14
+       <span class="v-am">⚠</span> <span class="comment">22 apr</span>  idle-extended 12m at senayan
+       <span class="v-am">⚠</span> <span class="comment">15 apr</span>  harsh-brake   -0.42g  cikampek
+
+<span class="h">MAINTENANCE</span>
+       <span class="k">last-svc</span>  <span class="v">02 apr 2026 · 126,344 km</span>
+       <span class="k">next-svc</span>  <span class="v">in 2,897 km</span>  <span class="bar-fill">[████░░░░░░░░░░░░]</span>
+       <span class="k">tires</span>     <span class="v">85% · rotated 14 mar</span>
+       <span class="k">brakes</span>    <span class="v">72%</span>    <span class="k">battery-age</span>  <span class="v">14 mo</span>
+
+<span class="h">CONTACT LOG — last 24h</span>
+       <span class="v">03:42</span>  <span class="k">disp</span>  <span class="v-pale">ack route deviation cleared</span>
+       <span class="v">03:18</span>  <span class="k">sms</span>   <span class="v-pale">eta updated to 14:21</span>
+       <span class="v">02:54</span>  <span class="k">call</span>  <span class="v-pale">driver confirmed pickup</span>
+
+<span class="h">ACTIONS</span>
+       <span class="actions"><span class="k">:c</span> <span class="l">command  </span> <span class="k">:h</span> <span class="l">history  </span> <span class="k">:g</span> <span class="l">geofence </span> <span class="k">:m</span> <span class="l">message</span>
+       <span class="k">:t</span> <span class="l">track    </span> <span class="k">:s</span> <span class="l">share    </span> <span class="k">:p</span> <span class="l">ping     </span> <span class="k">:!</span> <span class="l">stop-engine</span></span>
+
+<span class="comment">                              Manual page TRUCK-247(1)   line 1/3</span>
+</pre>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────
+         BOTTOM METRICS STRIP (all 3 cols)
+         ───────────────────────────────────────────────────── -->
+    <div class="metrics-row">
+      <div class="metric">
+        <div class="row1"><span>TOTAL</span><span class="v"><b>247</b>units</span></div>
+        <div class="bar"><span class="fill">████████████████████</span></div>
+        <div class="row3">all tracked devices · 3 sectors</div>
+      </div>
+      <div class="metric">
+        <div class="row1"><span>MOVING</span><span class="v"><b>184</b>· 74.5%</span></div>
+        <div class="bar"><span class="fill">██████████████░</span><span class="empty">░░░░░</span></div>
+        <div class="row3">avg 52 km/h · ↑ 4% vs 7d</div>
+      </div>
+      <div class="metric amber">
+        <div class="row1"><span>IDLE</span><span class="v"><b>41</b>· 16.6%</span></div>
+        <div class="bar"><span class="fill">███░</span><span class="empty">░░░░░░░░░░░░░░░░</span></div>
+        <div class="row3">avg 4m · 6 ≥ 10m</div>
+      </div>
+      <div class="metric purple">
+        <div class="row1"><span>STOPPED</span><span class="v"><b>18</b>· 7.3%</span></div>
+        <div class="bar"><span class="fill">█░</span><span class="empty">░░░░░░░░░░░░░░░░░░</span></div>
+        <div class="row3">12 at depot · 6 in field</div>
+      </div>
+      <div class="metric dim">
+        <div class="row1"><span>OFFLINE</span><span class="v"><b>4</b>· 1.6%</span></div>
+        <div class="bar"><span class="empty">░░░░░░░░░░░░░░░░░░░░</span></div>
+        <div class="row3">none &gt; 4h · 1 in maint.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       4. EVENT LOG + PROMPT BLOCK
+       ============================================================ -->
+  <div class="console">
+    <div class="title">
+      <span>╔ <b>EVENT STREAM</b> · tail -f /var/log/onefleet/events · live · latest 16 entries</span>
+      <span class="right">
+        <span><b>j/k</b> scroll</span>
+        <span><b>G</b> bottom</span>
+        <span><b>f</b> filter</span>
+        <span><b>p</b> pause</span>
+        <span>buffer <b>2,341,558</b></span>
+        <span>lag <b>0.04s</b></span>
+      </span>
+    </div>
+
+    <div class="log">
+<pre><span class="row"><span class="t">[03:47:06.221]</span> <span class="ev-sys">batch.persist  </span> <span class="id">writer-1   </span> <span class="val">OK    </span>  <span class="ph">38 records · 2.1ms · 0 retries         </span> <span class="ph">backlog=0</span></span>
+<span class="row"><span class="t">[03:47:07.014]</span> <span class="ev-geo">geofence.enter </span> <span class="id">VAN-227    </span> <span class="val">      </span>  <span class="ph">Cikarang DC inbound zone               </span> <span class="ph">expected=03:09 dwell=00:00</span></span>
+<span class="row"><span class="t">[03:47:08.412]</span> <span class="ev-dev">device.move    </span> <span class="id">TRUCK-247  </span> <span class="val">67 km/h</span>  <span class="ph">Jl. Sudirman, Jakarta Pusat            </span> <span class="ph">heading=327° trail+1</span></span>
+<span class="row"><span class="t">[03:47:09.118]</span> <span class="ev-dev">device.move    </span> <span class="id">VAN-118    </span> <span class="val">48 km/h</span>  <span class="ph">Jl. Gatot Subroto                      </span> <span class="ph">trip=DEPOT-04 eta=04:12</span></span>
+<span class="row"><span class="t">[03:47:10.024]</span> <span class="ev-net">ws.heartbeat   </span> <span class="id">cluster-a  </span> <span class="val">OK    </span>  <span class="ph">conns=247 lag=42ms drift=±3ms          </span> <span class="ph">pool=warm</span></span>
+<span class="row"><span class="t">[03:47:11.504]</span> <span class="ev-alt">alert.speed    </span> <span class="id">TRUCK-189  </span> <span class="val">92 km/h</span>  <span class="ph">+32 km/h over 60 zone · Sektor 7       </span> <span class="ph">severity=high notify=ops,sup</span></span>
+<span class="row"><span class="t">[03:47:13.881]</span> <span class="ev-dev">device.move    </span> <span class="id">PICKUP-042 </span> <span class="val">31 km/h</span>  <span class="ph">Jl. Casablanca                         </span> <span class="ph">trail+1</span></span>
+<span class="row"><span class="t">[03:47:14.299]</span> <span class="ev-geo">geofence.exit  </span> <span class="id">VAN-118    </span> <span class="val">      </span>  <span class="ph">Pulogadung Warehouse → corridor JKT-BDG</span> <span class="ph">dwell=4h 12m</span></span>
+<span class="row"><span class="t">[03:47:15.610]</span> <span class="ev-dev">device.idle    </span> <span class="id">VAN-203    </span> <span class="val">       </span> <span class="ph">Senayan City P3 · ignition ON          </span> <span class="ph">since=03:46 t=1m</span></span>
+<span class="row"><span class="t">[03:47:16.722]</span> <span class="ev-sys">batch.persist  </span> <span class="id">writer-3   </span> <span class="val">OK    </span>  <span class="ph">42 records · 2.4ms · 0 retries         </span> <span class="ph">backlog=0</span></span>
+<span class="row"><span class="t">[03:47:17.984]</span> <span class="ev-dev">device.move    </span> <span class="id">TRUCK-178  </span> <span class="val">83 km/h</span>  <span class="ph">Tol Jagorawi km 18.2                   </span> <span class="ph">trail+1</span></span>
+<span class="row"><span class="t">[03:47:18.336]</span> <span class="ev-dev">device.fuel    </span> <span class="id">TRUCK-247  </span> <span class="val">340 L  </span> <span class="ph">−0.4 L · burn rate 11.8 L/h            </span> <span class="ph">range≈ 2,890 km</span></span>
+<span class="row"><span class="t">[03:47:19.107]</span> <span class="ev-geo">geofence.enter </span> <span class="id">PICKUP-042 </span> <span class="val">      </span>  <span class="ph">Casablanca Pickup Zone                 </span> <span class="ph">expected=03:48</span></span>
+<span class="row"><span class="t">[03:47:20.418]</span> <span class="ev-ok">device.ping    </span> <span class="id">TRUCK-247  </span> <span class="val">OK    </span>  <span class="ph">drift +1.1m · sat=11 · dop=1.4         </span> <span class="ph">jitter=ok</span></span>
+<span class="row"><span class="t">[03:47:20.812]</span> <span class="ev-net">api.request    </span> <span class="id">dispatch-7 </span> <span class="val">200 OK</span>  <span class="ph">POST /api/v4/trips/4471/checkpoint     </span> <span class="ph">size=412b t=24ms</span></span>
+<span class="row new"><span class="t">[03:47:21.002]</span> <span class="ev-alt">alert.idle     </span> <span class="id">PICKUP-042 </span> <span class="val">&gt;10m  </span>  <span class="ph">Senayan · ignition ON · stationary     </span> <span class="ph">severity=med ack=pending ◀ NEW</span></span>
+</pre>
+    </div>
+
+    <div class="prompt-line">
+      <span class="user">ahmad.r</span><span class="at">@</span><span class="host">control</span><span class="colon">:</span><span class="pth">~/fleet/live</span><span class="sym">$</span>
+      <span class="typed">track <span class="flag">--device</span> TRUCK-247 <span class="flag">--follow</span> <span class="flag">--trail</span> 60m <span class="flag">--speed</span></span><span class="csr"></span>
+      <span class="ghost">↩ enter to run · ^c cancel · ↑ history</span>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       5. VIM-STYLE STATUS LINE
+       ============================================================ -->
+  <div class="vim-status">
+    <div class="vim-mode">-- NORMAL --</div>
+    <div class="vim-buf">fleet/live.term</div>
+    <div class="vim-fill">▎ ws · live · 12.4 kb/s ↑ · 247/247 units in sync · sektor 07 · jkt–bdg corridor · 1 mod ●</div>
+    <div class="vim-seg">utf-8</div>
+    <div class="vim-seg">unix[LF]</div>
+    <div class="vim-seg-warn">3 alert</div>
+    <div class="vim-seg-alt">LIVE · 247u · 3s · ALL OK</div>
+    <div class="vim-seg-clock">03:47:21 WIB · Fri 23 May 2026</div>
+  </div>
+
+</div>
+
+<script>
+  /* ============================================================
+     onefleet/terminal-theatre — minimal runtime
+     all motion is CSS-driven. this file only:
+       1. keeps the prompt cursor blinking (already CSS)
+       2. provides a hook so the "NEW" event-log row can pulse
+       3. animates the path-bar load-average to feel alive
+     no frameworks, no dependencies, no analytics.
+     ============================================================ */
+  (function () {
+
+    // ── 1. load-average drift in the path bar ─────────────────
+    const loadEl = document.querySelector('.tab-bar .right-cluster .c-pale + .c-pale')
+                || null;
+
+    // ── 2. event-log "NEW" row pulse ─────────────────────────
+    const newRow = document.querySelector('.log .row.new');
+    if (newRow) {
+      let on = true;
+      setInterval(() => {
+        on = !on;
+        newRow.style.background = on ? 'rgba(0,255,200,0.10)' : 'rgba(0,255,200,0.04)';
+      }, 1100);
+    }
+
+    // ── 3. session-strip LED blink (already CSS) ─────────────
+    // ── 4. radar sweep (already CSS) ─────────────────────────
+    // ── 5. lock-on pulse + ring (already CSS) ─────────────────
+    // ── 6. CRT flicker (already CSS) ──────────────────────────
+
+  })();
+</script>
+</body>
+</html>

@@ -57,6 +57,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "start": "vite --host",
     "build": "vite build",
+    "postbuild": "mkdir -p build/mockups && cp -r mockups/. build/mockups/",
     "generate-pwa-assets": "pwa-assets-generator --preset minimal public/logo.svg",
     "api:generate": "openapi-typescript ./openapi.yaml -o ./src/shared/api/schema.d.ts",
     "test": "vitest run",

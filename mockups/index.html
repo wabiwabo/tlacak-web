@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>OneFleet · Design Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000814;
+    --panel: #0a0e27;
+    --line: rgba(0,255,200,0.12);
+    --line-strong: rgba(0,255,200,0.25);
+    --ink: #d6e6ff;
+    --ink-2: rgba(214,230,255,0.65);
+    --ink-3: rgba(214,230,255,0.42);
+    --cyan: #00ffc8;
+    --alert: #ff3864;
+    --warn: #ffaa00;
+    --purple: #b026ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'JetBrains Mono', ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+  body {
+    min-height: 100vh;
+    padding: 48px 48px 96px;
+    background-image:
+      linear-gradient(rgba(0,255,200,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,200,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .container { max-width: 1440px; margin: 0 auto; }
+  a { color: inherit; text-decoration: none; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 40px; }
+  .brand-eyebrow { font-size: 10px; letter-spacing: 0.22em; color: var(--ink-3); text-transform: uppercase; }
+  .brand-title { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; text-transform: uppercase; }
+  .brand-title em { font-style: normal; color: var(--cyan); text-shadow: 0 0 14px rgba(0,255,200,0.55); }
+  .meta { text-align: right; font-size: 10px; color: var(--ink-3); line-height: 1.6; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  section { margin-bottom: 64px; }
+  .section-header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  .section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink); }
+  .section-title .num { color: var(--cyan); margin-right: 8px; }
+  .section-meta { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+  .lead { font-size: 13px; line-height: 1.6; color: var(--ink-2); max-width: 720px; margin-bottom: 24px; }
+  .lead em { color: var(--cyan); font-style: normal; }
+
+  .winner {
+    border: 1px solid var(--line-strong);
+    background: linear-gradient(180deg, rgba(0,255,200,0.04), transparent 60%);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .winner-mark {
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--cyan);
+    background: rgba(0,255,200,0.08);
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 10px rgba(0,255,200,0.55);
+    flex-shrink: 0;
+  }
+  .winner-body { flex: 1; }
+  .winner-title { font-size: 18px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--cyan); text-shadow: 0 0 10px rgba(0,255,200,0.4); }
+  .winner-sub { font-size: 11px; color: var(--ink-2); margin-top: 4px; letter-spacing: 0.04em; }
+  .winner-action {
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 10px 18px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: all 0.18s ease;
+  }
+  .winner-action:hover {
+    background: var(--cyan);
+    color: var(--bg);
+    box-shadow: 0 0 22px rgba(0,255,200,0.55);
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .card { background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; transition: border-color 0.18s ease; overflow: hidden; }
+  .card:hover { border-color: var(--line-strong); }
+  .card a { display: contents; }
+
+  .preview {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: #000;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+  .preview iframe {
+    position: absolute; top: 0; left: 0;
+    width: 1440px; height: 900px;
+    border: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+  }
+  .preview-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0%, transparent 60%, rgba(0,0,0,0.7) 100%); pointer-events: none; }
+  .preview-badge {
+    position: absolute; top: 14px; left: 14px;
+    font-size: 10px; letter-spacing: 0.22em;
+    color: var(--cyan);
+    background: rgba(0,0,0,0.7);
+    border: 1px solid var(--cyan);
+    padding: 4px 8px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(0,255,200,0.5);
+  }
+
+  .body { padding: 24px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .num { font-size: 10px; letter-spacing: 0.22em; color: var(--ink-3); }
+  .title { font-size: 18px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.2; color: var(--ink); text-transform: uppercase; }
+  .desc { font-size: 12px; line-height: 1.55; color: var(--ink-2); }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+  .tag { font-size: 9px; letter-spacing: 0.14em; color: var(--ink-3); border: 1px solid var(--line); padding: 3px 7px; text-transform: uppercase; }
+
+  .open { margin-top: auto; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); }
+  .open-label { font-size: 11px; letter-spacing: 0.2em; color: var(--cyan); text-transform: uppercase; }
+  .open-arrow { font-size: 14px; color: var(--ink-2); transition: transform 0.18s ease, color 0.18s ease; }
+  .card:hover .open-arrow { transform: translateX(4px); color: var(--cyan); }
+
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 10px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; }
+
+  @media (max-width: 980px) {
+    body { padding: 32px 20px 64px; }
+    header { flex-direction: column; gap: 14px; align-items: flex-start; }
+    .meta { text-align: left; }
+    .grid { grid-template-columns: 1fr; gap: 20px; }
+    .winner { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <div>
+        <div class="brand-eyebrow">// ONEFLEET · Design exploration</div>
+        <h1 class="brand-title">Visual <em>directions.</em></h1>
+      </div>
+      <div class="meta">
+        Build · 2026-05-23<br>
+        Reviewer · fariz@val.id<br>
+        Tracker · ONEFLEET v6
+      </div>
+    </header>
+
+    <!-- Round 1 outcome -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title"><span class="num">01 /</span> Round 1 · Shipped</h2>
+        <span class="section-meta">cyber ops · won the explore</span>
+      </div>
+      <p class="lead">
+        Four directions explored (Cyber Ops, Neo-Brutalism, Glass/Aurora, Editorial).
+        <em>Cyber Ops won</em> and now powers the production design system —
+        tokens, primitives, and the Live Tracking shell.
+      </p>
+      <div class="winner">
+        <div class="winner-mark">★</div>
+        <div class="winner-body">
+          <div class="winner-title">Cyber Ops · Mission Control</div>
+          <div class="winner-sub">
+            Shipped in production at <strong>https://1f.val.id</strong> — login screen + Mission Control top bar + 3-col Live Tracking layout + bottom metrics strip.
+          </div>
+        </div>
+        <a class="winner-action" href="https://1f.val.id/" target="_blank" rel="noopener">Open live →</a>
+      </div>
+    </section>
+
+    <!-- Round 2 — extreme -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title"><span class="num">02 /</span> Round 2 · Extreme</h2>
+        <span class="section-meta">push past expectation</span>
+      </div>
+      <p class="lead">
+        Four <em>radical</em> directions that take Cyber Ops as the floor and crank the audacity in different dimensions. Same screen, same data, same 1440×900 viewport — only the audacity differs.
+      </p>
+
+      <div class="grid">
+
+        <article class="card">
+          <a href="extreme-defcon.html" target="_blank" rel="noopener">
+            <div class="preview">
+              <span class="preview-badge">01 / DEFCON</span>
+              <iframe src="extreme-defcon.html" scrolling="no" loading="lazy" style="transform: scale(0.42); width: 3429px; height: 2143px;"></iframe>
+              <div class="preview-overlay"></div>
+            </div>
+            <div class="body">
+              <div class="num">01 / 04 · MISSION THEATRE</div>
+              <h3 class="title">DEFCON · Mission Theatre</h3>
+              <p class="desc">Hollywood mission control gone unhinged. Boot sequence type-in, DEFCON ring, CRT scanlines + chromatic aberration, radar sweep, persistent oscilloscope, alert splash, mission timer, glitch effect, ASCII decorative.</p>
+              <div class="tags">
+                <span class="tag">CRT</span>
+                <span class="tag">Chromatic</span>
+                <span class="tag">Radar</span>
+                <span class="tag">Cinematic</span>
+              </div>
+              <div class="open">
+                <span class="open-label">Open mockup</span>
+                <span class="open-arrow">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="extreme-holo-ops.html" target="_blank" rel="noopener">
+            <div class="preview">
+              <span class="preview-badge">02 / HOLO-OPS</span>
+              <iframe src="extreme-holo-ops.html" scrolling="no" loading="lazy" style="transform: scale(0.42); width: 3429px; height: 2143px;"></iframe>
+              <div class="preview-overlay"></div>
+            </div>
+            <div class="body">
+              <div class="num">02 / 04 · HUD PROJECTION</div>
+              <h3 class="title">HOLO-OPS HUD</h3>
+              <p class="desc">Mass Effect × Destiny × Death Stranding. Holographic projection on glass. Perspective skew + chromatic split, targeting reticles, 270° dials, particle field, custom reticle cursor, drone-feed inset.</p>
+              <div class="tags">
+                <span class="tag">3D Glass</span>
+                <span class="tag">Reticles</span>
+                <span class="tag">Dials</span>
+                <span class="tag">Cinematic Lock-on</span>
+              </div>
+              <div class="open">
+                <span class="open-label">Open mockup</span>
+                <span class="open-arrow">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="extreme-terminal-theatre.html" target="_blank" rel="noopener">
+            <div class="preview">
+              <span class="preview-badge">03 / TERMINAL</span>
+              <iframe src="extreme-terminal-theatre.html" scrolling="no" loading="lazy" style="transform: scale(0.42); width: 3429px; height: 2143px;"></iframe>
+              <div class="preview-overlay"></div>
+            </div>
+            <div class="body">
+              <div class="num">03 / 04 · CLI SESSION</div>
+              <h3 class="title">Terminal Theatre</h3>
+              <p class="desc">App = persistent terminal session. tmux/htop × NeoVim × Hackmud. Box-drawing borders, ASCII art ONEFLEET banner, progress bars, scrolling event log, vim status line, man-page StatusCard, blinking cursor.</p>
+              <div class="tags">
+                <span class="tag">Box-Drawing</span>
+                <span class="tag">ASCII Art</span>
+                <span class="tag">Vim</span>
+                <span class="tag">No GUI</span>
+              </div>
+              <div class="open">
+                <span class="open-label">Open mockup</span>
+                <span class="open-arrow">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <article class="card">
+          <a href="extreme-organism.html" target="_blank" rel="noopener">
+            <div class="preview">
+              <span class="preview-badge">04 / ORGANISM</span>
+              <iframe src="extreme-organism.html" scrolling="no" loading="lazy" style="transform: scale(0.42); width: 3429px; height: 2143px;"></iframe>
+              <div class="preview-overlay"></div>
+            </div>
+            <div class="body">
+              <div class="num">04 / 04 · ANTI-DASHBOARD</div>
+              <h3 class="title">Organism</h3>
+              <p class="desc">Anti-dashboard. Vehicles as bioluminescent cells on a near-black field, each pulsing at its own rhythm. Constellation lines + tendrils on selection + ethereal floating data. No panels, no menus, no chrome.</p>
+              <div class="tags">
+                <span class="tag">No Chrome</span>
+                <span class="tag">Cells</span>
+                <span class="tag">Tendrils</span>
+                <span class="tag">Poetic</span>
+              </div>
+              <div class="open">
+                <span class="open-label">Open mockup</span>
+                <span class="open-arrow">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+      </div>
+    </section>
+
+    <footer>
+      <span>// ONEFLEET · Design Exploration · 23 May 2026</span>
+      <span>Pick what surprises you — then we ship it.</span>
+    </footer>
+
+  </div>
+</body>
+</html>
