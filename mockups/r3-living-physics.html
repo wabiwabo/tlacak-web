@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>OneFleet · Living Physics · Live Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================
+   LIVING PHYSICS — ELEVATION SYSTEM
+   Depth is a data channel. Every surface communicates state through physics.
+   =================================================================== */
+
+:root {
+  --bg-deep:        #03050b;
+  --bg-base:        #04060c;
+
+  --surface-recessed-deep:   #010204;
+  --surface-recessed-shallow:#06080f;
+  --surface-flat:            #0a0e1e;
+  --surface-elevated:        #0e1530;
+  --surface-floating:        #141b3c;
+
+  --shadow-recessed-deep:
+    inset 0 4px 8px rgba(0,0,0,0.85),
+    inset 0 2px 4px rgba(0,0,0,0.6),
+    inset 0 -1px 0 rgba(0,255,200,0.04);
+
+  --shadow-recessed-shallow:
+    inset 0 2px 4px rgba(0,0,0,0.65),
+    inset 0 1px 2px rgba(0,0,0,0.45),
+    inset 0 -1px 0 rgba(0,255,200,0.06);
+
+  --shadow-flat: none;
+
+  --shadow-elevated:
+    0 2px 8px rgba(0,0,0,0.45),
+    0 1px 3px rgba(0,0,0,0.3),
+    0 0 0 1px rgba(0,255,200,0.10);
+
+  --shadow-floating:
+    0 8px 32px rgba(0,0,0,0.65),
+    0 4px 16px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(0,255,200,0.28),
+    0 0 24px rgba(0,255,200,0.14);
+
+  --shadow-incident:
+    0 12px 48px rgba(0,0,0,0.75),
+    0 6px 24px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(0,255,200,0.38),
+    0 0 40px rgba(0,255,200,0.22),
+    0 0 80px rgba(0,255,200,0.08);
+
+  --shadow-alert:
+    0 8px 32px rgba(0,0,0,0.65),
+    0 0 0 1px rgba(255,56,100,0.38),
+    0 0 24px rgba(255,56,100,0.20),
+    0 0 48px rgba(255,56,100,0.10);
+
+  --edge-highlight:      rgba(0,255,200,0.32);
+  --edge-highlight-dim:  rgba(0,255,200,0.12);
+  --edge-alert:          rgba(255,56,100,0.50);
+
+  --cyan:         #00ffc8;
+  --cyan-dim:     rgba(0,255,200,0.45);
+  --cyan-faint:   rgba(0,255,200,0.12);
+  --red:          #ff3864;
+  --red-dim:      rgba(255,56,100,0.45);
+  --red-faint:    rgba(255,56,100,0.12);
+  --amber:        #ffaa00;
+  --amber-dim:    rgba(255,170,0,0.45);
+
+  --text-primary:   #d6e6ff;
+  --text-secondary: #6a7888;
+  --text-muted:     #3a4a5e;
+  --text-cyan:      #00ffc8;
+  --text-red:       #ff3864;
+  --text-amber:     #ffaa00;
+
+  --grid-color: rgba(0,255,200,0.04);
+
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 1440px;
+  height: 900px;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* Cyber grid — visible only through recessed planes (flat background) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Soft top-center light source — physically consistent across all surfaces */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 900px 300px at 50% 0%,
+    rgba(0,255,200,0.025) 0%,
+    rgba(0,255,200,0.01) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* === ELEVATION UTILITY CLASSES === */
+.recessed-deep    { background: var(--surface-recessed-deep);   box-shadow: var(--shadow-recessed-deep); }
+.recessed-shallow { background: var(--surface-recessed-shallow); box-shadow: var(--shadow-recessed-shallow); }
+.flat             { background: var(--surface-flat); }
+.elevated         { background: var(--surface-elevated); box-shadow: var(--shadow-elevated); border-top: 1px solid var(--edge-highlight-dim); }
+.floating         { background: var(--surface-floating); box-shadow: var(--shadow-floating); border-top: 1px solid var(--edge-highlight); }
+.incident         { background: var(--surface-floating); box-shadow: var(--shadow-incident); border-top: 1px solid var(--edge-highlight); }
+.alert-surface    { background: var(--surface-elevated); box-shadow: var(--shadow-alert); border-top: 1px solid var(--edge-alert); }
+
+.hoverable {
+  transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  cursor: pointer;
+}
+.hoverable:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.55),
+    0 2px 6px rgba(0,0,0,0.35),
+    0 0 0 1px rgba(0,255,200,0.18);
+}
+.hoverable:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-recessed-shallow);
+}
+
+/* === LAYOUT === */
+#app {
+  position: relative;
+  width: 1440px;
+  height: 900px;
+  display: grid;
+  grid-template-rows: 42px auto 72px;
+  grid-template-columns: 260px 1fr 288px;
+  grid-template-areas:
+    "topbar  topbar   topbar"
+    "fleet   map      vehicle"
+    "strip   strip    strip";
+  z-index: 2;
+}
+
+/* === TOP BAR — flat (frame zero reference) === */
+#topbar {
+  grid-area: topbar;
+  background: var(--surface-flat);
+  border-bottom: 1px solid rgba(0,255,200,0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 20px;
+  position: relative;
+  z-index: 20;
+}
+
+.topbar-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.brand-mark {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--cyan);
+  border-radius: 3px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+  padding: 3px;
+}
+.brand-mark span { background: var(--cyan); border-radius: 1px; display: block; }
+.brand-mark span.empty { background: transparent; border: 1px solid rgba(0,255,200,0.40); }
+
+.brand-name {
+  font-size: 13px; font-weight: 800; letter-spacing: 0.15em;
+  color: var(--cyan); text-transform: uppercase;
+}
+
+.topbar-divider { width: 1px; height: 20px; background: rgba(0,255,200,0.12); flex-shrink: 0; }
+
+.topbar-time {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  letter-spacing: 0.06em; font-variant-numeric: tabular-nums;
+}
+.topbar-date { color: var(--text-secondary); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.topbar-sector { font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.topbar-spacer { flex: 1; }
+
+.topbar-fleet-count {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 4px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-elevated);
+  border-top: 1px solid var(--edge-highlight-dim);
+}
+.topbar-fleet-count .count-num { font-size: 13px; font-weight: 700; color: var(--cyan); }
+.topbar-fleet-count .count-label { font-size: 9px; color: var(--text-secondary); letter-spacing: 0.08em; text-transform: uppercase; }
+
+.topbar-status-pills { display: flex; gap: 4px; align-items: center; }
+.status-pill { padding: 3px 8px; border-radius: 3px; font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.status-pill.moving { background: var(--surface-elevated); box-shadow: var(--shadow-elevated); border-top: 1px solid var(--edge-highlight-dim); color: var(--cyan); }
+.status-pill.idle   { background: var(--surface-flat); color: var(--amber); }
+.status-pill.stopped{ background: var(--surface-recessed-shallow); box-shadow: var(--shadow-recessed-shallow); color: var(--text-secondary); }
+.status-pill.offline{ background: var(--surface-recessed-deep); box-shadow: var(--shadow-recessed-deep); color: var(--text-muted); }
+
+/* Alert ribbon — FLOATING/INCIDENT, pulsing shadow */
+#alert-ribbon {
+  position: absolute;
+  top: 42px; left: 0; right: 0; height: 32px;
+  background: linear-gradient(90deg, rgba(10,5,12,0.98) 0%, rgba(20,8,14,0.98) 50%, rgba(10,5,12,0.98) 100%);
+  box-shadow: var(--shadow-incident);
+  border-top: 1px solid var(--edge-alert);
+  border-bottom: 1px solid rgba(255,56,100,0.18);
+  display: flex; align-items: center; padding: 0 16px; gap: 8px;
+  z-index: 30;
+  animation: ribbonPulse 2.8s ease-in-out infinite;
+}
+@keyframes ribbonPulse {
+  0%,100% { box-shadow: 0 12px 48px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,56,100,0.38), 0 0 24px rgba(255,56,100,0.16); }
+  50%     { box-shadow: 0 12px 48px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,56,100,0.60), 0 0 40px rgba(255,56,100,0.30), 0 0 80px rgba(255,56,100,0.14); }
+}
+
+.ribbon-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: var(--red);
+  text-transform: uppercase; flex-shrink: 0;
+  animation: alertBlink 1.4s step-end infinite;
+}
+@keyframes alertBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+.ribbon-divider { width: 1px; height: 14px; background: rgba(255,56,100,0.30); flex-shrink: 0; }
+
+.ribbon-alert-item { display: flex; align-items: center; gap: 6px; font-size: 9px; letter-spacing: 0.04em; flex-shrink: 0; }
+.ribbon-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); flex-shrink: 0; box-shadow: 0 0 6px var(--red); }
+.ribbon-vehicle { color: var(--red); font-weight: 700; }
+.ribbon-desc    { color: var(--text-secondary); }
+.ribbon-time    { color: var(--text-muted); }
+.ribbon-spacer  { flex: 1; }
+
+.ribbon-ack {
+  font-size: 9px; color: var(--text-muted); letter-spacing: 0.06em;
+  padding: 2px 8px; border: 1px solid var(--text-muted); border-radius: 2px;
+  background: transparent; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+  transition: all 0.15s;
+}
+.ribbon-ack:hover { color: var(--text-secondary); border-color: var(--text-secondary); }
+
+/* === FLEET PANEL — left === */
+#fleet-panel {
+  grid-area: fleet;
+  background: var(--surface-flat);
+  border-right: 1px solid rgba(0,255,200,0.06);
+  display: flex; flex-direction: column; overflow: hidden;
+  padding-top: 32px; position: relative; z-index: 10;
+}
+
+.fleet-header {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid rgba(0,255,200,0.07);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.fleet-header-title { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-secondary); text-transform: uppercase; }
+
+.fleet-search {
+  background: var(--surface-recessed-shallow);
+  box-shadow: var(--shadow-recessed-shallow);
+  border: none; outline: none; color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  padding: 3px 8px; border-radius: 3px; width: 110px; letter-spacing: 0.04em;
+}
+.fleet-search::placeholder { color: var(--text-muted); }
+
+.fleet-list {
+  flex: 1; overflow-y: auto; padding: 4px 8px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.fleet-list::-webkit-scrollbar { width: 3px; }
+.fleet-list::-webkit-scrollbar-track { background: transparent; }
+.fleet-list::-webkit-scrollbar-thumb { background: rgba(0,255,200,0.15); border-radius: 2px; }
+
+/* Device rows — elevation by status */
+.device-row {
+  border-radius: 5px; padding: 6px 9px;
+  display: flex; flex-direction: column; gap: 3px;
+  cursor: pointer; transition: all 0.2s ease;
+  position: relative; overflow: hidden;
+}
+
+.device-row.status-selected {
+  background: var(--surface-floating);
+  box-shadow: var(--shadow-incident);
+  border-top: 1px solid var(--edge-highlight);
+  animation: selectedRise 0.3s ease-out;
+}
+@keyframes selectedRise {
+  from { transform: translateY(2px); box-shadow: var(--shadow-elevated); }
+  to   { transform: translateY(0);   box-shadow: var(--shadow-incident); }
+}
+
+.device-row.status-moving  { background: var(--surface-elevated); box-shadow: var(--shadow-elevated); border-top: 1px solid var(--edge-highlight-dim); }
+.device-row.status-idle    { background: var(--surface-flat); }
+.device-row.status-stopped { background: var(--surface-recessed-shallow); box-shadow: var(--shadow-recessed-shallow); }
+.device-row.status-offline { background: var(--surface-recessed-deep); box-shadow: var(--shadow-recessed-deep); }
+.device-row.status-selected .row-vehicle { color: var(--cyan); font-weight: 700; }
+
+/* Left accent bar on selected row */
+.device-row.status-selected::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+  border-radius: 2px 0 0 2px;
+}
+
+.row-top    { display: flex; align-items: center; gap: 6px; }
+.row-bottom { display: flex; align-items: center; gap: 6px; }
+
+.row-status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.status-selected  .row-status-dot { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+.status-moving    .row-status-dot { background: var(--cyan-dim); }
+.status-idle      .row-status-dot { background: var(--amber-dim); }
+.status-stopped   .row-status-dot { background: var(--text-muted); }
+.status-offline   .row-status-dot { background: var(--surface-flat); border: 1px solid var(--text-muted); }
+
+.row-vehicle { font-size: 10px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.04em; flex: 1; }
+.row-speed   { font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-primary); text-align: right; min-width: 46px; }
+.status-moving   .row-speed { color: var(--cyan); }
+.status-selected .row-speed { color: var(--cyan); }
+.status-stopped  .row-speed { color: var(--text-muted); }
+.status-offline  .row-speed { color: var(--text-muted); }
+
+.row-plate  { font-size: 8.5px; color: var(--text-muted); letter-spacing: 0.04em; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 2px; }
+.row-driver { font-size: 8.5px; color: var(--text-secondary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-ago    { font-size: 8px; color: var(--text-muted); letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
+.row-alert-badge { display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; border-radius: 50%; background: var(--red); color: #fff; font-size: 7px; font-weight: 800; box-shadow: 0 0 6px var(--red); flex-shrink: 0; }
+
+/* === MAP AREA — flat plane, grid shows through === */
+#map-area {
+  grid-area: map;
+  background: #030612;
+  position: relative; overflow: hidden; padding-top: 32px;
+}
+
+#map-svg { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+
+.map-search {
+  position: absolute; top: 42px; left: 12px;
+  display: flex; align-items: center; gap: 6px; z-index: 5;
+}
+.map-search-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-floating);
+  border-top: 1px solid var(--edge-highlight-dim);
+  border-radius: 4px; padding: 5px 10px;
+  font-size: 9px; color: var(--text-secondary); letter-spacing: 0.04em;
+}
+.map-search-key { background: var(--surface-flat); border: 1px solid rgba(0,255,200,0.12); border-radius: 2px; padding: 1px 4px; font-size: 8px; color: var(--text-muted); }
+
+.sector-badges { position: absolute; bottom: 12px; left: 12px; display: flex; gap: 5px; z-index: 5; }
+.sector-badge  { padding: 3px 7px; border-radius: 3px; font-size: 8px; letter-spacing: 0.06em; text-transform: uppercase; }
+.sector-badge.s1 { background: var(--surface-elevated); box-shadow: var(--shadow-elevated); border-top: 1px solid var(--edge-highlight-dim); color: var(--cyan); }
+.sector-badge.s2 { background: var(--surface-flat); color: var(--text-secondary); }
+.sector-badge.s3 { background: var(--surface-recessed-shallow); box-shadow: var(--shadow-recessed-shallow); color: var(--text-muted); }
+
+/* === VEHICLE PANEL — right (FLOATING — highest elevation) === */
+#vehicle-panel {
+  grid-area: vehicle;
+  background: var(--surface-floating);
+  box-shadow: var(--shadow-incident);
+  border-top: 1px solid var(--edge-highlight);
+  border-left: 1px solid rgba(0,255,200,0.14);
+  display: flex; flex-direction: column; overflow: hidden;
+  padding-top: 32px; position: relative; z-index: 15;
+}
+
+/* Top-brighter, bottom-dimmer light source on vehicle panel */
+#vehicle-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,255,200,0.025) 0%,
+    transparent 25%,
+    transparent 75%,
+    rgba(0,0,0,0.15) 100%
+  );
+  pointer-events: none; z-index: 0;
+}
+
+.vp-header {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid rgba(0,255,200,0.10);
+  flex-shrink: 0; position: relative; z-index: 1;
+}
+.vp-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.vp-vehicle-id { font-size: 15px; font-weight: 800; color: var(--cyan); letter-spacing: 0.08em; }
+.vp-status-badge {
+  display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 3px;
+  background: var(--surface-elevated); box-shadow: var(--shadow-elevated); border-top: 1px solid var(--edge-highlight-dim);
+}
+.vp-status-dot  { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.vp-status-text { font-size: 9px; font-weight: 700; color: var(--cyan); letter-spacing: 0.1em; text-transform: uppercase; }
+.vp-plate       { font-size: 10px; color: var(--text-secondary); letter-spacing: 0.06em; margin-bottom: 2px; }
+.vp-speed-row   { display: flex; align-items: baseline; gap: 4px; }
+.vp-speed-big   { font-size: 28px; font-weight: 800; color: var(--cyan); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.vp-speed-unit  { font-size: 10px; color: var(--text-secondary); letter-spacing: 0.06em; }
+.vp-direction   { font-size: 10px; font-weight: 600; color: var(--text-primary); margin-left: auto; letter-spacing: 0.06em; }
+
+.vp-driver { padding: 8px 12px; border-bottom: 1px solid rgba(0,255,200,0.06); flex-shrink: 0; position: relative; z-index: 1; }
+.vp-driver-row   { display: flex; align-items: center; gap: 8px; }
+.vp-driver-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--surface-elevated); box-shadow: var(--shadow-elevated);
+  border-top: 1px solid var(--edge-highlight-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--cyan); flex-shrink: 0;
+}
+.vp-driver-info  { flex: 1; }
+.vp-driver-name  { font-size: 11px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.03em; margin-bottom: 2px; }
+.vp-driver-meta  { font-size: 8.5px; color: var(--text-muted); letter-spacing: 0.03em; }
+
+.vp-location { padding: 7px 12px; border-bottom: 1px solid rgba(0,255,200,0.06); flex-shrink: 0; position: relative; z-index: 1; }
+.vp-location-label  { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px; }
+.vp-location-name   { font-size: 10px; color: var(--text-primary); letter-spacing: 0.03em; margin-bottom: 2px; }
+.vp-location-coords { font-size: 8.5px; color: var(--text-muted); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; display: flex; gap: 8px; }
+.vp-last-update     { font-size: 8.5px; color: var(--cyan); letter-spacing: 0.04em; }
+
+.vp-telemetry { padding: 8px 10px; border-bottom: 1px solid rgba(0,255,200,0.06); flex-shrink: 0; position: relative; z-index: 1; }
+.vp-section-label { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+
+.telemetry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+
+.tele-tile {
+  border-radius: 5px; padding: 7px 8px;
+  display: flex; flex-direction: column; gap: 3px;
+  position: relative; overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+/* Ignition ON = elevated (active) */
+.tele-tile.tele-ignition { background: var(--surface-elevated); box-shadow: var(--shadow-elevated); border-top: 1px solid var(--edge-highlight-dim); }
+/* Fuel 68% = flat (normal) */
+.tele-tile.tele-fuel     { background: var(--surface-flat); }
+/* Battery nominal = flat */
+.tele-tile.tele-battery  { background: var(--surface-flat); }
+/* Engine 24C = recessed-shallow (cool, stable) */
+.tele-tile.tele-temp     { background: var(--surface-recessed-shallow); box-shadow: var(--shadow-recessed-shallow); }
+
+.tele-label { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); text-transform: uppercase; }
+.tele-value { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; line-height: 1; }
+.tele-ignition .tele-value { color: var(--cyan); }
+.tele-fuel     .tele-value { color: var(--text-primary); }
+.tele-battery  .tele-value { color: var(--text-primary); }
+.tele-temp     .tele-value { color: var(--text-secondary); }
+.tele-sub { font-size: 8px; color: var(--text-muted); letter-spacing: 0.04em; }
+
+.fuel-bar-bg   { width: 100%; height: 3px; border-radius: 2px; background: var(--surface-recessed-shallow); box-shadow: var(--shadow-recessed-shallow); margin-top: 2px; overflow: hidden; }
+.fuel-bar-fill { height: 100%; width: 68%; background: linear-gradient(90deg, rgba(0,255,200,0.5), rgba(0,255,200,0.8)); border-radius: 2px; box-shadow: 0 0 4px rgba(0,255,200,0.3); }
+
+.vp-today { padding: 8px 10px; border-bottom: 1px solid rgba(0,255,200,0.06); flex-shrink: 0; position: relative; z-index: 1; }
+.today-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.today-item { display: flex; flex-direction: column; gap: 1px; padding: 5px 6px; border-radius: 4px; background: var(--surface-flat); }
+.today-label { font-size: 8px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.today-val   { font-size: 13px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+.vp-alerts { padding: 7px 10px; position: relative; z-index: 1; flex-shrink: 0; }
+
+.alert-item {
+  border-radius: 4px; padding: 6px 8px; margin-bottom: 4px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-alert);
+  border-top: 1px solid var(--edge-alert);
+  display: flex; align-items: flex-start; gap: 6px;
+}
+.alert-dot     { width: 5px; height: 5px; border-radius: 50%; background: var(--red); box-shadow: 0 0 6px var(--red); margin-top: 3px; flex-shrink: 0; }
+.alert-content { flex: 1; }
+.alert-type    { font-size: 9px; font-weight: 700; color: var(--red); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
+.alert-desc    { font-size: 8.5px; color: var(--text-secondary); letter-spacing: 0.03em; }
+.alert-time    { font-size: 8px; color: var(--text-muted); letter-spacing: 0.03em; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+
+.vp-actions { padding: 8px 10px; display: flex; gap: 5px; position: relative; z-index: 1; flex-shrink: 0; }
+
+.btn {
+  flex: 1; padding: 7px 8px; border-radius: 4px; border: none;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-primary {
+  background: rgba(0,255,200,0.15); color: var(--cyan);
+  box-shadow: var(--shadow-elevated); border-top: 1px solid var(--edge-highlight-dim);
+}
+.btn-primary:hover { background: rgba(0,255,200,0.22); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,255,200,0.25); }
+.btn-primary:active { transform: translateY(1px); box-shadow: var(--shadow-recessed-shallow); }
+.btn-ghost {
+  background: var(--surface-flat); color: var(--text-secondary);
+  border: 1px solid rgba(0,255,200,0.10);
+}
+.btn-ghost:hover { transform: translateY(-1px); color: var(--text-primary); border-color: rgba(0,255,200,0.20); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.btn-ghost:active { transform: translateY(1px); box-shadow: var(--shadow-recessed-shallow); }
+.btn-disabled { background: var(--surface-recessed-deep); box-shadow: var(--shadow-recessed-deep); color: var(--text-muted); cursor: not-allowed; }
+
+/* === BOTTOM METRICS STRIP — THE MIXING BOARD === */
+#metrics-strip {
+  grid-area: strip;
+  background: var(--surface-flat);
+  border-top: 1px solid rgba(0,255,200,0.08);
+  display: flex; align-items: stretch; padding: 8px 12px; gap: 8px;
+  position: relative; z-index: 10;
+}
+
+.metric-tile {
+  flex: 1; border-radius: 6px; padding: 8px 14px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden; cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* TOTAL — flat (reference zero) */
+.metric-tile.mt-total   { background: var(--surface-flat); }
+/* MOVING — incident/floating (most elevated — the "tallest slider") */
+.metric-tile.mt-moving  { background: var(--surface-floating); box-shadow: var(--shadow-incident); border-top: 1px solid var(--edge-highlight); }
+/* IDLE — flat */
+.metric-tile.mt-idle    { background: var(--surface-flat); }
+/* STOPPED — recessed-shallow */
+.metric-tile.mt-stopped { background: var(--surface-recessed-shallow); box-shadow: var(--shadow-recessed-shallow); }
+/* OFFLINE — recessed-deep (most carved) */
+.metric-tile.mt-offline { background: var(--surface-recessed-deep); box-shadow: var(--shadow-recessed-deep); }
+/* ALERTS — alert surface */
+.metric-tile.mt-alerts  { background: var(--surface-elevated); box-shadow: var(--shadow-alert); border-top: 1px solid var(--edge-alert); }
+
+.metric-tile.mt-moving:hover {
+  box-shadow: 0 12px 48px rgba(0,0,0,0.75), 0 0 0 1px rgba(0,255,200,0.45), 0 0 40px rgba(0,255,200,0.28);
+  transform: translateY(-2px);
+}
+
+.mt-label { font-size: 8px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.mt-total  .mt-label { color: var(--text-secondary); }
+.mt-moving .mt-label { color: var(--cyan); }
+.mt-idle   .mt-label { color: var(--amber); }
+.mt-stopped.mt-label { color: var(--text-secondary); }
+.mt-offline.mt-label { color: var(--text-muted); }
+.mt-alerts .mt-label { color: var(--red); }
+
+.mt-number { font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.mt-total   .mt-number { color: var(--text-primary); }
+.mt-moving  .mt-number { color: var(--cyan); }
+.mt-idle    .mt-number { color: var(--amber); }
+.mt-stopped .mt-number { color: var(--text-secondary); }
+.mt-offline .mt-number { color: var(--text-muted); }
+.mt-alerts  .mt-number { color: var(--red); }
+
+.mt-sub { font-size: 8.5px; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.mt-total   .mt-sub { color: var(--text-muted); }
+.mt-moving  .mt-sub { color: rgba(0,255,200,0.6); }
+.mt-idle    .mt-sub { color: rgba(255,170,0,0.5); }
+.mt-stopped .mt-sub { color: var(--text-muted); }
+.mt-offline .mt-sub { color: #2a3040; }
+.mt-alerts  .mt-sub { color: rgba(255,56,100,0.5); }
+
+.mt-bar-bg   { width: 100%; height: 2px; border-radius: 2px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: 2px; }
+.mt-bar-fill { height: 100%; border-radius: 2px; }
+.mt-moving  .mt-bar-fill { width: 74.5%; background: linear-gradient(90deg, rgba(0,255,200,0.4), rgba(0,255,200,0.75)); }
+.mt-idle    .mt-bar-fill { width: 16.6%; background: linear-gradient(90deg, rgba(255,170,0,0.3), rgba(255,170,0,0.65)); }
+.mt-stopped .mt-bar-fill { width:  7.3%; background: rgba(106,120,136,0.4); }
+.mt-offline .mt-bar-fill { width:  1.6%; background: rgba(58,74,94,0.3); }
+
+.strip-divider { width: 1px; background: rgba(0,255,200,0.06); align-self: stretch; flex-shrink: 0; }
+
+/* === ELEVATION LEGEND === */
+#elevation-legend {
+  position: absolute;
+  bottom: 82px; right: 296px; width: 148px;
+  background: rgba(4,6,12,0.92);
+  border-radius: 5px;
+  border: 1px solid rgba(0,255,200,0.12);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,255,200,0.06);
+  padding: 7px 8px;
+  z-index: 20;
+}
+
+.legend-title {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;
+  border-bottom: 1px solid rgba(0,255,200,0.08); padding-bottom: 4px;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; padding: 2px 0; }
+.legend-item:last-child { margin-bottom: 0; }
+
+.legend-swatch { width: 28px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.ls-rd  { background: var(--surface-recessed-deep);   box-shadow: inset 0 2px 4px rgba(0,0,0,0.9); }
+.ls-rs  { background: var(--surface-recessed-shallow); box-shadow: inset 0 1px 3px rgba(0,0,0,0.7); }
+.ls-fl  { background: var(--surface-flat); }
+.ls-el  { background: var(--surface-elevated); box-shadow: 0 1px 4px rgba(0,0,0,0.5); border-top: 1px solid rgba(0,255,200,0.15); }
+.ls-flt { background: var(--surface-floating); box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 4px rgba(0,255,200,0.2); border-top: 1px solid rgba(0,255,200,0.30); }
+
+.legend-text  { flex: 1; }
+.legend-level   { font-size: 7.5px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.04em; }
+.legend-meaning { font-size: 7px; color: var(--text-muted); letter-spacing: 0.03em; }
+
+/* Clock colon blink */
+@keyframes colonBlink {
+  0%,49%  { opacity: 1; }
+  50%,99% { opacity: 0.35; }
+}
+.colon { animation: colonBlink 1s step-end infinite; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- TOP BAR — flat zero reference -->
+  <div id="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">
+        <span></span><span></span>
+        <span></span><span class="empty"></span>
+      </div>
+      <span class="brand-name">OneFleet</span>
+    </div>
+
+    <div class="topbar-divider"></div>
+
+    <div style="display:flex;align-items:center;gap:14px;color:var(--text-secondary);font-size:10px;">
+      <span class="topbar-time">
+        <span id="clock-hm">03<span class="colon">:</span>47</span><span class="colon">:</span><span id="clock-s">21</span>
+      </span>
+      <span class="topbar-date">Fri, May 23 · 2026</span>
+      <div class="topbar-divider"></div>
+      <span class="topbar-sector">WIB · Sektor Tujuh</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-status-pills">
+      <div class="status-pill moving">&#8593; 184</div>
+      <div class="status-pill idle">&#8212; 41</div>
+      <div class="status-pill stopped">&#9632; 18</div>
+      <div class="status-pill offline">&#183; 4</div>
+    </div>
+
+    <div class="topbar-divider"></div>
+
+    <div class="topbar-fleet-count hoverable">
+      <span class="count-num">247</span>
+      <span class="count-label">Units Live</span>
+    </div>
+  </div>
+
+  <!-- Alert ribbon — INCIDENT elevation, pulsing, floats above -->
+  <div id="alert-ribbon">
+    <span class="ribbon-label">&#9888; 3 Active</span>
+    <div class="ribbon-divider"></div>
+    <div class="ribbon-alert-item">
+      <span class="ribbon-dot"></span>
+      <span class="ribbon-vehicle">TRUCK-189</span>
+      <span class="ribbon-desc">&#160;92 km/h in 60 zone</span>
+      <span class="ribbon-time">&#160;02:51</span>
+    </div>
+    <div class="ribbon-divider"></div>
+    <div class="ribbon-alert-item">
+      <span class="ribbon-dot"></span>
+      <span class="ribbon-vehicle">VAN-118</span>
+      <span class="ribbon-desc">&#160;Geofence exit &#183; Pulogadung</span>
+      <span class="ribbon-time">&#160;03:14</span>
+    </div>
+    <div class="ribbon-divider"></div>
+    <div class="ribbon-alert-item">
+      <span class="ribbon-dot"></span>
+      <span class="ribbon-vehicle">PICKUP-042</span>
+      <span class="ribbon-desc">&#160;Idling &gt;10m &#183; Senayan</span>
+      <span class="ribbon-time">&#160;03:36</span>
+    </div>
+    <span class="ribbon-spacer"></span>
+    <button class="ribbon-ack hoverable">ACK ALL</button>
+  </div>
+
+  <!-- FLEET PANEL — left, flat base -->
+  <div id="fleet-panel">
+    <div class="fleet-header">
+      <span class="fleet-header-title">Fleet &#183; 247 Units</span>
+      <input class="fleet-search" type="text" placeholder="search units&#8230;">
+    </div>
+
+    <div class="fleet-list">
+
+      <!-- TRUCK-247 — SELECTED + MOVING = incident/floating (highest row) -->
+      <div class="device-row status-selected hoverable">
+        <div class="row-top">
+          <span class="row-status-dot"></span>
+          <span class="row-vehicle">TRUCK-247</span>
+          <span class="row-speed">67 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 9421 KGV</span>
+          <span class="row-driver">Ahmad Wijaya</span>
+          <span class="row-ago">12s</span>
+        </div>
+      </div>
+
+      <!-- TRUCK-189 — ALERT + MOVING = elevated + red glow -->
+      <div class="device-row status-moving hoverable" style="box-shadow:var(--shadow-alert);border-top:1px solid var(--edge-alert);">
+        <div class="row-top">
+          <span class="row-status-dot" style="background:var(--red);box-shadow:0 0 6px var(--red);"></span>
+          <span class="row-vehicle" style="color:var(--red);">TRUCK-189</span>
+          <span class="row-alert-badge">!</span>
+          <span class="row-speed" style="color:var(--red);">92 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 7823 KXZ</span>
+          <span class="row-driver">Budi Santoso</span>
+          <span class="row-ago">8s</span>
+        </div>
+      </div>
+
+      <!-- VAN-118 — ALERT GEOFENCE + MOVING = elevated + red -->
+      <div class="device-row status-moving hoverable" style="box-shadow:var(--shadow-alert);border-top:1px solid var(--edge-alert);">
+        <div class="row-top">
+          <span class="row-status-dot" style="background:var(--red);box-shadow:0 0 6px var(--red);"></span>
+          <span class="row-vehicle" style="color:var(--red);">VAN-118</span>
+          <span class="row-alert-badge">!</span>
+          <span class="row-speed">54 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 1204 VNY</span>
+          <span class="row-driver">Deni Kurniawan</span>
+          <span class="row-ago">3s</span>
+        </div>
+      </div>
+
+      <!-- TRUCK-203 — MOVING = elevated-shallow -->
+      <div class="device-row status-moving hoverable">
+        <div class="row-top">
+          <span class="row-status-dot"></span>
+          <span class="row-vehicle">TRUCK-203</span>
+          <span class="row-speed">48 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 5512 KVT</span>
+          <span class="row-driver">Reza Firmansyah</span>
+          <span class="row-ago">21s</span>
+        </div>
+      </div>
+
+      <!-- VAN-095 — MOVING = elevated-shallow -->
+      <div class="device-row status-moving hoverable">
+        <div class="row-top">
+          <span class="row-status-dot"></span>
+          <span class="row-vehicle">VAN-095</span>
+          <span class="row-speed">61 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 3390 VMK</span>
+          <span class="row-driver">Siti Rahayu</span>
+          <span class="row-ago">7s</span>
+        </div>
+      </div>
+
+      <!-- PICKUP-042 — ALERT IDLE = stopped recessed + amber alert -->
+      <div class="device-row status-stopped hoverable" style="box-shadow:0 2px 12px rgba(255,56,100,0.15),var(--shadow-recessed-shallow);border-top:1px solid rgba(255,56,100,0.22);">
+        <div class="row-top">
+          <span class="row-status-dot" style="background:rgba(255,56,100,0.4);"></span>
+          <span class="row-vehicle" style="color:var(--red);">PICKUP-042</span>
+          <span class="row-alert-badge" style="background:var(--amber);">!</span>
+          <span class="row-speed" style="color:var(--text-muted);">0 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 8810 PKA</span>
+          <span class="row-driver">Wahyu Prasetyo</span>
+          <span class="row-ago">10m+</span>
+        </div>
+      </div>
+
+      <!-- TRUCK-221 — MOVING = elevated -->
+      <div class="device-row status-moving hoverable">
+        <div class="row-top">
+          <span class="row-status-dot"></span>
+          <span class="row-vehicle">TRUCK-221</span>
+          <span class="row-speed">73 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 9007 KRV</span>
+          <span class="row-driver">Eko Budiman</span>
+          <span class="row-ago">4s</span>
+        </div>
+      </div>
+
+      <!-- VAN-176 — IDLE = flat -->
+      <div class="device-row status-idle hoverable">
+        <div class="row-top">
+          <span class="row-status-dot"></span>
+          <span class="row-vehicle">VAN-176</span>
+          <span class="row-speed" style="color:var(--amber);">0 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 6621 VNR</span>
+          <span class="row-driver">Hendra Gunawan</span>
+          <span class="row-ago">4m</span>
+        </div>
+      </div>
+
+      <!-- TRUCK-198 — MOVING = elevated -->
+      <div class="device-row status-moving hoverable">
+        <div class="row-top">
+          <span class="row-status-dot"></span>
+          <span class="row-vehicle">TRUCK-198</span>
+          <span class="row-speed">39 km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 4402 KJM</span>
+          <span class="row-driver">Agus Setiawan</span>
+          <span class="row-ago">18s</span>
+        </div>
+      </div>
+
+      <!-- PICKUP-067 — OFFLINE = recessed-deep -->
+      <div class="device-row status-offline">
+        <div class="row-top">
+          <span class="row-status-dot"></span>
+          <span class="row-vehicle" style="color:var(--text-muted);">PICKUP-067</span>
+          <span class="row-speed">&#8212; km/h</span>
+        </div>
+        <div class="row-bottom">
+          <span class="row-plate">B 2278 PKB</span>
+          <span class="row-driver" style="color:var(--text-muted);">No signal</span>
+          <span class="row-ago" style="color:#1a2435;">47m</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAP AREA — flat plane, grid visible -->
+  <div id="map-area">
+
+    <div class="map-search">
+      <div class="map-search-pill hoverable">
+        <span style="color:var(--text-muted);">find vehicle&#8230;</span>
+        <span class="map-search-key">&#8984;K</span>
+      </div>
+    </div>
+
+    <svg id="map-svg" viewBox="0 0 892 826" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="mapGrid" width="32" height="32" patternUnits="userSpaceOnUse">
+          <path d="M32 0L0 0 0 32" fill="none" stroke="rgba(0,255,200,0.04)" stroke-width="0.5"/>
+        </pattern>
+
+        <filter id="roadGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+
+        <filter id="selectedGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+
+        <filter id="alertGlow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+
+        <radialGradient id="mapLight" cx="50%" cy="0%" r="70%">
+          <stop offset="0%" stop-color="rgba(0,255,200,0.025)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+        </radialGradient>
+
+        <pattern id="geofenceHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,170,0,0.15)" stroke-width="1"/>
+        </pattern>
+
+        <linearGradient id="trailGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(0,255,200,0)"/>
+          <stop offset="60%" stop-color="rgba(0,255,200,0.40)"/>
+          <stop offset="100%" stop-color="rgba(0,255,200,0.85)"/>
+        </linearGradient>
+
+        <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <polygon points="0 0, 6 3, 0 6" fill="rgba(0,255,200,0.7)"/>
+        </marker>
+
+        <linearGradient id="cardLight" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stop-color="rgba(0,255,200,0.05)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Map background — flat -->
+      <rect width="892" height="826" fill="#030612"/>
+      <rect width="892" height="826" fill="url(#mapGrid)"/>
+      <rect width="892" height="826" fill="url(#mapLight)"/>
+
+      <!-- District fills — slightly lighter than sea -->
+      <polygon points="380,260 480,240 530,320 510,400 430,420 370,380 340,320" fill="rgba(10,14,30,0.7)" stroke="rgba(0,255,200,0.07)" stroke-width="0.8"/>
+      <polygon points="340,380 430,420 510,400 540,500 490,560 380,570 300,500 290,430" fill="rgba(8,11,24,0.6)" stroke="rgba(0,255,200,0.06)" stroke-width="0.7"/>
+      <polygon points="180,240 340,220 380,260 340,320 290,380 200,360 150,300" fill="rgba(9,12,26,0.6)" stroke="rgba(0,255,200,0.05)" stroke-width="0.7"/>
+      <polygon points="180,100 400,80 460,180 480,240 380,260 340,220 180,240 140,160" fill="rgba(6,9,20,0.7)" stroke="rgba(0,255,200,0.06)" stroke-width="0.7"/>
+      <polygon points="480,240 600,220 660,300 640,420 540,500 510,400 530,320" fill="rgba(8,12,26,0.6)" stroke="rgba(0,255,200,0.05)" stroke-width="0.7"/>
+      <polygon points="640,300 780,280 820,380 780,480 700,520 640,460 640,420 660,300" fill="rgba(6,9,18,0.5)" stroke="rgba(0,255,200,0.04)" stroke-width="0.5"/>
+      <polygon points="290,560 380,570 490,560 540,660 460,760 320,740 240,660 260,580" fill="rgba(6,9,18,0.5)" stroke="rgba(0,255,200,0.04)" stroke-width="0.6"/>
+      <polygon points="460,760 540,760 620,800 600,826 400,826 380,800" fill="rgba(5,7,15,0.5)" stroke="rgba(0,255,200,0.04)" stroke-width="0.5"/>
+
+      <!-- Java Sea — deeper recessed plane -->
+      <polygon points="0,0 892,0 892,100 460,180 180,100 0,140" fill="rgba(1,2,8,0.85)"/>
+
+      <!-- Rivers -->
+      <path d="M420,100 C415,150 410,200 415,260 C420,320 430,380 440,440 C445,480 450,530 460,580 C465,610 470,640 480,700" fill="none" stroke="rgba(0,80,120,0.35)" stroke-width="2.5"/>
+      <path d="M200,100 C205,160 200,220 195,280 C190,340 185,400 175,460" fill="none" stroke="rgba(0,80,120,0.25)" stroke-width="1.5"/>
+      <path d="M680,220 C675,280 680,340 685,400 C688,440 692,480 698,520" fill="none" stroke="rgba(0,80,120,0.22)" stroke-width="1.5"/>
+
+      <!-- Roads -->
+      <!-- Cipularang toll -->
+      <path d="M446,400 C450,440 458,500 465,560 C472,620 478,680 482,740 C484,780 486,810 488,826" fill="none" stroke="rgba(0,255,200,0.22)" stroke-width="2.5" filter="url(#roadGlow)"/>
+      <!-- Jakarta inner ring -->
+      <ellipse cx="445" cy="330" rx="110" ry="90" fill="none" stroke="rgba(0,255,200,0.14)" stroke-width="1.5"/>
+      <!-- Jl. Sudirman/Thamrin -->
+      <path d="M445,200 L445,400" fill="none" stroke="rgba(0,255,200,0.30)" stroke-width="2" filter="url(#roadGlow)"/>
+      <!-- Outer ring -->
+      <ellipse cx="445" cy="360" rx="180" ry="155" fill="none" stroke="rgba(0,255,200,0.09)" stroke-width="1"/>
+      <!-- Pantura coastal road -->
+      <path d="M0,130 C100,115 200,108 300,106 C380,104 440,108 520,112 C620,118 720,125 820,130" fill="none" stroke="rgba(0,255,200,0.16)" stroke-width="1.5"/>
+      <!-- Jagorawi -->
+      <path d="M530,320 C560,380 590,440 620,500 C640,540 660,580 680,620 C700,660 720,700 740,740" fill="none" stroke="rgba(0,255,200,0.15)" stroke-width="1.5"/>
+      <!-- JORR South -->
+      <path d="M300,500 C360,520 420,540 490,550 C540,555 590,548 640,540 C690,530 740,510 780,490" fill="none" stroke="rgba(0,255,200,0.10)" stroke-width="1"/>
+      <!-- Local roads -->
+      <path d="M200,300 L600,300" fill="none" stroke="rgba(0,255,200,0.07)" stroke-width="0.8"/>
+      <path d="M250,180 L700,180" fill="none" stroke="rgba(0,255,200,0.06)" stroke-width="0.7"/>
+      <path d="M180,420 L750,420" fill="none" stroke="rgba(0,255,200,0.07)" stroke-width="0.8"/>
+      <path d="M300,200 L320,600" fill="none" stroke="rgba(0,255,200,0.06)" stroke-width="0.7"/>
+      <path d="M560,180 L570,560" fill="none" stroke="rgba(0,255,200,0.06)" stroke-width="0.7"/>
+
+      <!-- Geofence: Pulogadung Warehouse -->
+      <rect x="582" y="265" width="90" height="68" rx="3" fill="url(#geofenceHatch)" stroke="rgba(255,170,0,0.35)" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="627" y="260" font-family="JetBrains Mono" font-size="8" fill="rgba(255,170,0,0.55)" text-anchor="middle" letter-spacing="0.06em">PULOGADUNG</text>
+      <text x="627" y="345" font-family="JetBrains Mono" font-size="7" fill="rgba(255,170,0,0.40)" text-anchor="middle" letter-spacing="0.04em">WAREHOUSE</text>
+
+      <!-- Route trail for TRUCK-247 — fading, dashed -->
+      <path d="M446,390 C444,380 442,370 441,360 C440,350 440,340 441,330 C442,320 443,310 444,300 C445,290 446,280 446,270" fill="none" stroke="url(#trailGrad)" stroke-width="2" stroke-dasharray="6,4" opacity="0.8" marker-end="url(#arrowhead)"/>
+      <path d="M446,390 C447,400 448,410 449,420 C450,430 450,440 449,450" fill="none" stroke="rgba(0,255,200,0.20)" stroke-width="1.5" stroke-dasharray="4,5"/>
+
+      <!-- District labels -->
+      <text x="430" y="340" font-family="JetBrains Mono" font-size="8" font-style="italic" fill="rgba(214,230,255,0.18)" text-anchor="middle">JAKARTA PUSAT</text>
+      <text x="410" y="490" font-family="JetBrains Mono" font-size="8" font-style="italic" fill="rgba(214,230,255,0.15)" text-anchor="middle">JAKARTA SELATAN</text>
+      <text x="260" y="310" font-family="JetBrains Mono" font-size="8" font-style="italic" fill="rgba(214,230,255,0.14)" text-anchor="middle">JAKARTA BARAT</text>
+      <text x="580" y="360" font-family="JetBrains Mono" font-size="8" font-style="italic" fill="rgba(214,230,255,0.14)" text-anchor="middle">JAKARTA TIMUR</text>
+      <text x="330" y="170" font-family="JetBrains Mono" font-size="8" font-style="italic" fill="rgba(214,230,255,0.13)" text-anchor="middle">JAKARTA UTARA</text>
+      <text x="700" y="400" font-family="JetBrains Mono" font-size="7" font-style="italic" fill="rgba(214,230,255,0.11)" text-anchor="middle">BEKASI</text>
+      <text x="420" y="640" font-family="JetBrains Mono" font-size="7" font-style="italic" fill="rgba(214,230,255,0.11)" text-anchor="middle">DEPOK</text>
+      <text x="510" y="810" font-family="JetBrains Mono" font-size="7" font-style="italic" fill="rgba(214,230,255,0.10)" text-anchor="middle">BANDUNG CORRIDOR</text>
+      <text x="300" y="55"  font-family="JetBrains Mono" font-size="9" font-style="italic" fill="rgba(0,80,120,0.45)" text-anchor="middle" letter-spacing="0.1em">LAUT JAWA</text>
+
+      <!-- ── VEHICLE MARKERS ── -->
+
+      <!-- VAN-118 — ALERT, geofence (incident elevation, red glow) -->
+      <g filter="url(#alertGlow)">
+        <circle cx="617" cy="299" r="6" fill="rgba(255,56,100,0.65)" stroke="rgba(255,56,100,0.5)" stroke-width="1.5">
+          <animate attributeName="r" values="6;8;6" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0.7;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="617" cy="299" r="12" fill="none" stroke="rgba(255,56,100,0.20)" stroke-width="1">
+          <animate attributeName="r" values="9;14;9" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.6;0;0.6" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+      <text x="617" y="287" font-family="JetBrains Mono" font-size="7" fill="rgba(255,56,100,0.7)" text-anchor="middle">VAN-118</text>
+
+      <!-- TRUCK-189 — ALERT, speeding (incident, red) -->
+      <g filter="url(#alertGlow)">
+        <circle cx="348" cy="178" r="6" fill="rgba(255,56,100,0.60)" stroke="rgba(255,56,100,0.45)" stroke-width="1.5">
+          <animate attributeName="r" values="6;8;6" dur="1.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="348" cy="178" r="12" fill="none" stroke="rgba(255,56,100,0.18)" stroke-width="1">
+          <animate attributeName="r" values="8;14;8" dur="1.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+      <text x="348" y="167" font-family="JetBrains Mono" font-size="7" fill="rgba(255,56,100,0.65)" text-anchor="middle">TRUCK-189</text>
+
+      <!-- TRUCK-203 — moving, elevated -->
+      <circle cx="505" cy="195" r="5" fill="rgba(0,255,200,0.55)" stroke="rgba(0,255,200,0.35)" stroke-width="1">
+        <animate attributeName="opacity" values="1;0.75;1" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <text x="505" y="184" font-family="JetBrains Mono" font-size="7" fill="rgba(0,255,200,0.40)" text-anchor="middle">TRUCK-203</text>
+
+      <!-- VAN-095 — moving -->
+      <circle cx="258" cy="345" r="5" fill="rgba(0,255,200,0.50)" stroke="rgba(0,255,200,0.30)" stroke-width="1">
+        <animate attributeName="opacity" values="1;0.72;1" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <text x="258" y="334" font-family="JetBrains Mono" font-size="7" fill="rgba(0,255,200,0.38)" text-anchor="middle">VAN-095</text>
+
+      <!-- PICKUP-042 — ALERT idle, stopped/recessed -->
+      <rect x="381" y="415" width="10" height="10" rx="1" fill="rgba(255,56,100,0.18)" stroke="rgba(255,56,100,0.35)" stroke-width="1.5">
+        <animate attributeName="opacity" values="0.8;0.45;0.8" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <text x="386" y="412" font-family="JetBrains Mono" font-size="7" fill="rgba(255,56,100,0.55)" text-anchor="middle">PICKUP-042</text>
+
+      <!-- TRUCK-221 — moving -->
+      <circle cx="694" cy="155" r="5" fill="rgba(0,255,200,0.58)" stroke="rgba(0,255,200,0.35)" stroke-width="1">
+        <animate attributeName="opacity" values="1;0.73;1" dur="2.2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="694" y="144" font-family="JetBrains Mono" font-size="7" fill="rgba(0,255,200,0.42)" text-anchor="middle">TRUCK-221</text>
+
+      <!-- VAN-176 — IDLE, recessed-shallow (amber, dim) -->
+      <circle cx="162" cy="390" r="5" fill="rgba(255,170,0,0.20)" stroke="rgba(255,170,0,0.25)" stroke-width="1"/>
+      <text x="162" y="379" font-family="JetBrains Mono" font-size="7" fill="rgba(255,170,0,0.40)" text-anchor="middle">VAN-176</text>
+
+      <!-- TRUCK-198 — moving -->
+      <circle cx="556" cy="468" r="5" fill="rgba(0,255,200,0.48)" stroke="rgba(0,255,200,0.28)" stroke-width="1">
+        <animate attributeName="opacity" values="1;0.70;1" dur="2.8s" repeatCount="indefinite"/>
+      </circle>
+      <text x="556" y="457" font-family="JetBrains Mono" font-size="7" fill="rgba(0,255,200,0.36)" text-anchor="middle">TRUCK-198</text>
+
+      <!-- PICKUP-067 — OFFLINE, recessed-deep (ghost) -->
+      <circle cx="734" cy="334" r="5" fill="rgba(20,30,50,0.6)" stroke="rgba(58,74,94,0.3)" stroke-width="1"/>
+      <text x="734" y="323" font-family="JetBrains Mono" font-size="7" fill="rgba(58,74,94,0.40)" text-anchor="middle">PICKUP-067</text>
+
+      <!-- Extra fleet density -->
+      <circle cx="470" cy="540" r="4" fill="rgba(0,255,200,0.42)" stroke="rgba(0,255,200,0.25)" stroke-width="1"/>
+      <circle cx="280" cy="520" r="4" fill="rgba(0,255,200,0.40)" stroke="rgba(0,255,200,0.22)" stroke-width="1"/>
+      <circle cx="740" cy="490" r="4" fill="rgba(0,255,200,0.38)" stroke="rgba(0,255,200,0.22)" stroke-width="1"/>
+      <circle cx="620" cy="420" r="4" fill="rgba(0,255,200,0.40)" stroke="rgba(0,255,200,0.22)" stroke-width="1"/>
+      <circle cx="195" cy="250" r="4" fill="rgba(255,170,0,0.18)" stroke="rgba(255,170,0,0.20)" stroke-width="1"/>
+
+      <!-- ══ SELECTED TRUCK-247 — INCIDENT/ELEVATED-TALL ══ -->
+      <!-- Shadow cast on map plane (depth cue: elevated marker casts shadow below) -->
+      <ellipse cx="446" cy="278" rx="22" ry="8" fill="rgba(0,255,200,0.08)" filter="url(#selectedGlow)"/>
+
+      <!-- The marker -->
+      <g filter="url(#selectedGlow)">
+        <!-- Outer pulse ring -->
+        <circle cx="446" cy="270" r="24" fill="none" stroke="rgba(0,255,200,0.10)" stroke-width="1">
+          <animate attributeName="r" values="18;28;18" dur="2.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.5;0;0.5" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Orbit ring (spinning) -->
+        <circle cx="446" cy="270" r="17" fill="none" stroke="rgba(0,255,200,0.30)" stroke-width="1" stroke-dasharray="8,4">
+          <animateTransform attributeName="transform" type="rotate" from="0 446 270" to="360 446 270" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Main marker -->
+        <circle cx="446" cy="270" r="10" fill="rgba(0,255,200,0.92)" stroke="rgba(0,255,200,0.7)" stroke-width="2">
+          <animate attributeName="stroke-width" values="2;3;2" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+
+      <!-- Heading arrow NW -->
+      <polygon points="446,248 441,258 451,258" fill="rgba(0,255,200,0.85)" filter="url(#selectedGlow)" transform="rotate(-45 446 253)"/>
+      <!-- Vehicle ID label -->
+      <text x="446" y="274" font-family="JetBrains Mono" font-size="6" font-weight="800" fill="#000" text-anchor="middle">247</text>
+
+      <!-- Floating data card anchored to marker -->
+      <line x1="459" y1="262" x2="500" y2="222" stroke="rgba(0,255,200,0.25)" stroke-width="1" stroke-dasharray="3,3"/>
+      <circle cx="500" cy="222" r="2" fill="rgba(0,255,200,0.4)"/>
+
+      <!-- Card background (floating, incident elevation) -->
+      <rect x="502" y="180" width="170" height="90" rx="5" fill="rgba(20,27,60,0.96)"
+            style="filter: drop-shadow(0 8px 24px rgba(0,0,0,0.7)) drop-shadow(0 0 1px rgba(0,255,200,0.30))"/>
+      <!-- Top edge highlight on card -->
+      <rect x="502" y="180" width="170" height="1" rx="1" fill="rgba(0,255,200,0.32)"/>
+      <!-- Light source gradient on card -->
+      <rect x="502" y="180" width="170" height="45" rx="5" fill="url(#cardLight)" opacity="0.8"/>
+
+      <!-- Card data -->
+      <text x="512" y="196" font-family="JetBrains Mono" font-size="10" font-weight="800" fill="#00ffc8" letter-spacing="0.06em">TRUCK-247</text>
+      <text x="512" y="214" font-family="JetBrains Mono" font-size="20" font-weight="800" fill="#00ffc8" letter-spacing="-0.02em">67 km/h</text>
+      <text x="665" y="214" font-family="JetBrains Mono" font-size="10" font-weight="600" fill="rgba(0,255,200,0.7)" text-anchor="end">&#8598; NW</text>
+      <text x="512" y="226" font-family="JetBrains Mono" font-size="8" fill="rgba(214,230,255,0.55)">B 9421 KGV &#183; Ahmad Wijaya</text>
+      <text x="512" y="237" font-family="JetBrains Mono" font-size="7.5" fill="rgba(106,120,136,0.8)">Jl. Sudirman &#183; Jakarta Pusat</text>
+      <!-- Fuel bar on card -->
+      <text x="512" y="250" font-family="JetBrains Mono" font-size="7.5" fill="rgba(106,120,136,0.7)">Fuel:</text>
+      <rect x="536" y="244" width="72" height="4" rx="2" fill="rgba(0,255,200,0.08)"/>
+      <rect x="536" y="244" width="49" height="4" rx="2" fill="rgba(0,255,200,0.50)"/>
+      <text x="611" y="250" font-family="JetBrains Mono" font-size="7.5" fill="rgba(0,255,200,0.6)" text-anchor="end">68%</text>
+      <text x="640" y="250" font-family="JetBrains Mono" font-size="7" fill="rgba(106,120,136,0.55)">&#183; 12s ago</text>
+
+      <!-- Compass rose -->
+      <g transform="translate(856,74)">
+        <circle r="22" fill="rgba(4,6,12,0.85)" stroke="rgba(0,255,200,0.15)" stroke-width="1"/>
+        <polygon points="0,-18 3,-6 0,-2 -3,-6" fill="rgba(0,255,200,0.7)"/>
+        <polygon points="0,18 3,6 0,2 -3,6" fill="rgba(106,120,136,0.4)"/>
+        <polygon points="18,0 6,3 2,0 6,-3" fill="rgba(106,120,136,0.4)"/>
+        <polygon points="-18,0 -6,3 -2,0 -6,-3" fill="rgba(106,120,136,0.4)"/>
+        <line x1="-11" y1="-11" x2="11" y2="11" stroke="rgba(0,255,200,0.12)" stroke-width="0.8"/>
+        <line x1="11" y1="-11" x2="-11" y2="11" stroke="rgba(0,255,200,0.12)" stroke-width="0.8"/>
+        <circle r="3" fill="rgba(0,255,200,0.4)"/>
+        <circle r="1.5" fill="rgba(0,255,200,0.8)"/>
+        <text y="-24" font-family="JetBrains Mono" font-size="8" font-weight="700" fill="rgba(0,255,200,0.8)" text-anchor="middle">N</text>
+      </g>
+
+      <!-- Scale bar -->
+      <g transform="translate(820,796)">
+        <line x1="-50" y1="0" x2="0" y2="0" stroke="rgba(0,255,200,0.4)" stroke-width="2"/>
+        <line x1="-50" y1="-4" x2="-50" y2="4" stroke="rgba(0,255,200,0.4)" stroke-width="1.5"/>
+        <line x1="0" y1="-4" x2="0" y2="4" stroke="rgba(0,255,200,0.4)" stroke-width="1.5"/>
+        <line x1="-25" y1="-3" x2="-25" y2="3" stroke="rgba(0,255,200,0.25)" stroke-width="1"/>
+        <rect x="-50" y="-1" width="25" height="2" fill="rgba(0,255,200,0.5)"/>
+        <text x="-50" y="-7" font-family="JetBrains Mono" font-size="7" fill="rgba(106,120,136,0.7)" text-anchor="middle">0</text>
+        <text x="0" y="-7" font-family="JetBrains Mono" font-size="7" fill="rgba(106,120,136,0.7)" text-anchor="middle">25km</text>
+      </g>
+
+    </svg>
+
+    <div class="sector-badges">
+      <div class="sector-badge s1 hoverable">Sektor 01 &#183; Jkt Pusat</div>
+      <div class="sector-badge s2 hoverable">Sektor 02 &#183; Jkt Timur</div>
+      <div class="sector-badge s3 hoverable">Sektor 03 &#183; Bandung</div>
+    </div>
+
+  </div>
+
+  <!-- VEHICLE PANEL — right (FLOATING — incident level, highest on screen) -->
+  <div id="vehicle-panel">
+
+    <div class="vp-header">
+      <div class="vp-header-top">
+        <span class="vp-vehicle-id">TRUCK-247</span>
+        <div class="vp-status-badge">
+          <span class="vp-status-dot"></span>
+          <span class="vp-status-text">Moving</span>
+        </div>
+      </div>
+      <div class="vp-plate">B 9421 KGV &#183; Heading NW</div>
+      <div class="vp-speed-row">
+        <span class="vp-speed-big">67</span>
+        <span class="vp-speed-unit">km/h</span>
+        <span class="vp-direction">&#8598; NW</span>
+      </div>
+    </div>
+
+    <div class="vp-driver">
+      <div class="vp-driver-row">
+        <div class="vp-driver-avatar">AW</div>
+        <div class="vp-driver-info">
+          <div class="vp-driver-name">Ahmad Wijaya</div>
+          <div class="vp-driver-meta">ID #4471 &#183; +62 812 4471 2208</div>
+        </div>
+        <button class="btn btn-ghost hoverable" style="flex:none;padding:4px 8px;font-size:8px;">CALL</button>
+      </div>
+    </div>
+
+    <div class="vp-location">
+      <div class="vp-location-label">Current Location</div>
+      <div class="vp-location-name">Jl. Sudirman, Jakarta Pusat</div>
+      <div class="vp-location-coords">
+        <span>-6.2087 &#183; 106.8456</span>
+        <span class="vp-last-update">&#8635; 12s ago</span>
+      </div>
+    </div>
+
+    <!-- Telemetry — elevation per sensor state -->
+    <div class="vp-telemetry">
+      <div class="vp-section-label">Telemetry</div>
+      <div class="telemetry-grid">
+
+        <!-- Ignition ON = ELEVATED (active) -->
+        <div class="tele-tile tele-ignition hoverable">
+          <div class="tele-label">Ignition</div>
+          <div class="tele-value">ON</div>
+          <div class="tele-sub">since 03:12 WIB</div>
+        </div>
+
+        <!-- Fuel 68% = FLAT (normal) -->
+        <div class="tele-tile tele-fuel hoverable">
+          <div class="tele-label">Fuel</div>
+          <div class="tele-value">68%</div>
+          <div class="fuel-bar-bg"><div class="fuel-bar-fill"></div></div>
+          <div class="tele-sub">&#126;340 L remaining</div>
+        </div>
+
+        <!-- Battery 12.4V = FLAT (nominal) -->
+        <div class="tele-tile tele-battery hoverable">
+          <div class="tele-label">Battery</div>
+          <div class="tele-value">12.4<span style="font-size:10px;font-weight:400;color:var(--text-muted)">V</span></div>
+          <div class="tele-sub">nominal</div>
+        </div>
+
+        <!-- Engine 24C = RECESSED-SHALLOW (cool, stable) -->
+        <div class="tele-tile tele-temp hoverable">
+          <div class="tele-label">Engine</div>
+          <div class="tele-value">24<span style="font-size:10px;font-weight:400;color:var(--text-muted)">&#176;C</span></div>
+          <div class="tele-sub">cool &#183; stable</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Today stats -->
+    <div class="vp-today">
+      <div class="vp-section-label">Today</div>
+      <div class="today-grid">
+        <div class="today-item">
+          <span class="today-label">Distance</span>
+          <span class="today-val">247 km</span>
+        </div>
+        <div class="today-item">
+          <span class="today-label">Drive Time</span>
+          <span class="today-val">6h 12m</span>
+        </div>
+        <div class="today-item">
+          <span class="today-label">Stops</span>
+          <span class="today-val">4</span>
+        </div>
+        <div class="today-item" style="background:var(--surface-elevated);box-shadow:var(--shadow-elevated);border-top:1px solid var(--edge-alert);">
+          <span class="today-label" style="color:var(--red);">Alerts</span>
+          <span class="today-val" style="color:var(--red);">1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts — incident level tiles -->
+    <div class="vp-alerts">
+      <div class="vp-section-label">Active Incidents</div>
+
+      <div class="alert-item">
+        <span class="alert-dot"></span>
+        <div class="alert-content">
+          <div class="alert-type">Speed Violation</div>
+          <div class="alert-desc">TRUCK-189 &#183; 92 km/h in 60 zone</div>
+        </div>
+        <span class="alert-time">02:51</span>
+      </div>
+
+      <div class="alert-item">
+        <span class="alert-dot"></span>
+        <div class="alert-content">
+          <div class="alert-type">Geofence Exit</div>
+          <div class="alert-desc">VAN-118 &#183; Pulogadung Warehouse</div>
+        </div>
+        <span class="alert-time">03:14</span>
+      </div>
+
+      <div class="alert-item" style="border-top-color:rgba(255,170,0,0.35);box-shadow:0 4px 12px rgba(0,0,0,0.4),0 0 0 1px rgba(255,170,0,0.20);">
+        <span class="alert-dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber);"></span>
+        <div class="alert-content">
+          <div class="alert-type" style="color:var(--amber);">Idle Alert</div>
+          <div class="alert-desc">PICKUP-042 &#183; Senayan &#183; &gt;10m</div>
+        </div>
+        <span class="alert-time">03:36</span>
+      </div>
+    </div>
+
+    <!-- Buttons: filled=elevated, ghost=flat, disabled=recessed -->
+    <div class="vp-actions">
+      <button class="btn btn-primary hoverable">Track</button>
+      <button class="btn btn-ghost hoverable">Route</button>
+      <button class="btn btn-ghost hoverable">History</button>
+      <button class="btn btn-disabled">Geofence</button>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM METRICS STRIP — THE PHYSICAL MIXING BOARD -->
+  <div id="metrics-strip">
+
+    <!-- TOTAL — flat (reference) -->
+    <div class="metric-tile mt-total hoverable">
+      <div class="mt-label">Total</div>
+      <div class="mt-number">247</div>
+      <div class="mt-sub">units registered</div>
+    </div>
+
+    <div class="strip-divider"></div>
+
+    <!-- MOVING — incident/floating (TALLEST — longest shadow) -->
+    <div class="metric-tile mt-moving hoverable">
+      <div class="mt-label">&#8593; Moving</div>
+      <div class="mt-number">184</div>
+      <div class="mt-sub">74.5% of fleet</div>
+      <div class="mt-bar-bg"><div class="mt-bar-fill"></div></div>
+    </div>
+
+    <div class="strip-divider"></div>
+
+    <!-- IDLE — flat -->
+    <div class="metric-tile mt-idle hoverable">
+      <div class="mt-label">&#8212; Idle</div>
+      <div class="mt-number">41</div>
+      <div class="mt-sub">16.6% &#183; engine on</div>
+      <div class="mt-bar-bg"><div class="mt-bar-fill"></div></div>
+    </div>
+
+    <div class="strip-divider"></div>
+
+    <!-- STOPPED — recessed-shallow (carved in) -->
+    <div class="metric-tile mt-stopped hoverable">
+      <div class="mt-label">&#9632; Stopped</div>
+      <div class="mt-number">18</div>
+      <div class="mt-sub">7.3% &#183; parked</div>
+      <div class="mt-bar-bg"><div class="mt-bar-fill"></div></div>
+    </div>
+
+    <div class="strip-divider"></div>
+
+    <!-- OFFLINE — recessed-deep (most carved) -->
+    <div class="metric-tile mt-offline">
+      <div class="mt-label">&#183; Offline</div>
+      <div class="mt-number">4</div>
+      <div class="mt-sub">no signal</div>
+      <div class="mt-bar-bg"><div class="mt-bar-fill"></div></div>
+    </div>
+
+    <div class="strip-divider"></div>
+
+    <!-- ALERTS — alert surface (red glow) -->
+    <div class="metric-tile mt-alerts hoverable">
+      <div class="mt-label">&#9888; Alerts</div>
+      <div class="mt-number">3</div>
+      <div class="mt-sub">2 critical &#183; 1 warn</div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ELEVATION LEGEND — corner key -->
+<div id="elevation-legend">
+  <div class="legend-title">Elevation Key</div>
+  <div class="legend-item">
+    <div class="legend-swatch ls-flt"></div>
+    <div class="legend-text">
+      <div class="legend-level">Floating</div>
+      <div class="legend-meaning">Incident &#183; Alert &#183; Focus</div>
+    </div>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch ls-el"></div>
+    <div class="legend-text">
+      <div class="legend-level">Elevated</div>
+      <div class="legend-meaning">Active &#183; Moving</div>
+    </div>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch ls-fl"></div>
+    <div class="legend-text">
+      <div class="legend-level">Flat</div>
+      <div class="legend-meaning">Idle &#183; Informational</div>
+    </div>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch ls-rs"></div>
+    <div class="legend-text">
+      <div class="legend-level">Recessed</div>
+      <div class="legend-meaning">Stopped &#183; Parked</div>
+    </div>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch ls-rd"></div>
+    <div class="legend-text">
+      <div class="legend-level">Deep Recess</div>
+      <div class="legend-meaning">Offline &#183; No Data</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Clock tick — update seconds only, no innerHTML
+  var secEl = document.getElementById('clock-s');
+  function updateClock() {
+    if (!secEl) return;
+    var s = new Date().getSeconds();
+    secEl.textContent = s < 10 ? '0' + s : '' + s;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Press-recess physics for interactive tiles
+  var interactives = document.querySelectorAll('.metric-tile.hoverable, .device-row.hoverable, .btn');
+  for (var i = 0; i < interactives.length; i++) {
+    (function(el) {
+      el.addEventListener('mousedown', function() {
+        el.style.transform = 'translateY(2px)';
+        el.style.transition = 'transform 0.08s ease';
+      });
+      el.addEventListener('mouseup', function() {
+        el.style.transform = '';
+      });
+      el.addEventListener('mouseleave', function() {
+        el.style.transform = '';
+      });
+    })(interactives[i]);
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>OneFleet · Abstraction Elevator · R3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:ital,wght@0,200;0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { font: inherit; cursor: pointer; border: none; background: none; }
+svg text { user-select: none; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CSS VARIABLES
+═══════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Executive ── */
+  --E-bg:       #f4f0e8;
+  --E-cream:    #ede8de;
+  --E-cream2:   #e6dfd4;
+  --E-ink:      #1a1410;
+  --E-ink-mid:  #3a3028;
+  --E-ink-dim:  #7a6e62;
+  --E-ink-faint:#b0a898;
+  --E-red:      #9d2a2a;
+  --E-red-dim:  rgba(157,42,42,0.35);
+  --E-line:     #cfc7b8;
+  --E-line-dim: #ddd6c8;
+
+  /* ── Dispatch ── */
+  --D-bg:       #000814;
+  --D-panel:    #050b1c;
+  --D-panel2:   #080f22;
+  --D-cyan:     #00ffc8;
+  --D-cyan-dim: rgba(0,255,200,0.14);
+  --D-cyan-glow:rgba(0,255,200,0.06);
+  --D-alert:    #ff3864;
+  --D-amber:    #ffaa00;
+  --D-text:     #c8daf0;
+  --D-text-dim: #3e5270;
+  --D-border:   rgba(0,255,200,0.13);
+  --D-border2:  rgba(0,255,200,0.07);
+
+  /* ── Vehicle ── */
+  --V-bg:       #000814;
+  --V-panel:    #040a1a;
+  --V-cyan:     #00ffc8;
+  --V-amber:    #ffaa00;
+  --V-red:      #ff3864;
+  --V-text:     #c0d4ec;
+  --V-text-dim: #304860;
+  --V-border:   rgba(0,255,200,0.1);
+  --V-border2:  rgba(0,255,200,0.05);
+
+  /* ── Chrome ── */
+  --chrome:     #04030c;
+  --chrome-brd: rgba(200,220,255,0.07);
+  --chrome-txt: rgba(200,220,255,0.45);
+  --divider:    rgba(200,220,255,0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BODY / SHELL
+═══════════════════════════════════════════════════════════════════ */
+html, body {
+  width: 1440px; height: 900px;
+  overflow: hidden;
+  background: var(--chrome);
+}
+
+.shell {
+  width: 1440px; height: 900px;
+  display: flex; flex-direction: column;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOP BAR — MODE SWITCHER
+═══════════════════════════════════════════════════════════════════ */
+.topbar {
+  flex-shrink: 0;
+  height: 46px;
+  background: #020108;
+  border-bottom: 1px solid var(--chrome-brd);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  position: relative; z-index: 20;
+}
+
+.topbar-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(200,220,255,0.3);
+}
+.topbar-brand .accent { color: rgba(0,255,200,0.55); }
+
+/* Centered mode switcher pill */
+.mode-rail {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: stretch;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(200,220,255,0.09);
+  border-radius: 5px; overflow: hidden;
+}
+
+.mode-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 16px; height: 34px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.13em;
+  text-transform: uppercase; color: rgba(200,220,255,0.28);
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.mode-pill:hover { background: rgba(255,255,255,0.04); }
+
+.mode-pill + .mode-pill { border-left: 1px solid rgba(200,220,255,0.07); }
+
+.mode-pill.exec { color: rgba(130,100,80,0.65); }
+.mode-pill.disp { color: rgba(0,255,200,0.5); }
+.mode-pill.veh  { color: rgba(0,255,200,0.4); }
+
+.kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 16px; padding: 0 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 3px;
+  font-size: 8.5px; font-weight: 600; letter-spacing: 0;
+  color: rgba(255,255,255,0.3);
+}
+.mode-pill.exec .kbd { background: rgba(157,42,42,0.1); border-color: rgba(157,42,42,0.28); color: rgba(200,80,80,0.8); }
+.mode-pill.disp .kbd { background: rgba(0,255,200,0.07); border-color: rgba(0,255,200,0.22); color: rgba(0,255,200,0.65); }
+.mode-pill.veh  .kbd { background: rgba(0,255,200,0.05); border-color: rgba(0,255,200,0.15); color: rgba(0,255,200,0.5); }
+
+.mode-divider-dot { color: rgba(200,220,255,0.12); font-size: 14px; display: flex; align-items: center; padding: 0 2px; }
+
+/* Right meta */
+.topbar-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; letter-spacing: 0.08em;
+  color: rgba(200,220,255,0.25);
+  display: flex; align-items: center; gap: 12px;
+}
+.topbar-meta .live-chip {
+  background: rgba(0,255,200,0.08);
+  border: 1px solid rgba(0,255,200,0.2);
+  color: rgba(0,255,200,0.6);
+  padding: 2px 8px; border-radius: 3px;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.14em;
+}
+.topbar-meta .clock { color: rgba(200,220,255,0.45); font-weight: 500; }
+.topbar-meta .date  { color: rgba(200,220,255,0.22); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   TRIPTYCH
+═══════════════════════════════════════════════════════════════════ */
+.triptych {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr 1px 1fr;
+}
+
+.v-divider {
+  background: var(--divider);
+}
+.v-divider::after {
+  content: '';
+  display: block; width: 1px; height: 100%;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(200,220,255,0.07) 20%,
+    rgba(200,220,255,0.07) 80%,
+    transparent 100%);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   ██████████ COLUMN 1 — EXECUTIVE ██████████
+═══════════════════════════════════════════════════════════════════ */
+.col-E {
+  background: var(--E-bg);
+  overflow: hidden; display: flex; flex-direction: column;
+  position: relative;
+}
+
+/* Paper noise texture */
+.col-E::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply; pointer-events: none; z-index: 0;
+}
+
+.E-inner {
+  position: relative; z-index: 1;
+  flex: 1; display: flex; flex-direction: column;
+  padding: 26px 30px 0;
+  overflow: hidden;
+}
+
+/* ── Mode indicator bar ── */
+.E-mode-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.E-mode-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--E-ink-dim);
+  display: flex; align-items: center; gap: 8px;
+}
+.E-mode-tag .bracket { color: var(--E-red); font-weight: 700; }
+.E-mode-tag .alt-label { color: var(--E-ink-faint); font-weight: 300; font-size: 8.5px; letter-spacing: 0.16em; }
+
+.E-date-cap {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--E-ink-faint);
+}
+
+/* ── Rule ── */
+.E-rule-full {
+  width: 100%; height: 1px;
+  background: linear-gradient(to right, var(--E-ink) 0%, var(--E-line) 30%, var(--E-line-dim) 100%);
+  margin: 0 0 18px;
+}
+.E-rule-thin {
+  width: 100%; height: 0.5px;
+  background: var(--E-line);
+  margin: 16px 0;
+}
+.E-rule-double {
+  width: 100%; margin: 0 0 18px;
+}
+.E-rule-double::before {
+  content: '';
+  display: block; width: 100%; height: 1px; background: var(--E-line); margin-bottom: 2px;
+}
+.E-rule-double::after {
+  content: '';
+  display: block; width: 100%; height: 0.5px; background: var(--E-line-dim);
+}
+
+/* ── Hero typography ── */
+.E-kicker {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px; font-weight: 400; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--E-ink-dim);
+  margin-bottom: 10px;
+}
+.E-kicker span { color: var(--E-red); }
+
+.E-headline {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900; color: var(--E-ink);
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: -0.015em;
+  margin-bottom: 14px;
+}
+.E-headline .line1 { font-size: 46px; display: block; }
+.E-headline .line2 { font-size: 54px; display: block; }
+.E-headline .line3 { font-size: 38px; display: block; color: var(--E-ink-mid); }
+
+/* Serif italic subhed with drop-cap */
+.E-subhed {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 13.5px; font-weight: 400;
+  color: var(--E-ink-mid);
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  margin-bottom: 2px;
+  overflow: hidden;
+}
+.E-subhed .drop-cap {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px; font-weight: 900; font-style: italic;
+  float: left; line-height: 0.82;
+  margin-right: 3px; margin-top: 4px;
+  color: var(--E-ink);
+}
+.E-subhed .mid-dot { color: var(--E-red-dim); margin: 0 5px; font-style: normal; }
+
+/* ── Status grid ── */
+.E-status-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 0; margin-bottom: 0;
+}
+.E-stat-cell {
+  padding: 10px 0;
+  border-right: 1px solid var(--E-line-dim);
+}
+.E-stat-cell:last-child { border-right: none; }
+.E-stat-cell + .E-stat-cell { padding-left: 14px; }
+
+.E-stat-n {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 900;
+  color: var(--E-ink); line-height: 1;
+  display: block; margin-bottom: 3px;
+}
+.E-stat-n.dim { color: var(--E-ink-dim); font-size: 22px; }
+.E-stat-n.red { color: var(--E-red); }
+
+.E-stat-l {
+  font-family: 'Inter', sans-serif;
+  font-size: 8.5px; font-weight: 300;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--E-ink-dim);
+  display: block;
+}
+
+/* ── Alert section ── */
+.E-alert-kicker {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px; font-weight: 500; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--E-red);
+  margin-bottom: 9px;
+  display: flex; align-items: center; gap: 8px;
+}
+.E-alert-kicker::before {
+  content: '';
+  display: inline-block; width: 16px; height: 1px;
+  background: var(--E-red);
+}
+
+.E-alert {
+  display: grid; grid-template-columns: 16px 1fr auto;
+  align-items: start; gap: 8px;
+  padding: 6px 0; border-bottom: 0.5px solid var(--E-line-dim);
+}
+.E-alert:last-child { border-bottom: none; }
+
+.E-alert-glyph {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-size: 13px;
+  color: var(--E-red); opacity: 0.6;
+  line-height: 1.2;
+}
+.E-alert-body {}
+.E-alert-who {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px; font-weight: 500;
+  color: var(--E-ink); letter-spacing: 0.04em;
+  margin-bottom: 1px;
+}
+.E-alert-what {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px; font-weight: 300;
+  color: var(--E-ink-dim); letter-spacing: 0.02em;
+}
+.E-alert-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--E-ink-faint); padding-top: 1px;
+}
+
+/* ── Map thumbnail ── */
+.E-map-block { margin-bottom: 0; }
+.E-map-caption {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px; font-weight: 300; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--E-ink-faint);
+  margin-bottom: 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.E-map-caption span { font-style: italic; letter-spacing: 0; text-transform: none; font-size: 8.5px; }
+
+.E-map {
+  width: 100%; height: 110px;
+  background: var(--E-cream);
+  border: 0.5px solid var(--E-line);
+  overflow: hidden; position: relative;
+}
+
+/* ── Signature ── */
+.E-sig {
+  margin-top: auto; padding: 14px 30px 16px;
+  border-top: 1px solid var(--E-line);
+  background: var(--E-bg);
+  position: relative; z-index: 2;
+}
+.E-sig-main {
+  font-family: 'Inter', sans-serif;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--E-ink-faint);
+  margin-bottom: 3px;
+}
+.E-sig-sub {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-size: 10px; font-weight: 400;
+  color: var(--E-ink-dim);
+}
+
+/* ── Footer altitude bar ── */
+.E-altitude {
+  flex-shrink: 0; height: 22px;
+  background: var(--E-cream2); border-top: 0.5px solid var(--E-line);
+  padding: 0 30px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--E-ink-faint);
+}
+.E-alt-left { display: flex; align-items: center; gap: 6px; }
+.E-alt-dot  { width: 5px; height: 5px; border-radius: 50%; background: var(--E-red); flex-shrink: 0; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   ██████████ COLUMN 2 — DISPATCH ██████████
+═══════════════════════════════════════════════════════════════════ */
+.col-D {
+  background: var(--D-bg);
+  overflow: hidden; display: flex; flex-direction: column;
+  position: relative;
+}
+
+/* Grid overlay */
+.col-D::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,200,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,200,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+
+/* Vignette */
+.col-D::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, rgba(0,5,12,0.7) 100%);
+  pointer-events: none; z-index: 0;
+}
+
+.D-inner {
+  position: relative; z-index: 1;
+  flex: 1; display: flex; flex-direction: column;
+  padding: 18px 20px 0;
+  overflow: hidden;
+}
+
+/* ── Mode bar ── */
+.D-mode-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.D-mode-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--D-cyan);
+  display: flex; align-items: center; gap: 8px; opacity: 0.85;
+}
+.D-mode-tag .bracket { font-weight: 700; }
+.D-mode-tag .alt-frag { color: var(--D-text-dim); font-weight: 300; font-size: 8px; }
+
+.D-alert-chip {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255,56,100,0.12);
+  border: 1px solid rgba(255,56,100,0.35);
+  border-radius: 3px; padding: 2px 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--D-alert);
+}
+.D-chip-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--D-alert); flex-shrink: 0;
+  animation: pulse-red 1.8s ease-in-out infinite;
+}
+
+/* ── Queue header ── */
+.D-queue-head {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--D-border);
+}
+.D-queue-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--D-text);
+  margin-bottom: 3px;
+}
+.D-queue-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.05em;
+  color: var(--D-text-dim);
+}
+
+/* ── Exception card ── */
+.D-exc {
+  background: var(--D-panel);
+  border: 1px solid rgba(200,220,255,0.06);
+  border-radius: 3px; padding: 10px 12px 10px 14px;
+  margin-bottom: 7px;
+  position: relative; overflow: hidden;
+}
+.D-exc-accent {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.D-exc.red   .D-exc-accent { background: var(--D-alert); box-shadow: 0 0 8px rgba(255,56,100,0.4); }
+.D-exc.amber .D-exc-accent { background: var(--D-amber); box-shadow: 0 0 8px rgba(255,170,0,0.3); }
+.D-exc.cyan  .D-exc-accent { background: rgba(0,255,200,0.5); box-shadow: 0 0 6px rgba(0,255,200,0.2); }
+
+.D-exc.red   { border-color: rgba(255,56,100,0.18); }
+.D-exc.amber { border-color: rgba(255,170,0,0.15); }
+.D-exc.cyan  { border-color: rgba(0,255,200,0.1); }
+
+.D-exc-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 5px;
+}
+.D-exc-id-row { display: flex; align-items: baseline; gap: 6px; }
+
+.D-exc-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
+  color: var(--D-text);
+}
+.D-exc-sep { color: var(--D-text-dim); font-weight: 300; font-size: 10px; }
+.D-exc-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
+}
+.D-exc.red   .D-exc-type { color: var(--D-alert); }
+.D-exc.amber .D-exc-type { color: var(--D-amber); }
+.D-exc.cyan  .D-exc-type { color: rgba(0,255,200,0.7); }
+
+.D-impact {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 2px;
+  flex-shrink: 0;
+}
+.D-exc.red   .D-impact { background: rgba(255,56,100,0.16); border: 1px solid rgba(255,56,100,0.4); color: var(--D-alert); }
+.D-exc.amber .D-impact { background: rgba(255,170,0,0.1);   border: 1px solid rgba(255,170,0,0.35); color: var(--D-amber); }
+.D-exc.cyan  .D-impact { background: rgba(0,255,200,0.06);  border: 1px solid rgba(0,255,200,0.2);  color: rgba(0,255,200,0.6); }
+
+.D-exc-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--D-text-dim); line-height: 1.65; margin-bottom: 8px;
+}
+.D-exc-meta .loc  { color: rgba(200,220,255,0.45); }
+.D-exc-meta .ts   { color: rgba(200,220,255,0.25); }
+.D-exc-meta .val  { color: rgba(200,220,255,0.55); font-weight: 500; }
+
+.D-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.D-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 3px 9px; border-radius: 2px;
+  transition: background 0.1s, color 0.1s; cursor: pointer;
+}
+/* Primary action */
+.D-btn.primary.red   { background: rgba(255,56,100,0.15); border: 1px solid rgba(255,56,100,0.45); color: var(--D-alert); }
+.D-btn.primary.amber { background: rgba(255,170,0,0.12);   border: 1px solid rgba(255,170,0,0.4);   color: var(--D-amber); }
+.D-btn.primary.cyan  { background: rgba(0,255,200,0.08);   border: 1px solid rgba(0,255,200,0.25);  color: rgba(0,255,200,0.7); }
+/* Ghost actions */
+.D-btn.ghost.red     { background: transparent; border: 1px solid rgba(255,56,100,0.22); color: rgba(255,56,100,0.55); }
+.D-btn.ghost.amber   { background: transparent; border: 1px solid rgba(255,170,0,0.22);  color: rgba(255,170,0,0.55); }
+.D-btn.ghost.cyan    { background: transparent; border: 1px solid rgba(0,255,200,0.14);  color: rgba(0,255,200,0.4); }
+
+/* ── Bottom section ── */
+.D-bottom {
+  display: flex; gap: 10px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--D-border2);
+}
+
+.D-map-thumb {
+  flex-shrink: 0; width: 152px; height: 108px;
+  background: #02091a; border: 1px solid var(--D-border); border-radius: 3px;
+  overflow: hidden; position: relative;
+}
+
+.D-right-col { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+
+.D-fleet-summary {
+  background: rgba(0,255,200,0.03);
+  border: 1px solid rgba(0,255,200,0.09); border-radius: 3px;
+  padding: 8px 10px;
+}
+.D-fl-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--D-text-dim); line-height: 1.75;
+}
+.D-fl-line .n    { color: rgba(200,220,255,0.6); font-weight: 500; }
+.D-fl-line .mvg  { color: rgba(0,255,200,0.55); }
+.D-fl-line .idl  { color: rgba(255,170,0,0.5); }
+.D-fl-line .stp  { color: rgba(200,220,255,0.25); }
+.D-fl-line .off  { color: rgba(200,220,255,0.15); }
+.D-fl-line .calm { color: rgba(0,255,200,0.35); font-style: italic; font-size: 8.5px; }
+
+.D-vc-card {
+  background: var(--D-panel2);
+  border: 1px solid rgba(0,255,200,0.18); border-radius: 3px;
+  padding: 8px 10px;
+}
+.D-vc-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 5px;
+}
+.D-vc-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--D-cyan);
+}
+.D-vc-speed {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--D-cyan); line-height: 1;
+}
+.D-vc-speed sup {
+  font-size: 8px; font-weight: 300; letter-spacing: 0.08em;
+  color: var(--D-text-dim); margin-left: 2px; vertical-align: middle;
+}
+.D-vc-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--D-text-dim); line-height: 1.7;
+}
+.D-vc-meta .hl { color: rgba(200,220,255,0.55); }
+
+/* ── Altitude bar ── */
+.D-altitude {
+  flex-shrink: 0; height: 22px;
+  background: #020a1a; border-top: 1px solid var(--D-border2);
+  padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--D-text-dim);
+}
+.D-alt-left { display: flex; align-items: center; gap: 6px; }
+.D-alt-dot  { width: 5px; height: 5px; border-radius: 50%; background: var(--D-cyan); flex-shrink: 0; box-shadow: 0 0 5px rgba(0,255,200,0.7); }
+.D-alt-right { color: rgba(255,56,100,0.45); }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   ██████████ COLUMN 3 — VEHICLE ██████████
+═══════════════════════════════════════════════════════════════════ */
+.col-V {
+  background: var(--V-bg);
+  overflow: hidden; display: flex; flex-direction: column;
+  position: relative;
+}
+
+/* Scan lines */
+.col-V::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: linear-gradient(transparent 50%, rgba(0,255,200,0.009) 50%);
+  background-size: 100% 3px;
+  pointer-events: none; z-index: 0;
+}
+
+.V-inner {
+  position: relative; z-index: 1;
+  flex: 1; display: flex; flex-direction: column;
+  padding: 18px 18px 0;
+  overflow: hidden;
+}
+
+/* ── Mode bar ── */
+.V-mode-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.V-mode-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(0,255,200,0.55);
+  display: flex; align-items: center; gap: 7px;
+}
+.V-mode-tag .bracket { color: rgba(0,255,200,0.75); font-weight: 700; }
+.V-mode-tag .alt-frag { color: var(--V-text-dim); font-weight: 300; font-size: 8px; }
+.V-mode-tag .veh-id { color: rgba(0,255,200,0.5); font-size: 8.5px; }
+
+/* ── Vehicle hero ── */
+.V-hero {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding-bottom: 10px; margin-bottom: 10px;
+  border-bottom: 1px solid var(--V-border);
+}
+.V-title-col {}
+.V-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--V-cyan); line-height: 1; margin-bottom: 4px;
+}
+.V-plate {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; font-weight: 400; letter-spacing: 0.14em;
+  color: rgba(200,220,255,0.35);
+}
+.V-location {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--V-text-dim); margin-top: 4px; line-height: 1.4;
+}
+.V-location .loc-name { color: rgba(200,220,255,0.45); }
+
+.V-speed-col { text-align: right; }
+.V-spd-big {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
+  color: var(--V-cyan); line-height: 1;
+}
+.V-spd-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.12em;
+  color: var(--V-text-dim); display: block; text-align: right; margin-top: 2px;
+}
+.V-status-chip {
+  display: inline-block; margin-top: 4px;
+  background: rgba(0,255,200,0.1); border: 1px solid rgba(0,255,200,0.3); border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 600; letter-spacing: 0.14em;
+  color: rgba(0,255,200,0.7); padding: 1px 6px;
+}
+
+/* ── Driver strip ── */
+.V-driver {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 10px; margin-bottom: 10px;
+  border-bottom: 1px solid var(--V-border);
+}
+.V-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(0,255,200,0.08);
+  border: 1px solid rgba(0,255,200,0.22);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 700; color: var(--V-cyan);
+  flex-shrink: 0;
+}
+.V-driver-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em;
+  color: var(--V-text); margin-bottom: 3px; line-height: 1;
+}
+.V-driver-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.05em;
+  color: var(--V-text-dim); line-height: 1.5;
+}
+.V-telemetry-mini {
+  margin-left: auto; display: grid; grid-template-columns: repeat(2, auto);
+  gap: 2px 10px; text-align: right;
+}
+.V-tel-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 300; letter-spacing: 0.08em;
+  color: var(--V-text-dim);
+}
+.V-tel-item .v { color: rgba(200,220,255,0.5); font-weight: 500; margin-right: 2px; }
+
+/* ── Today tiles ── */
+.V-today {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 5px; margin-bottom: 10px;
+}
+.V-tile {
+  background: rgba(0,255,200,0.03);
+  border: 1px solid var(--V-border2); border-radius: 2px;
+  padding: 6px 7px;
+}
+.V-tile-n {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+  color: var(--V-cyan); line-height: 1; display: block; margin-bottom: 2px;
+}
+.V-tile-n.alert { color: rgba(255,56,100,0.7); }
+.V-tile-l {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; font-weight: 300; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--V-text-dim); display: block;
+}
+
+/* ── Timeline ── */
+.V-tl-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 500; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--V-text-dim);
+  margin-bottom: 7px;
+  display: flex; align-items: center; gap: 8px;
+}
+.V-tl-head::after { content: ''; flex: 1; height: 1px; background: var(--V-border2); }
+
+.V-timeline {
+  flex: 1; overflow: hidden; position: relative;
+  margin-bottom: 0;
+}
+
+/* Spine line */
+.V-timeline::before {
+  content: '';
+  position: absolute; left: 35px; top: 4px; bottom: 4px;
+  width: 1px; background: rgba(0,255,200,0.07);
+}
+
+.V-evt {
+  display: flex; align-items: flex-start;
+  padding: 4px 0; gap: 0; position: relative;
+}
+
+.V-evt-ts {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; font-weight: 400; color: var(--V-text-dim);
+  width: 35px; flex-shrink: 0; padding-top: 2px;
+  letter-spacing: 0.02em;
+}
+.V-evt-ts.past { opacity: 0.45; }
+
+.V-evt-node {
+  width: 7px; height: 7px; border-radius: 50%;
+  margin-top: 3px; margin-right: 8px;
+  flex-shrink: 0; position: relative; z-index: 1;
+}
+.V-evt-node.ok   { background: rgba(0,255,200,0.65); box-shadow: 0 0 5px rgba(0,255,200,0.4); }
+.V-evt-node.warn { background: rgba(255,170,0,0.7);  box-shadow: 0 0 5px rgba(255,170,0,0.3); }
+.V-evt-node.info { background: rgba(200,220,255,0.18); }
+.V-evt-node.dim  { background: transparent; border: 1px solid rgba(200,220,255,0.15); }
+.V-evt-node.current {
+  background: var(--V-cyan); box-shadow: 0 0 10px rgba(0,255,200,0.6);
+  animation: pulse-cyan 2s ease-in-out infinite;
+}
+
+.V-evt-body { flex: 1; }
+.V-evt-main {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; font-weight: 400; letter-spacing: 0.03em;
+  color: var(--V-text); line-height: 1.3; margin-bottom: 1px;
+}
+.V-evt-main.past { color: rgba(200,220,255,0.35); }
+.V-evt-main .ok-ic   { color: var(--V-cyan); }
+.V-evt-main .warn-ic { color: var(--V-amber); }
+.V-evt-main .up-ic   { color: rgba(0,255,200,0.5); }
+.V-evt-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--V-text-dim); line-height: 1.4;
+}
+
+/* ── Sparklines ── */
+.V-sparks {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 5px; margin-top: 9px;
+  padding-top: 9px; border-top: 1px solid var(--V-border);
+}
+.V-spark-tile {
+  background: rgba(0,255,200,0.025);
+  border: 1px solid var(--V-border2); border-radius: 2px;
+  padding: 5px 5px 4px;
+}
+.V-spark-hdr {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; font-weight: 400; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--V-text-dim);
+  display: flex; justify-content: space-between; margin-bottom: 3px;
+}
+.V-spark-hdr .val { color: rgba(200,220,255,0.45); font-weight: 500; }
+.V-spark-svg { display: block; width: 100%; }
+
+/* ── Altitude bar ── */
+.V-altitude {
+  flex-shrink: 0; height: 22px;
+  background: #02091a; border-top: 1px solid var(--V-border2);
+  padding: 0 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--V-text-dim);
+}
+.V-alt-left { display: flex; align-items: center; gap: 6px; }
+.V-alt-dot  { width: 5px; height: 5px; border-radius: 50%; background: rgba(0,255,200,0.45); flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════════════════════ */
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,56,100,0.5); }
+  50%       { opacity: 0.6; box-shadow: 0 0 0 3px rgba(255,56,100,0); }
+}
+@keyframes pulse-cyan {
+  0%, 100% { box-shadow: 0 0 6px rgba(0,255,200,0.5); }
+  50%       { box-shadow: 0 0 14px rgba(0,255,200,0.8); }
+}
+@keyframes urgent-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,56,100,0); }
+  50%       { box-shadow: 0 0 12px rgba(255,56,100,0.15); }
+}
+
+.D-exc.red { animation: urgent-glow 2.5s ease-in-out infinite; }
+
+/* ── Vehicle: Telemetry grid ── */
+.V-telgrid {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--V-border);
+}
+.V-telgrid-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 500; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--V-text-dim);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.V-telgrid-head::after { content: ''; flex: 1; height: 1px; background: var(--V-border2); }
+
+.V-telgrid-cells {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.V-telcell {
+  background: rgba(0,255,200,0.02);
+  border: 1px solid var(--V-border2); border-radius: 2px;
+  padding: 5px 6px;
+}
+.V-telcell-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; font-weight: 300; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--V-text-dim);
+  margin-bottom: 3px;
+}
+.V-telcell-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--V-text); line-height: 1; margin-bottom: 2px;
+}
+.V-telcell-val.on { color: var(--V-cyan); }
+.V-telcell-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; font-weight: 300; letter-spacing: 0.06em;
+  color: var(--V-text-dim);
+}
+
+/* ── Vehicle: Comms log ── */
+.V-comms {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--V-border);
+}
+.V-comms-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 500; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--V-text-dim);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.V-comms-head::after { content: ''; flex: 1; height: 1px; background: var(--V-border2); }
+
+.V-comms-entry {
+  display: flex; align-items: baseline; gap: 7px;
+  padding: 3px 0; border-bottom: 1px solid rgba(0,255,200,0.04);
+}
+.V-comms-entry:last-child { border-bottom: none; }
+
+.V-comms-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 300; color: var(--V-text-dim);
+  flex-shrink: 0; width: 32px;
+}
+.V-comms-who {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 600; letter-spacing: 0.06em;
+  flex-shrink: 0; width: 58px;
+}
+.V-comms-entry.outbound .V-comms-who { color: rgba(0,255,200,0.55); }
+.V-comms-entry.inbound  .V-comms-who { color: rgba(200,220,255,0.5); }
+
+.V-comms-msg {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 300; letter-spacing: 0.03em;
+  color: var(--V-text-dim); line-height: 1.4; flex: 1;
+}
+
+/* ── Vehicle: elevation profile ── */
+.V-elevation {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--V-border);
+}
+.V-elevation-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 400; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--V-text-dim);
+  margin-bottom: 5px;
+}
+.V-elev-svg {
+  display: block; width: 100%;
+  background: rgba(0,255,200,0.015);
+  border: 1px solid var(--V-border2); border-radius: 2px;
+}
+
+/* ── Vehicle: bearing compass widget ── */
+.V-bearing-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--V-border);
+  margin-top: 6px;
+}
+.V-bearing-compass { flex-shrink: 0; }
+
+.V-bearing-info {}
+.V-bearing-deg {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px; font-weight: 700; color: var(--V-cyan);
+  line-height: 1; letter-spacing: -0.02em;
+}
+.V-bearing-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 300; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--V-text-dim); margin-top: 3px;
+}
+.V-bearing-coords {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 300; letter-spacing: 0.06em;
+  color: rgba(48,72,96,0.9); margin-top: 2px;
+}
+
+.V-bearing-status-col {
+  margin-left: auto;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.V-bs-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 8px;
+}
+.V-bs-key {
+  font-weight: 300; letter-spacing: 0.08em;
+  color: var(--V-text-dim); min-width: 52px;
+}
+.V-bs-val {
+  font-weight: 500; color: rgba(200,220,255,0.45);
+}
+.V-bs-val.ok { color: rgba(0,255,200,0.6); }
+
+/* ── Vehicle: route mini-map ── */
+.V-routemap {
+  margin-bottom: 10px;
+  border: 1px solid var(--V-border); border-radius: 2px;
+  overflow: hidden; background: rgba(0,255,200,0.015);
+}
+
+/* ── Executive: pull quote ── */
+.E-pullquote {
+  margin: 14px 0 0;
+  padding: 10px 0 10px 14px;
+  border-left: 2px solid var(--E-line);
+}
+.E-pullquote p {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-size: 11px; font-weight: 400;
+  color: var(--E-ink-dim); line-height: 1.6; letter-spacing: 0.01em;
+}
+.E-pullquote cite {
+  display: block; margin-top: 5px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal; font-size: 8px; font-weight: 300;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--E-ink-faint);
+}
+
+/* ── Executive: utilization bar ── */
+.E-util-row {
+  margin: 6px 0;
+}
+.E-util-label {
+  display: flex; justify-content: space-between;
+  font-family: 'Inter', sans-serif;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.1em;
+  color: var(--E-ink-dim); margin-bottom: 4px;
+}
+.E-util-track {
+  width: 100%; height: 3px; background: var(--E-line-dim);
+  border-radius: 2px; overflow: hidden;
+}
+.E-util-fill {
+  height: 100%; border-radius: 2px;
+  background: var(--E-ink);
+}
+
+/* ── Dispatch: telemetry mini under fleet summary ── */
+.D-tel-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 4px; margin-top: 5px;
+}
+.D-tel-chip {
+  background: rgba(0,255,200,0.03);
+  border: 1px solid rgba(0,255,200,0.07); border-radius: 2px;
+  padding: 4px 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 0.05em;
+}
+.D-tel-chip .lbl { color: var(--D-text-dim); font-weight: 300; font-size: 7px; display: block; letter-spacing: 0.1em; }
+.D-tel-chip .val { color: rgba(200,220,255,0.55); font-weight: 600; }
+
+/* ── Executive: colophon ── */
+.E-colophon {
+  padding: 12px 30px 0;
+  background: var(--E-bg);
+  position: relative; z-index: 2;
+  border-top: 1px solid var(--E-line);
+}
+.E-colophon-inner {
+  display: flex; align-items: center;
+  gap: 0; margin-bottom: 8px;
+}
+.E-col-stat { flex: 1; padding: 0 0; }
+.E-col-stat + .E-col-stat { padding-left: 12px; }
+.E-col-n {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 900; color: var(--E-ink);
+  line-height: 1; margin-bottom: 2px;
+}
+.E-col-l {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 7.5px; font-weight: 300; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--E-ink-faint);
+}
+.E-col-divider {
+  width: 1px; background: var(--E-line-dim);
+  align-self: stretch; flex-shrink: 0; margin: 2px 12px 2px 0;
+}
+.E-col-footnote {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--E-ink-faint); line-height: 1.6;
+  padding-top: 6px; border-top: 0.5px solid var(--E-line-dim);
+  margin-bottom: 0; padding-bottom: 10px;
+}
+
+/* ── Executive: folio header ── */
+.E-folio {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 7px; margin-bottom: 12px;
+  border-bottom: 2px solid var(--E-ink);
+}
+.E-folio-left, .E-folio-center, .E-folio-right {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px; font-weight: 300; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--E-ink-mid);
+}
+.E-folio-center {
+  color: var(--E-ink-faint); font-style: italic;
+  font-family: 'Playfair Display', serif;
+  font-size: 9px; letter-spacing: 0.04em; text-transform: none;
+}
+
+/* ── Executive: sector table ── */
+.E-sector-table {
+  margin-bottom: 4px;
+}
+.E-sector-head, .E-sector-row {
+  display: grid;
+  grid-template-columns: 1fr 36px 44px 36px;
+  align-items: center;
+  padding: 4px 0;
+  gap: 0;
+}
+.E-sector-head {
+  border-bottom: 1px solid var(--E-line);
+  margin-bottom: 2px;
+}
+.E-sector-head span {
+  font-family: 'Inter', sans-serif;
+  font-size: 7.5px; font-weight: 400; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--E-ink-faint);
+}
+.E-sector-row + .E-sector-row {
+  border-top: 0.5px solid var(--E-line-dim);
+}
+.E-sector-col-1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.04em;
+  color: var(--E-ink-mid);
+}
+.E-sector-col-n {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px; font-weight: 700; color: var(--E-ink);
+  text-align: right;
+}
+.E-sector-col-n.red { color: var(--E-red); }
+.E-sector-col-n.dim { color: var(--E-ink-faint); font-size: 12px; }
+
+/* ── Executive: secondary row ── */
+.E-secondary-row {
+  display: flex; align-items: stretch;
+  gap: 0; margin-bottom: 4px;
+}
+.E-sec-item {
+  flex: 1; padding: 6px 0;
+}
+.E-sec-item + .E-sec-item { padding-left: 12px; }
+.E-sec-sep {
+  width: 1px; background: var(--E-line-dim); flex-shrink: 0; margin: 4px 12px 4px 0;
+}
+.E-sec-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px; font-weight: 300; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--E-ink-faint);
+  display: block; margin-bottom: 2px;
+}
+.E-sec-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 700; color: var(--E-ink);
+  display: block; line-height: 1;
+}
+
+
+/* ── Dispatch: device list ── */
+.D-devlist {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--D-border2);
+}
+.D-devlist-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 400; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--D-text-dim);
+  margin-bottom: 5px;
+}
+.D-devlist-count {
+  color: rgba(0,255,200,0.45); font-weight: 600; margin-left: 4px;
+}
+.D-devlist-cmd {
+  color: rgba(200,220,255,0.18); font-size: 7.5px; letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.D-devtable { display: flex; flex-direction: column; gap: 1px; }
+
+.D-devrow {
+  display: grid;
+  grid-template-columns: 80px 76px 32px 72px 26px 16px;
+  align-items: center; gap: 0;
+  padding: 3px 6px 3px 8px;
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+.D-devrow:hover { background: rgba(0,255,200,0.03); }
+.D-devrow-selected {
+  background: rgba(0,255,200,0.05);
+  border-color: rgba(0,255,200,0.15);
+}
+
+.D-dev-id   { color: rgba(200,220,255,0.65); font-weight: 500; }
+.D-dev-plate{ color: var(--D-text-dim); font-size: 7.5px; }
+.D-dev-spd  { color: rgba(200,220,255,0.5); font-weight: 600; text-align: right; }
+.D-dev-spd.cyan   { color: var(--D-cyan); }
+.D-dev-spd.warn   { color: var(--D-amber); }
+.D-dev-spd.alert  { color: var(--D-alert); }
+.D-dev-spd.dim    { color: var(--D-text-dim); }
+.D-dev-driver { color: var(--D-text-dim); font-size: 8px; padding-left: 8px; }
+.D-dev-ago    { color: rgba(200,220,255,0.2); font-size: 7.5px; text-align: right; }
+.D-dev-status { text-align: right; font-size: 10px; }
+.D-dev-status.mvg   { color: rgba(0,255,200,0.5); }
+.D-dev-status.alert { color: var(--D-alert); animation: pulse-red 2s ease-in-out infinite; }
+.D-dev-status.idle  { color: var(--D-amber); opacity: 0.6; }
+
+/* ── Dispatch: silence band ── */
+.D-silence-band {
+  background: rgba(0,255,200,0.03);
+  border: 1px solid rgba(0,255,200,0.08);
+  border-radius: 2px; padding: 6px 10px;
+  margin: 8px 0 0;
+}
+.D-silence-inner {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; font-weight: 300; letter-spacing: 0.05em;
+  color: rgba(0,255,200,0.4);
+}
+.D-silence-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(0,255,200,0.4); flex-shrink: 0;
+}
+.D-silence-text { flex: 1; }
+.D-silence-time { color: var(--D-text-dim); font-size: 8px; }
+
+/* ── Dispatch: ops log ── */
+.D-opslog {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--D-border2);
+}
+.D-opslog-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 500; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--D-text-dim);
+  margin-bottom: 5px;
+}
+.D-opslog-entries { display: flex; flex-direction: column; gap: 1px; }
+
+.D-log-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 2px 0;
+  font-family: 'JetBrains Mono', monospace;
+  border-bottom: 1px solid rgba(0,255,200,0.03);
+}
+.D-log-row:last-child { border-bottom: none; }
+
+.D-log-ts {
+  font-size: 8px; font-weight: 300; color: var(--D-text-dim);
+  flex-shrink: 0; width: 30px;
+}
+.D-log-tag {
+  font-size: 7px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 1px 5px; border-radius: 2px;
+  flex-shrink: 0; min-width: 36px; text-align: center;
+}
+.D-log-tag.alert { background: rgba(255,56,100,0.12); color: var(--D-alert); }
+.D-log-tag.warn  { background: rgba(255,170,0,0.1);   color: var(--D-amber); }
+.D-log-tag.info  { background: rgba(0,255,200,0.06);  color: rgba(0,255,200,0.5); }
+.D-log-tag.ok    { background: rgba(0,255,200,0.08);  color: rgba(0,255,200,0.65); }
+
+.D-log-msg {
+  font-size: 8px; font-weight: 300; letter-spacing: 0.03em;
+  color: var(--D-text-dim); flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+</style>
+</head>
+
+<body>
+<div class="shell">
+
+  <!-- ═══════════════════════════════════════════════════
+       TOP BAR
+  ════════════════════════════════════════════════════ -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="accent">ONE</span>FLEET &thinsp;·&thinsp; Abstraction Elevator
+    </div>
+
+    <div class="mode-rail">
+      <button class="mode-pill exec">
+        <span class="kbd">⌘1</span>&nbsp;[E]&thinsp;Executive
+      </button>
+      <div class="mode-divider-dot">·</div>
+      <button class="mode-pill disp">
+        <span class="kbd">⌘2</span>&nbsp;[D]&thinsp;Dispatch
+      </button>
+      <div class="mode-divider-dot">·</div>
+      <button class="mode-pill veh">
+        <span class="kbd">⌘3</span>&nbsp;[V]&thinsp;Vehicle
+      </button>
+    </div>
+
+    <div class="topbar-meta">
+      <span class="clock" id="clk">03:47:21 WIB</span>
+      <span class="date">Fri 23 May 2026</span>
+      <span class="live-chip">247 LIVE</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TRIPTYCH
+  ════════════════════════════════════════════════════ -->
+  <div class="triptych">
+
+    <!-- ═══════════════════════════════════════════
+         COLUMN E — EXECUTIVE
+    ══════════════════════════════════════════════ -->
+    <div class="col-E">
+      <div class="E-inner">
+
+        <!-- Folio header -->
+        <div class="E-folio">
+          <div class="E-folio-left">ONEFLEET &thinsp;·&thinsp; DISPATCH OPS</div>
+          <div class="E-folio-center">Vol. XXIV &thinsp;·&thinsp; No. 143</div>
+          <div class="E-folio-right">03:47 WIB</div>
+        </div>
+
+        <!-- Mode indicator -->
+        <div class="E-mode-bar">
+          <div class="E-mode-tag">
+            <span class="bracket">[E]</span>
+            Executive
+            <span class="alt-label">· 30,000 ft</span>
+          </div>
+          <div class="E-date-cap">Fri 23 May 2026</div>
+        </div>
+
+        <!-- Top rule -->
+        <div class="E-rule-double"></div>
+
+        <!-- Kicker -->
+        <div class="E-kicker">Operations Briefing &thinsp;·&thinsp; <span>03:47 WIB</span> &thinsp;·&thinsp; Jakarta Sector VII</div>
+
+        <!-- Headline — huge Playfair -->
+        <div class="E-headline">
+          <span class="line1">Two Hundred</span>
+          <span class="line2">Forty-Seven</span>
+          <span class="line3">Units · Fleet</span>
+        </div>
+
+        <!-- Italic serif subhed with drop-cap -->
+        <div class="E-subhed">
+          <span class="drop-cap">O</span>ne hundred eighty-four
+          <span class="mid-dot">·</span>
+          in motion
+          <span class="mid-dot">·</span>
+          this hour.
+          Seventy-four point five percent utilization.
+        </div>
+
+        <div class="E-rule-thin"></div>
+
+        <!-- Status grid -->
+        <div class="E-status-grid">
+          <div class="E-stat-cell">
+            <span class="E-stat-n">184</span>
+            <span class="E-stat-l">Moving</span>
+          </div>
+          <div class="E-stat-cell">
+            <span class="E-stat-n dim">41</span>
+            <span class="E-stat-l">Idle</span>
+          </div>
+          <div class="E-stat-cell">
+            <span class="E-stat-n dim">18</span>
+            <span class="E-stat-l">Stopped</span>
+          </div>
+          <div class="E-stat-cell">
+            <span class="E-stat-n dim" style="font-size:18px; margin-top:5px;">4</span>
+            <span class="E-stat-l">Offline</span>
+          </div>
+        </div>
+
+        <!-- Sector table -->
+        <div class="E-sector-table">
+          <div class="E-sector-head">
+            <span class="E-sector-col-1">Sector</span>
+            <span class="E-sector-col-n">Units</span>
+            <span class="E-sector-col-n">Moving</span>
+            <span class="E-sector-col-n">Alerts</span>
+          </div>
+          <div class="E-sector-row">
+            <span class="E-sector-col-1">Jakarta · Pusat &amp; Selatan</span>
+            <span class="E-sector-col-n">112</span>
+            <span class="E-sector-col-n">84</span>
+            <span class="E-sector-col-n red">2</span>
+          </div>
+          <div class="E-sector-row">
+            <span class="E-sector-col-1">Bekasi · Timur</span>
+            <span class="E-sector-col-n">89</span>
+            <span class="E-sector-col-n">67</span>
+            <span class="E-sector-col-n red">1</span>
+          </div>
+          <div class="E-sector-row">
+            <span class="E-sector-col-1">Tangerang · Barat</span>
+            <span class="E-sector-col-n">46</span>
+            <span class="E-sector-col-n">33</span>
+            <span class="E-sector-col-n dim">0</span>
+          </div>
+        </div>
+
+        <div class="E-rule-thin"></div>
+
+        <!-- Utilization bar -->
+        <div class="E-util-row">
+          <div class="E-util-label">
+            <span>Fleet utilization</span>
+            <span>74.5%</span>
+          </div>
+          <div class="E-util-track">
+            <div class="E-util-fill" style="width:74.5%"></div>
+          </div>
+        </div>
+
+        <div class="E-rule-thin"></div>
+
+        <!-- Pull quote -->
+        <div class="E-pullquote">
+          <p>"two hundred forty-seven units · seventy-four percent in motion · this hour. Three incidents under active management."</p>
+          <cite>Fleet Operations Centre · Jakarta Pusat</cite>
+        </div>
+
+        <div class="E-rule-thin"></div>
+
+        <!-- Alert section -->
+        <div class="E-alert-kicker">3 Active Alerts</div>
+
+        <div class="E-alert">
+          <div class="E-alert-glyph">—</div>
+          <div class="E-alert-body">
+            <div class="E-alert-who">TRUCK-189</div>
+            <div class="E-alert-what">Speed 92 km/h in 60 zone &thinsp;·&thinsp; Sektor 7 &thinsp;·&thinsp; Tol Cipularang</div>
+          </div>
+          <div class="E-alert-time">02:51</div>
+        </div>
+        <div class="E-alert">
+          <div class="E-alert-glyph">—</div>
+          <div class="E-alert-body">
+            <div class="E-alert-who">VAN-118</div>
+            <div class="E-alert-what">Geofence exit &thinsp;·&thinsp; Pulogadung Warehouse &thinsp;·&thinsp; NE gate</div>
+          </div>
+          <div class="E-alert-time">03:14</div>
+        </div>
+        <div class="E-alert">
+          <div class="E-alert-glyph">—</div>
+          <div class="E-alert-body">
+            <div class="E-alert-who">PICKUP-042</div>
+            <div class="E-alert-what">Idling ≥ 10 minutes &thinsp;·&thinsp; Senayan &thinsp;·&thinsp; Jl. Asia Afrika</div>
+          </div>
+          <div class="E-alert-time">03:36</div>
+        </div>
+
+        <div class="E-rule-thin"></div>
+
+        <!-- Map thumbnail -->
+        <!-- Secondary stats row -->
+        <div class="E-secondary-row">
+          <div class="E-sec-item">
+            <span class="E-sec-label">Avg. speed active fleet</span>
+            <span class="E-sec-val">58 km/h</span>
+          </div>
+          <div class="E-sec-sep"></div>
+          <div class="E-sec-item">
+            <span class="E-sec-label">Total km today</span>
+            <span class="E-sec-val">12,847 km</span>
+          </div>
+          <div class="E-sec-sep"></div>
+          <div class="E-sec-item">
+            <span class="E-sec-label">Deliveries completed</span>
+            <span class="E-sec-val">94 / 118</span>
+          </div>
+        </div>
+
+        <div class="E-rule-thin"></div>
+
+        <div class="E-map-block">
+          <div class="E-map-caption">
+            Fleet Distribution — Jakarta to Bandung
+            <span>247 markers</span>
+          </div>
+          <div class="E-map">
+            <svg width="100%" height="100%" viewBox="0 0 440 110" preserveAspectRatio="xMidYMid slice"
+                 xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Paper ground -->
+              <rect width="440" height="110" fill="#ede8de"/>
+
+              <!-- Water area (Java Sea / coast hatching) -->
+              <g stroke="#cfc7b8" stroke-width="0.4" opacity="0.6">
+                <line x1="0" y1="0" x2="30" y2="15"/>
+                <line x1="0" y1="12" x2="30" y2="27"/>
+                <line x1="0" y1="24" x2="18" y2="33"/>
+                <line x1="410" y1="95" x2="440" y2="80"/>
+                <line x1="420" y1="110" x2="440" y2="98"/>
+              </g>
+
+              <!-- Cipularang highway (main) -->
+              <path d="M 30 52 Q 90 48 150 50 Q 210 52 280 56 Q 350 60 420 64"
+                    fill="none" stroke="#1a1410" stroke-width="1.6" opacity="0.45"/>
+
+              <!-- Pantura (coast road) -->
+              <path d="M 10 28 Q 90 24 180 22 Q 280 21 380 20 Q 420 20 440 21"
+                    fill="none" stroke="#1a1410" stroke-width="0.7" opacity="0.22"/>
+
+              <!-- Ringroad Jakarta -->
+              <path d="M 155 25 L 165 50 L 158 68 L 145 72 L 132 60 L 136 40 Z"
+                    fill="none" stroke="#1a1410" stroke-width="0.6" stroke-dasharray="3 2" opacity="0.2"/>
+
+              <!-- Connector roads -->
+              <path d="M 155 50 L 150 75 L 160 90" fill="none" stroke="#1a1410" stroke-width="0.5" opacity="0.15"/>
+              <path d="M 165 50 L 175 75" fill="none" stroke="#1a1410" stroke-width="0.5" opacity="0.15"/>
+              <path d="M 210 52 L 215 78" fill="none" stroke="#1a1410" stroke-width="0.4" opacity="0.12"/>
+
+              <!-- District labels -->
+              <text x="158" y="45" font-family="Georgia,serif" font-size="6" font-style="italic" fill="#7a6e62" opacity="0.65" text-anchor="middle">Jakarta</text>
+              <text x="308" y="68" font-family="Georgia,serif" font-size="6" font-style="italic" fill="#7a6e62" opacity="0.45" text-anchor="middle">Bandung</text>
+              <text x="95" y="30" font-family="Georgia,serif" font-size="5.5" font-style="italic" fill="#7a6e62" opacity="0.4" text-anchor="middle">Tangerang</text>
+              <text x="220" y="38" font-family="Georgia,serif" font-size="5.5" font-style="italic" fill="#7a6e62" opacity="0.35" text-anchor="middle">Bekasi</text>
+              <text x="140" y="85" font-family="Georgia,serif" font-size="5" font-style="italic" fill="#7a6e62" opacity="0.3" text-anchor="middle">Bogor</text>
+
+              <!-- Moving vehicles (filled dots) -->
+              <circle cx="154" cy="50" r="2.5" fill="#1a1410" opacity="0.75"/>  <!-- TRUCK-247 selected -->
+              <circle cx="154" cy="50" r="6" fill="none" stroke="#9d2a2a" stroke-width="0.8" opacity="0.65"/>
+              <circle cx="143" cy="47" r="1.8" fill="#1a1410" opacity="0.7"/>
+              <circle cx="162" cy="48" r="1.8" fill="#1a1410" opacity="0.65"/>
+              <circle cx="160" cy="55" r="1.8" fill="#1a1410" opacity="0.65"/>
+              <circle cx="148" cy="54" r="1.8" fill="#1a1410" opacity="0.6"/>
+              <circle cx="175" cy="51" r="1.8" fill="#1a1410" opacity="0.65"/>
+              <circle cx="192" cy="52" r="1.8" fill="#1a1410" opacity="0.6"/>
+              <circle cx="210" cy="54" r="1.8" fill="#1a1410" opacity="0.55"/>
+              <circle cx="228" cy="55" r="1.8" fill="#1a1410" opacity="0.5"/>
+              <circle cx="250" cy="57" r="1.8" fill="#1a1410" opacity="0.5"/>
+              <circle cx="275" cy="59" r="1.8" fill="#1a1410" opacity="0.45"/>
+              <circle cx="300" cy="61" r="1.8" fill="#1a1410" opacity="0.4"/>
+
+              <!-- Alert vehicles (red rings) -->
+              <circle cx="171" cy="49" r="2.2" fill="none" stroke="#9d2a2a" stroke-width="1" opacity="0.75"/>  <!-- TRUCK-189 -->
+              <circle cx="178" cy="57" r="2.2" fill="none" stroke="#9d2a2a" stroke-width="1" opacity="0.7"/>   <!-- VAN-118 -->
+              <circle cx="161" cy="62" r="2.2" fill="none" stroke="#9d2a2a" stroke-width="1" opacity="0.65"/>  <!-- PICKUP-042 -->
+
+              <!-- Idle vehicles (hollow circles) -->
+              <circle cx="128" cy="52" r="1.8" fill="none" stroke="#7a6e62" stroke-width="0.8" opacity="0.6"/>
+              <circle cx="136" cy="57" r="1.8" fill="none" stroke="#7a6e62" stroke-width="0.8" opacity="0.55"/>
+              <circle cx="280" cy="60" r="1.8" fill="none" stroke="#7a6e62" stroke-width="0.8" opacity="0.4"/>
+              <circle cx="310" cy="62" r="1.8" fill="none" stroke="#7a6e62" stroke-width="0.8" opacity="0.35"/>
+
+              <!-- Stopped (tiny squares) -->
+              <rect x="118" y="50" width="3" height="3" fill="none" stroke="#7a6e62" stroke-width="0.7" opacity="0.45"/>
+              <rect x="340" y="63" width="3" height="3" fill="none" stroke="#7a6e62" stroke-width="0.7" opacity="0.3"/>
+
+              <!-- Scale bar -->
+              <line x1="360" y1="100" x2="410" y2="100" stroke="#7a6e62" stroke-width="0.7" opacity="0.4"/>
+              <line x1="360" y1="97" x2="360" y2="103" stroke="#7a6e62" stroke-width="0.7" opacity="0.4"/>
+              <line x1="410" y1="97" x2="410" y2="103" stroke="#7a6e62" stroke-width="0.7" opacity="0.4"/>
+              <text x="385" y="109" font-family="monospace" font-size="5" fill="#7a6e62" opacity="0.5" text-anchor="middle">50 km</text>
+
+              <!-- Compass rose (minimal) -->
+              <g transform="translate(24, 88)">
+                <line x1="0" y1="-8" x2="0" y2="8" stroke="#3a3028" stroke-width="0.7" opacity="0.5"/>
+                <line x1="-8" y1="0" x2="8" y2="0" stroke="#3a3028" stroke-width="0.7" opacity="0.5"/>
+                <polygon points="0,-8 -2,-3 2,-3" fill="#9d2a2a" opacity="0.6"/>
+                <text x="0" y="-10" font-family="serif" font-size="5" fill="#7a6e62" opacity="0.5" text-anchor="middle">N</text>
+              </g>
+
+            </svg>
+          </div>
+        </div>
+
+      </div><!-- /E-inner -->
+
+      <!-- Colophon block -->
+      <div class="E-colophon">
+        <div class="E-colophon-inner">
+          <div class="E-col-stat">
+            <span class="E-col-n">74.5%</span>
+            <span class="E-col-l">Utilization</span>
+          </div>
+          <div class="E-col-divider"></div>
+          <div class="E-col-stat">
+            <span class="E-col-n">12,847</span>
+            <span class="E-col-l">km total today</span>
+          </div>
+          <div class="E-col-divider"></div>
+          <div class="E-col-stat">
+            <span class="E-col-n">94/118</span>
+            <span class="E-col-l">deliveries done</span>
+          </div>
+          <div class="E-col-divider"></div>
+          <div class="E-col-stat">
+            <span class="E-col-n">3</span>
+            <span class="E-col-l">active incidents</span>
+          </div>
+        </div>
+        <div class="E-col-footnote">
+          All figures current as at 03:47 WIB. Data refreshes every 30 seconds.
+          Incidents escalated automatically to operations manager on duty.
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="E-sig">
+        <div class="E-sig-main">Operations Briefing &thinsp;·&thinsp; 03:47 WIB &thinsp;·&thinsp; 23 May 2026</div>
+        <div class="E-sig-sub">Verified — Fleet Operations Centre, Jakarta Pusat</div>
+      </div>
+
+      <!-- Altitude footer -->
+      <div class="E-altitude">
+        <div class="E-alt-left">
+          <div class="E-alt-dot"></div>
+          30,000 FT &thinsp;·&thinsp; Executive Altitude
+        </div>
+        <div>Read in ten seconds</div>
+      </div>
+    </div><!-- /col-E -->
+
+    <div class="v-divider"></div>
+
+    <!-- ═══════════════════════════════════════════
+         COLUMN D — DISPATCH
+    ══════════════════════════════════════════════ -->
+    <div class="col-D">
+      <div class="D-inner">
+
+        <!-- Mode bar -->
+        <div class="D-mode-bar">
+          <div class="D-mode-tag">
+            <span class="bracket">[D]</span>
+            Dispatch
+            <span class="alt-frag">· 1,000 ft</span>
+          </div>
+          <div class="D-alert-chip">
+            <div class="D-chip-dot"></div>
+            3 active
+          </div>
+        </div>
+
+        <!-- Queue header -->
+        <div class="D-queue-head">
+          <div class="D-queue-title">3 things needing your decision</div>
+          <div class="D-queue-sub">next 30 minutes &thinsp;·&thinsp; ranked by impact &thinsp;·&thinsp; silence = nothing needs you</div>
+        </div>
+
+        <!-- Exception 1 — URGENT / RED -->
+        <div class="D-exc red">
+          <div class="D-exc-accent"></div>
+          <div class="D-exc-top">
+            <div class="D-exc-id-row">
+              <span class="D-exc-id">TRUCK-189</span>
+              <span class="D-exc-sep">·</span>
+              <span class="D-exc-type">Speed +32%</span>
+            </div>
+            <div class="D-impact">Urgent</div>
+          </div>
+          <div class="D-exc-meta">
+            <span class="loc">Sektor 7 &thinsp;·&thinsp; Tol Cipularang KM 84</span>&ensp;
+            <span class="ts">02:51 WIB</span><br>
+            Running <span class="val">92 km/h</span> in <span class="val">60 km/h</span> zone &thinsp;·&thinsp; driver unresponsive on radio
+          </div>
+          <div class="D-actions">
+            <button class="D-btn primary red">Acknowledge</button>
+            <button class="D-btn ghost red">Reroute</button>
+            <button class="D-btn ghost red">Call Driver</button>
+            <button class="D-btn ghost red">Snooze 15m</button>
+          </div>
+        </div>
+
+        <!-- Exception 2 — 30 MIN / AMBER -->
+        <div class="D-exc amber">
+          <div class="D-exc-accent"></div>
+          <div class="D-exc-top">
+            <div class="D-exc-id-row">
+              <span class="D-exc-id">VAN-118</span>
+              <span class="D-exc-sep">·</span>
+              <span class="D-exc-type">Fence Exit</span>
+            </div>
+            <div class="D-impact">30 min</div>
+          </div>
+          <div class="D-exc-meta">
+            <span class="loc">Pulogadung Warehouse &thinsp;·&thinsp; NE gate</span>&ensp;
+            <span class="ts">03:14 WIB</span><br>
+            Departed authorized zone &thinsp;·&thinsp; <span class="val">2.4 km</span> outside perimeter &thinsp;·&thinsp; 8 km/h
+          </div>
+          <div class="D-actions">
+            <button class="D-btn primary amber">Acknowledge</button>
+            <button class="D-btn ghost amber">Reroute</button>
+            <button class="D-btn ghost amber">Call Driver</button>
+            <button class="D-btn ghost amber">Snooze 15m</button>
+          </div>
+        </div>
+
+        <!-- Exception 3 — 60 MIN / CYAN -->
+        <div class="D-exc cyan">
+          <div class="D-exc-accent"></div>
+          <div class="D-exc-top">
+            <div class="D-exc-id-row">
+              <span class="D-exc-id" style="color:rgba(200,220,255,0.65);">PICKUP-042</span>
+              <span class="D-exc-sep">·</span>
+              <span class="D-exc-type">Idle 10+ min</span>
+            </div>
+            <div class="D-impact">60 min</div>
+          </div>
+          <div class="D-exc-meta">
+            <span class="loc">Senayan &thinsp;·&thinsp; Jl. Asia Afrika intersection</span>&ensp;
+            <span class="ts">03:36 WIB</span><br>
+            Engine running &thinsp;·&thinsp; speed <span class="val">0 km/h</span> &thinsp;·&thinsp; road closure confirmed
+          </div>
+          <div class="D-actions">
+            <button class="D-btn primary cyan">Acknowledge</button>
+            <button class="D-btn ghost cyan">Reroute</button>
+            <button class="D-btn ghost cyan">Call Driver</button>
+            <button class="D-btn ghost cyan">Snooze 15m</button>
+          </div>
+        </div>
+
+        <!-- Bottom: map + fleet summary + selected vehicle -->
+        <div class="D-bottom">
+
+          <!-- Map thumbnail -->
+          <div class="D-map-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 152 108"
+                 preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="dg1" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(0,255,200,0.04)"/>
+                  <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+                </radialGradient>
+              </defs>
+              <rect width="152" height="108" fill="#02091a"/>
+              <ellipse cx="76" cy="54" rx="60" ry="42" fill="url(#dg1)"/>
+
+              <!-- Faint grid -->
+              <line x1="0" y1="54" x2="152" y2="54" stroke="rgba(0,255,200,0.06)" stroke-width="0.5"/>
+              <line x1="76" y1="0" x2="76" y2="108" stroke="rgba(0,255,200,0.06)" stroke-width="0.5"/>
+
+              <!-- Main road E-W -->
+              <path d="M 5 50 Q 40 47 76 48 Q 112 49 147 51"
+                    fill="none" stroke="rgba(0,255,200,0.18)" stroke-width="1"/>
+              <!-- N-S connector -->
+              <path d="M 76 10 Q 78 45 76 80"
+                    fill="none" stroke="rgba(0,255,200,0.08)" stroke-width="0.6"/>
+
+              <!-- Jakarta district faint box -->
+              <rect x="48" y="26" width="50" height="44" rx="1"
+                    fill="none" stroke="rgba(0,255,200,0.08)" stroke-width="0.5" stroke-dasharray="2 2"/>
+
+              <!-- Alert markers with glow rings -->
+              <!-- TRUCK-189 -->
+              <circle cx="87" cy="46" r="8" fill="rgba(255,56,100,0.06)"/>
+              <circle cx="87" cy="46" r="4" fill="rgba(255,56,100,0.2)"/>
+              <circle cx="87" cy="46" r="2" fill="#ff3864"/>
+              <!-- VAN-118 -->
+              <circle cx="95" cy="56" r="8" fill="rgba(255,170,0,0.05)"/>
+              <circle cx="95" cy="56" r="4" fill="rgba(255,170,0,0.18)"/>
+              <circle cx="95" cy="56" r="2" fill="#ffaa00"/>
+              <!-- PICKUP-042 -->
+              <circle cx="74" cy="62" r="7" fill="rgba(0,255,200,0.04)"/>
+              <circle cx="74" cy="62" r="3.5" fill="rgba(0,255,200,0.15)"/>
+              <circle cx="74" cy="62" r="1.8" fill="rgba(0,255,200,0.55)"/>
+
+              <!-- TRUCK-247 selected -->
+              <circle cx="70" cy="49" r="6" fill="rgba(0,255,200,0.08)"/>
+              <circle cx="70" cy="49" r="3" fill="rgba(0,255,200,0.35)"/>
+              <circle cx="70" cy="49" r="1.8" fill="#00ffc8"/>
+
+              <!-- Other vehicles dim -->
+              <circle cx="58" cy="47" r="1.2" fill="rgba(0,255,200,0.25)"/>
+              <circle cx="64" cy="52" r="1.2" fill="rgba(0,255,200,0.2)"/>
+              <circle cx="80" cy="50" r="1.2" fill="rgba(0,255,200,0.2)"/>
+              <circle cx="102" cy="50" r="1.2" fill="rgba(0,255,200,0.15)"/>
+              <circle cx="116" cy="51" r="1.2" fill="rgba(0,255,200,0.12)"/>
+
+              <!-- Labels -->
+              <text x="76" y="14" font-family="monospace" font-size="5" fill="rgba(0,255,200,0.3)" text-anchor="middle" letter-spacing="1">JKT</text>
+            </svg>
+          </div>
+
+          <!-- Right side -->
+          <div class="D-right-col">
+            <!-- Fleet summary -->
+            <div class="D-fleet-summary">
+              <div class="D-fl-line"><span class="n">247</span> units tracked</div>
+              <div class="D-fl-line">
+                <span class="mvg">↑ 184 moving</span>&ensp;·&ensp;
+                <span class="idl">↘ 41 idle</span>&ensp;·&ensp;
+                <span class="stp">■ 18 stopped</span>&ensp;·&ensp;
+                <span class="off">· 4 offline</span>
+              </div>
+              <div class="D-fl-line"><span class="calm">— none requiring attention beyond queue above</span></div>
+            </div>
+
+            <!-- Selected vehicle micro card -->
+            <div class="D-vc-card">
+              <div class="D-vc-top">
+                <div class="D-vc-id">TRUCK-247</div>
+                <div class="D-vc-speed">67<sup>km/h NW</sup></div>
+              </div>
+              <div class="D-vc-meta">
+                <span class="hl">Ahmad Wijaya</span> · ID #4471<br>
+                Jl. Sudirman, Jakarta Pusat · 12s ago<br>
+                247 km today · 6h 12m driving · 4 stops
+              </div>
+              <div class="D-tel-row">
+                <div class="D-tel-chip"><span class="lbl">Fuel</span><span class="val">68%</span></div>
+                <div class="D-tel-chip"><span class="lbl">Ignition</span><span class="val">ON</span></div>
+                <div class="D-tel-chip"><span class="lbl">Battery</span><span class="val">12.4V</span></div>
+                <div class="D-tel-chip"><span class="lbl">Engine</span><span class="val">24°C</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Silence indicator band -->
+        <div class="D-silence-band">
+          <div class="D-silence-inner">
+            <span class="D-silence-dot"></span>
+            <span class="D-silence-text">244 units operating normally &thinsp;·&thinsp; no action required</span>
+            <span class="D-silence-time">as of 03:47</span>
+          </div>
+        </div>
+
+        <!-- Ops log strip -->
+        <div class="D-opslog">
+          <div class="D-opslog-head">Recent ops log &thinsp;·&thinsp; last 30 min</div>
+          <div class="D-opslog-entries">
+            <div class="D-log-row">
+              <span class="D-log-ts">03:38</span>
+              <span class="D-log-tag info">INFO</span>
+              <span class="D-log-msg">TRUCK-247 resumed movement after idle · Senayan</span>
+            </div>
+            <div class="D-log-row">
+              <span class="D-log-ts">03:36</span>
+              <span class="D-log-tag warn">WARN</span>
+              <span class="D-log-msg">PICKUP-042 idle &gt;10m detected · Jl. Asia Afrika</span>
+            </div>
+            <div class="D-log-row">
+              <span class="D-log-ts">03:16</span>
+              <span class="D-log-tag ok">ACK</span>
+              <span class="D-log-msg">VAN-118 driver acknowledged geofence alert</span>
+            </div>
+            <div class="D-log-row">
+              <span class="D-log-ts">03:14</span>
+              <span class="D-log-tag alert">ALERT</span>
+              <span class="D-log-msg">VAN-118 exited Pulogadung Warehouse perimeter</span>
+            </div>
+            <div class="D-log-row">
+              <span class="D-log-ts">02:51</span>
+              <span class="D-log-tag alert">ALERT</span>
+              <span class="D-log-msg">TRUCK-189 over speed limit 92/60 Cipularang KM84</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device list: 10 visible units -->
+        <div class="D-devlist">
+          <div class="D-devlist-head">
+            <span>Unit roster <span class="D-devlist-count">10 of 247</span></span>
+            <span class="D-devlist-cmd">⌘B to browse all</span>
+          </div>
+          <div class="D-devtable">
+            <div class="D-devrow D-devrow-selected">
+              <span class="D-dev-id">TRUCK-247</span>
+              <span class="D-dev-plate">B 9421 KGV</span>
+              <span class="D-dev-spd cyan">67</span>
+              <span class="D-dev-driver">Ahmad W.</span>
+              <span class="D-dev-ago">12s</span>
+              <span class="D-dev-status mvg">▲</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">VAN-118</span>
+              <span class="D-dev-plate">B 7724 KTW</span>
+              <span class="D-dev-spd warn">8</span>
+              <span class="D-dev-driver">Rudi H.</span>
+              <span class="D-dev-ago">28s</span>
+              <span class="D-dev-status alert">!</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">TRUCK-203</span>
+              <span class="D-dev-plate">B 3310 KUV</span>
+              <span class="D-dev-spd">54</span>
+              <span class="D-dev-driver">Budi S.</span>
+              <span class="D-dev-ago">8s</span>
+              <span class="D-dev-status mvg">▲</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">VAN-095</span>
+              <span class="D-dev-plate">B 5592 KMN</span>
+              <span class="D-dev-spd">71</span>
+              <span class="D-dev-driver">Eko P.</span>
+              <span class="D-dev-ago">15s</span>
+              <span class="D-dev-status mvg">▲</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">TRUCK-189</span>
+              <span class="D-dev-plate">B 1891 KPQ</span>
+              <span class="D-dev-spd alert">92</span>
+              <span class="D-dev-driver">Yanto D.</span>
+              <span class="D-dev-ago">3s</span>
+              <span class="D-dev-status alert">!</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">PICKUP-042</span>
+              <span class="D-dev-plate">B 0421 KLR</span>
+              <span class="D-dev-spd dim">0</span>
+              <span class="D-dev-driver">Andi M.</span>
+              <span class="D-dev-ago">41s</span>
+              <span class="D-dev-status idle">↘</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">TRUCK-221</span>
+              <span class="D-dev-plate">B 2210 KST</span>
+              <span class="D-dev-spd">48</span>
+              <span class="D-dev-driver">Firman R.</span>
+              <span class="D-dev-ago">22s</span>
+              <span class="D-dev-status mvg">▲</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">VAN-176</span>
+              <span class="D-dev-plate">B 1762 KVX</span>
+              <span class="D-dev-spd dim">0</span>
+              <span class="D-dev-driver">Hendra W.</span>
+              <span class="D-dev-ago">2m</span>
+              <span class="D-dev-status idle">■</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">TRUCK-198</span>
+              <span class="D-dev-plate">B 1980 KZA</span>
+              <span class="D-dev-spd">62</span>
+              <span class="D-dev-driver">Slamet G.</span>
+              <span class="D-dev-ago">18s</span>
+              <span class="D-dev-status mvg">▲</span>
+            </div>
+            <div class="D-devrow">
+              <span class="D-dev-id">PICKUP-067</span>
+              <span class="D-dev-plate">B 0671 KCB</span>
+              <span class="D-dev-spd">39</span>
+              <span class="D-dev-driver">Agus T.</span>
+              <span class="D-dev-ago">31s</span>
+              <span class="D-dev-status mvg">▲</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /D-inner -->
+
+      <!-- Altitude footer -->
+      <div class="D-altitude">
+        <div class="D-alt-left">
+          <div class="D-alt-dot"></div>
+          1,000 FT &thinsp;·&thinsp; Dispatch Altitude
+        </div>
+        <div class="D-alt-right">3 decisions pending</div>
+      </div>
+    </div><!-- /col-D -->
+
+    <div class="v-divider"></div>
+
+    <!-- ═══════════════════════════════════════════
+         COLUMN V — VEHICLE
+    ══════════════════════════════════════════════ -->
+    <div class="col-V">
+      <div class="V-inner">
+
+        <!-- Mode bar -->
+        <div class="V-mode-bar">
+          <div class="V-mode-tag">
+            <span class="bracket">[V]</span>
+            Vehicle
+            <span class="alt-frag">· ground level</span>
+            <span class="veh-id">· TRUCK-247</span>
+          </div>
+        </div>
+
+        <!-- Route mini-map -->
+        <div class="V-routemap">
+          <svg width="100%" height="52" viewBox="0 0 440 52"
+               preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            <rect width="440" height="52" fill="rgba(0,255,200,0.02)" rx="2"/>
+            <!-- Route path Bekasi → Cawang → Sudirman -->
+            <path d="M 30 26 Q 100 24 160 25 Q 210 26 260 27 Q 310 28 360 26 Q 400 25 420 25"
+                  fill="none" stroke="rgba(0,255,200,0.15)" stroke-width="1.5"/>
+            <!-- Completed portion (thicker, brighter) -->
+            <path d="M 30 26 Q 100 24 160 25 Q 210 26 260 27 Q 310 28 355 26.5"
+                  fill="none" stroke="rgba(0,255,200,0.45)" stroke-width="2"/>
+            <!-- Waypoints -->
+            <circle cx="30"  cy="26" r="3" fill="rgba(0,255,200,0.3)" stroke="rgba(0,255,200,0.5)" stroke-width="1"/>
+            <circle cx="165" cy="25" r="3" fill="rgba(0,255,200,0.3)" stroke="rgba(0,255,200,0.4)" stroke-width="1"/>
+            <circle cx="275" cy="27" r="3" fill="rgba(0,255,200,0.3)" stroke="rgba(0,255,200,0.4)" stroke-width="1"/>
+            <!-- Current position -->
+            <circle cx="356" cy="26.5" r="5" fill="rgba(0,255,200,0.15)"/>
+            <circle cx="356" cy="26.5" r="3" fill="#00ffc8"/>
+            <!-- Destination (open) -->
+            <circle cx="420" cy="25" r="4" fill="none" stroke="rgba(0,255,200,0.2)" stroke-width="1" stroke-dasharray="2 1"/>
+            <!-- Labels -->
+            <text x="30"  y="42" font-family="monospace" font-size="7" fill="rgba(0,255,200,0.3)" text-anchor="middle">Bekasi</text>
+            <text x="165" y="42" font-family="monospace" font-size="7" fill="rgba(0,255,200,0.3)" text-anchor="middle">Cawang</text>
+            <text x="275" y="42" font-family="monospace" font-size="7" fill="rgba(0,255,200,0.3)" text-anchor="middle">Senayan</text>
+            <text x="356" y="14" font-family="monospace" font-size="7" fill="rgba(0,255,200,0.6)" text-anchor="middle">03:47 ●</text>
+            <text x="420" y="42" font-family="monospace" font-size="7" fill="rgba(200,220,255,0.2)" text-anchor="middle">Dest</text>
+            <!-- Distance legend -->
+            <text x="225" y="10" font-family="monospace" font-size="6.5" fill="rgba(0,255,200,0.25)" text-anchor="middle" letter-spacing="1">247 KM TODAY</text>
+          </svg>
+        </div>
+
+        <!-- Vehicle hero -->
+        <div class="V-hero">
+          <div class="V-title-col">
+            <div class="V-name">TRUCK-247</div>
+            <div class="V-plate">B 9421 KGV</div>
+            <div class="V-location">
+              <span class="loc-name">Jl. Sudirman</span>, Jakarta Pusat<br>
+              -6.2087, 106.8456 &thinsp;·&thinsp; 12s ago
+            </div>
+          </div>
+          <div class="V-speed-col">
+            <div class="V-spd-big">67</div>
+            <span class="V-spd-unit">KM/H · NW</span>
+            <div><span class="V-status-chip">MOVING</span></div>
+          </div>
+        </div>
+
+        <!-- Driver strip -->
+        <div class="V-driver">
+          <div class="V-avatar">AW</div>
+          <div>
+            <div class="V-driver-name">Ahmad Wijaya</div>
+            <div class="V-driver-meta">ID #4471 &thinsp;·&thinsp; +62 812 4471 2208</div>
+          </div>
+          <div class="V-telemetry-mini">
+            <div class="V-tel-item"><span class="v">ON</span>Ignition</div>
+            <div class="V-tel-item"><span class="v">68%</span>Fuel</div>
+            <div class="V-tel-item"><span class="v">12.4V</span>Battery</div>
+            <div class="V-tel-item"><span class="v">24°C</span>Engine</div>
+          </div>
+        </div>
+
+        <!-- Today tiles -->
+        <div class="V-today">
+          <div class="V-tile">
+            <span class="V-tile-n">247</span>
+            <span class="V-tile-l">km today</span>
+          </div>
+          <div class="V-tile">
+            <span class="V-tile-n">6h12</span>
+            <span class="V-tile-l">driving</span>
+          </div>
+          <div class="V-tile">
+            <span class="V-tile-n">4</span>
+            <span class="V-tile-l">stops</span>
+          </div>
+          <div class="V-tile" style="border-color:rgba(255,56,100,0.15)">
+            <span class="V-tile-n alert">1</span>
+            <span class="V-tile-l">alert</span>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="V-tl-head">Event Timeline &thinsp;·&thinsp; Last 12h</div>
+
+        <div class="V-timeline">
+
+          <div class="V-evt">
+            <div class="V-evt-ts">03:47</div>
+            <div class="V-evt-node current"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main"><span class="ok-ic">✓</span> Moving &thinsp;·&thinsp; 67 km/h &thinsp;·&thinsp; Heading NW</div>
+              <div class="V-evt-sub">Jl. Sudirman, Jakarta Pusat &thinsp;·&thinsp; now</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts">03:36</div>
+            <div class="V-evt-node warn"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main"><span class="warn-ic">⚠</span> Idling 11 min &thinsp;·&thinsp; Engine on, 0 km/h</div>
+              <div class="V-evt-sub">Senayan &thinsp;·&thinsp; intersection closed (Asia Afrika)</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts">03:14</div>
+            <div class="V-evt-node warn"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main"><span class="warn-ic">⚠</span> Geofence exit &thinsp;·&thinsp; Pulogadung</div>
+              <div class="V-evt-sub">Departed warehouse perimeter &thinsp;·&thinsp; 8.2 km/h</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts">03:12</div>
+            <div class="V-evt-node ok"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main"><span class="up-ic">▲</span> Ignition ON &thinsp;·&thinsp; Engine start</div>
+              <div class="V-evt-sub">Pulogadung Warehouse &thinsp;·&thinsp; cold start 24°C</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts">02:51</div>
+            <div class="V-evt-node ok"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main"><span class="up-ic">▲</span> Moving &thinsp;·&thinsp; route start</div>
+              <div class="V-evt-sub">Departure &thinsp;·&thinsp; Pulogadung → Sudirman</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts past">01:44</div>
+            <div class="V-evt-node info"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main past">■ Stopped &thinsp;·&thinsp; Cawang checkpoint</div>
+              <div class="V-evt-sub">22 min &thinsp;·&thinsp; fuel −4% &thinsp;·&thinsp; driver break</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts past">00:22</div>
+            <div class="V-evt-node info"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main past">■ Stopped &thinsp;·&thinsp; Bekasi checkpoint</div>
+              <div class="V-evt-sub">18 min &thinsp;·&thinsp; driver break logged</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts past" style="opacity:0.3">23:10</div>
+            <div class="V-evt-node dim"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main past" style="opacity:0.4">· Overnight stop &thinsp;·&thinsp; Bekasi depot</div>
+              <div class="V-evt-sub" style="opacity:0.4">Previous day &thinsp;·&thinsp; shift start 23:00</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts past" style="opacity:0.22">22:34</div>
+            <div class="V-evt-node dim"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main past" style="opacity:0.3">▲ Moving &thinsp;·&thinsp; 58 km/h · Bekasi → Jakarta</div>
+              <div class="V-evt-sub" style="opacity:0.3">Evening run · Tol Becakayu</div>
+            </div>
+          </div>
+
+          <div class="V-evt">
+            <div class="V-evt-ts past" style="opacity:0.18">21:15</div>
+            <div class="V-evt-node dim"></div>
+            <div class="V-evt-body">
+              <div class="V-evt-main past" style="opacity:0.25">■ Stop &thinsp;·&thinsp; Cikarang delivery point</div>
+              <div class="V-evt-sub" style="opacity:0.25">Delivery confirmed &thinsp;·&thinsp; 34 min</div>
+            </div>
+          </div>
+
+        </div><!-- /V-timeline -->
+
+        <!-- Sparklines -->
+        <div class="V-sparks">
+
+          <!-- Speed -->
+          <div class="V-spark-tile">
+            <div class="V-spark-hdr">Speed <span class="val">67</span></div>
+            <svg class="V-spark-svg" height="30" viewBox="0 0 76 30" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="sp1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(0,255,200,0.28)"/>
+                  <stop offset="100%" stop-color="rgba(0,255,200,0)"/>
+                </linearGradient>
+              </defs>
+              <path d="M0 24 L8 22 L16 17 L24 20 L32 24 L40 26 L48 21 L56 16 L64 13 L70 9 L76 8"
+                    fill="none" stroke="rgba(0,255,200,0.65)" stroke-width="1.2"/>
+              <path d="M0 24 L8 22 L16 17 L24 20 L32 24 L40 26 L48 21 L56 16 L64 13 L70 9 L76 8 L76 30 L0 30Z"
+                    fill="url(#sp1)"/>
+              <circle cx="76" cy="8" r="2" fill="#00ffc8"/>
+            </svg>
+          </div>
+
+          <!-- Fuel -->
+          <div class="V-spark-tile">
+            <div class="V-spark-hdr">Fuel <span class="val">68%</span></div>
+            <svg class="V-spark-svg" height="30" viewBox="0 0 76 30" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="sp2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(255,170,0,0.22)"/>
+                  <stop offset="100%" stop-color="rgba(255,170,0,0)"/>
+                </linearGradient>
+              </defs>
+              <path d="M0 12 L10 12.5 L20 13 L30 14 L40 14.5 L50 15.5 L60 16.5 L68 17.5 L76 18"
+                    fill="none" stroke="rgba(255,170,0,0.6)" stroke-width="1.2"/>
+              <path d="M0 12 L10 12.5 L20 13 L30 14 L40 14.5 L50 15.5 L60 16.5 L68 17.5 L76 18 L76 30 L0 30Z"
+                    fill="url(#sp2)"/>
+              <circle cx="76" cy="18" r="2" fill="rgba(255,170,0,0.8)"/>
+            </svg>
+          </div>
+
+          <!-- Ignition state -->
+          <div class="V-spark-tile">
+            <div class="V-spark-hdr">Ign <span class="val">ON</span></div>
+            <svg class="V-spark-svg" height="30" viewBox="0 0 76 30" xmlns="http://www.w3.org/2000/svg">
+              <!-- Off period -->
+              <rect x="0" y="18" width="36" height="5" rx="1" fill="rgba(200,220,255,0.06)"/>
+              <!-- On period -->
+              <rect x="38" y="10" width="38" height="5" rx="1" fill="rgba(0,255,200,0.3)"/>
+              <!-- Step indicator -->
+              <line x1="38" y1="4" x2="38" y2="26" stroke="rgba(0,255,200,0.35)" stroke-width="0.5" stroke-dasharray="2 1"/>
+              <text x="39" y="9" font-family="monospace" font-size="5" fill="rgba(0,255,200,0.45)">03:12</text>
+            </svg>
+          </div>
+
+          <!-- Route progress -->
+          <div class="V-spark-tile">
+            <div class="V-spark-hdr">Route <span class="val">247km</span></div>
+            <svg class="V-spark-svg" height="30" viewBox="0 0 76 30" xmlns="http://www.w3.org/2000/svg">
+              <!-- Track base -->
+              <rect x="4" y="13" width="68" height="3" rx="1.5" fill="rgba(200,220,255,0.07)"/>
+              <!-- Progress fill -->
+              <rect x="4" y="13" width="52" height="3" rx="1.5" fill="rgba(0,255,200,0.35)"/>
+              <!-- Stop dots -->
+              <circle cx="16" cy="14.5" r="2" fill="rgba(0,255,200,0.55)"/>
+              <circle cx="32" cy="14.5" r="2" fill="rgba(0,255,200,0.5)"/>
+              <circle cx="46" cy="14.5" r="2" fill="rgba(0,255,200,0.5)"/>
+              <!-- Current pos -->
+              <circle cx="56" cy="14.5" r="3" fill="#00ffc8"/>
+              <!-- Destination -->
+              <circle cx="72" cy="14.5" r="2" fill="none" stroke="rgba(200,220,255,0.18)" stroke-width="1"/>
+              <text x="4" y="26" font-family="monospace" font-size="4.5" fill="rgba(50,70,100,0.9)">Bekasi</text>
+              <text x="50" y="26" font-family="monospace" font-size="4.5" fill="rgba(0,255,200,0.4)">Sudirman</text>
+            </svg>
+          </div>
+
+        </div><!-- /V-sparks -->
+
+        <!-- Telemetry grid -->
+        <div class="V-telgrid">
+          <div class="V-telgrid-head">Live Telemetry</div>
+          <div class="V-telgrid-cells">
+            <div class="V-telcell">
+              <div class="V-telcell-label">Ignition</div>
+              <div class="V-telcell-val on">ON</div>
+              <div class="V-telcell-sub">since 03:12</div>
+            </div>
+            <div class="V-telcell">
+              <div class="V-telcell-label">Fuel</div>
+              <div class="V-telcell-val">68%</div>
+              <div class="V-telcell-sub">~340 L remain</div>
+            </div>
+            <div class="V-telcell">
+              <div class="V-telcell-label">Battery</div>
+              <div class="V-telcell-val">12.4 V</div>
+              <div class="V-telcell-sub">nominal</div>
+            </div>
+            <div class="V-telcell">
+              <div class="V-telcell-label">Engine</div>
+              <div class="V-telcell-val">24 °C</div>
+              <div class="V-telcell-sub">cold stable</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comms log -->
+        <div class="V-comms">
+          <div class="V-comms-head">Comms Log &thinsp;·&thinsp; TRUCK-247</div>
+          <div class="V-comms-entry outbound">
+            <span class="V-comms-time">03:14</span>
+            <span class="V-comms-who">Dispatch</span>
+            <span class="V-comms-msg">Geofence alert sent to driver — awaiting ACK</span>
+          </div>
+          <div class="V-comms-entry inbound">
+            <span class="V-comms-time">03:16</span>
+            <span class="V-comms-who">Ahmad W.</span>
+            <span class="V-comms-msg">Acknowledged — delivery confirmed, returning route</span>
+          </div>
+          <div class="V-comms-entry outbound">
+            <span class="V-comms-time">03:37</span>
+            <span class="V-comms-who">Dispatch</span>
+            <span class="V-comms-msg">Idle alert — confirm status at Senayan</span>
+          </div>
+          <div class="V-comms-entry inbound">
+            <span class="V-comms-time">03:38</span>
+            <span class="V-comms-who">Ahmad W.</span>
+            <span class="V-comms-msg">Road closed Asia Afrika, moving when clear</span>
+          </div>
+        </div>
+
+        <!-- Elevation profile -->
+        <div class="V-elevation">
+          <div class="V-elevation-head">Route elevation profile &thinsp;·&thinsp; Bekasi → Sudirman</div>
+          <svg class="V-elev-svg" height="36" viewBox="0 0 440 36" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="elev-g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(0,255,200,0.2)"/>
+                <stop offset="100%" stop-color="rgba(0,255,200,0)"/>
+              </linearGradient>
+            </defs>
+            <!-- Elevation path (simplified Jakarta–Sudirman: fairly flat, slight rise at toll) -->
+            <path d="M0 28 L40 26 L80 25 L110 24 L140 22 L160 20 L180 21 L210 22 L240 24 L270 23 L300 22 L330 21 L360 20 L390 19 L420 18 L440 17"
+                  fill="none" stroke="rgba(0,255,200,0.5)" stroke-width="1.2"/>
+            <path d="M0 28 L40 26 L80 25 L110 24 L140 22 L160 20 L180 21 L210 22 L240 24 L270 23 L300 22 L330 21 L360 20 L390 19 L420 18 L440 17 L440 36 L0 36 Z"
+                  fill="url(#elev-g)"/>
+            <!-- Current position marker -->
+            <line x1="356" y1="4" x2="356" y2="36" stroke="rgba(0,255,200,0.25)" stroke-width="0.5" stroke-dasharray="2 1"/>
+            <circle cx="356" cy="20" r="2.5" fill="#00ffc8"/>
+            <!-- Labels -->
+            <text x="0"   y="35" font-family="monospace" font-size="5" fill="rgba(48,72,96,0.8)">Bekasi</text>
+            <text x="160" y="35" font-family="monospace" font-size="5" fill="rgba(48,72,96,0.6)">Toll</text>
+            <text x="354" y="14" font-family="monospace" font-size="5" fill="rgba(0,255,200,0.55)" text-anchor="middle">now</text>
+            <text x="432" y="35" font-family="monospace" font-size="5" fill="rgba(48,72,96,0.5)" text-anchor="end">Sudirman</text>
+            <!-- Elev axis -->
+            <text x="438" y="18" font-family="monospace" font-size="5" fill="rgba(48,72,96,0.5)" text-anchor="end">~12m</text>
+            <text x="438" y="32" font-family="monospace" font-size="5" fill="rgba(48,72,96,0.4)" text-anchor="end">~0m</text>
+          </svg>
+        </div>
+
+        <!-- Bearing compass widget -->
+        <div class="V-bearing-row">
+          <div class="V-bearing-compass">
+            <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+              <!-- Compass circle -->
+              <circle cx="26" cy="26" r="24" fill="rgba(0,255,200,0.03)" stroke="rgba(0,255,200,0.12)" stroke-width="1"/>
+              <!-- Cardinal labels -->
+              <text x="26" y="8"  font-family="monospace" font-size="6" fill="rgba(0,255,200,0.5)"  text-anchor="middle">N</text>
+              <text x="44" y="29" font-family="monospace" font-size="6" fill="rgba(200,220,255,0.25)" text-anchor="start">E</text>
+              <text x="26" y="48" font-family="monospace" font-size="6" fill="rgba(200,220,255,0.25)" text-anchor="middle">S</text>
+              <text x="4"  y="29" font-family="monospace" font-size="6" fill="rgba(200,220,255,0.25)" text-anchor="start">W</text>
+              <!-- Tick marks -->
+              <line x1="26" y1="3"  x2="26" y2="7"  stroke="rgba(0,255,200,0.3)" stroke-width="1"/>
+              <line x1="49" y1="26" x2="45" y2="26" stroke="rgba(200,220,255,0.15)" stroke-width="0.7"/>
+              <line x1="26" y1="49" x2="26" y2="45" stroke="rgba(200,220,255,0.15)" stroke-width="0.7"/>
+              <line x1="3"  y1="26" x2="7"  y2="26" stroke="rgba(200,220,255,0.15)" stroke-width="0.7"/>
+              <!-- NW arrow (heading NW = 315°) -->
+              <!-- rotate around center 26,26 by 315deg -->
+              <g transform="rotate(315, 26, 26)">
+                <polygon points="26,6 23,22 26,19 29,22" fill="#00ffc8" opacity="0.8"/>
+                <polygon points="26,46 23,30 26,33 29,30" fill="rgba(200,220,255,0.15)"/>
+              </g>
+              <!-- Center dot -->
+              <circle cx="26" cy="26" r="2.5" fill="#00ffc8" opacity="0.9"/>
+            </svg>
+          </div>
+          <div class="V-bearing-info">
+            <div class="V-bearing-deg">315°</div>
+            <div class="V-bearing-label">NW · heading</div>
+            <div class="V-bearing-coords">-6.2087, 106.8456</div>
+          </div>
+          <div class="V-bearing-status-col">
+            <div class="V-bs-item"><span class="V-bs-key">Updated</span><span class="V-bs-val">12s ago</span></div>
+            <div class="V-bs-item"><span class="V-bs-key">Accuracy</span><span class="V-bs-val">±4 m GPS</span></div>
+            <div class="V-bs-item"><span class="V-bs-key">Signal</span><span class="V-bs-val ok">Strong</span></div>
+            <div class="V-bs-item"><span class="V-bs-key">Satellites</span><span class="V-bs-val">11</span></div>
+          </div>
+        </div>
+
+      </div><!-- /V-inner -->
+
+      <!-- Altitude footer -->
+      <div class="V-altitude">
+        <div class="V-alt-left">
+          <div class="V-alt-dot"></div>
+          Ground Level &thinsp;·&thinsp; Forensic View
+        </div>
+        <div>TRUCK-247 · full trace</div>
+      </div>
+    </div><!-- /col-V -->
+
+  </div><!-- /triptych -->
+
+</div><!-- /shell -->
+
+<script>
+// Live clock tick
+(function () {
+  const el = document.getElementById('clk');
+  if (!el) return;
+  let h = 3, m = 47, s = 21;
+  setInterval(function () {
+    s++;
+    if (s >= 60) { s = 0; m++; }
+    if (m >= 60) { m = 0; h++; }
+    if (h >= 24) { h = 0; }
+    const p = n => String(n).padStart(2, '0');
+    el.textContent = p(h) + ':' + p(m) + ':' + p(s) + ' WIB';
+  }, 1000);
+})();
+</script>
+
+</body>
+</html>

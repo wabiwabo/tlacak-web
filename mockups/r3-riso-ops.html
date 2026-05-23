@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>ONEFLEET · DISPATCH SHEET · r3-riso-ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Crimson+Pro:ital,wght@1,400;1,600;1,700&family=Spectral:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+
+<style>
+/* ═════════════════════════════════════════════════════════════════════════════
+   ONEFLEET · DISPATCH SHEET · r3-riso-ops
+   Warm cream paper + two-color risograph aesthetic
+   Ink 1 — structural: deep cyan-teal  #1d4f5e
+   Ink 2 — state:      warm vermilion  #d94f2a
+   Ink 3 — secondary:  warm brown-gray #7a6a52
+   Ink 4 — headline:   near-black-brown #1a140e
+   1440 × 900 viewport
+═════════════════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Palette */
+  --paper:        #f5ebd6;
+  --paper-mid:    #efe4cb;
+  --paper-deep:   #e8d9bd;
+  --paper-darker: #dfd0b0;
+
+  --teal:         #1d4f5e;
+  --teal-mid:     #2a6a7d;
+  --teal-faint:   rgba(29, 79, 94, 0.10);
+  --teal-faint2:  rgba(29, 79, 94, 0.18);
+
+  --vermilion:    #d94f2a;
+  --verm-dim:     rgba(217, 79, 42, 0.14);
+  --verm-faint:   rgba(217, 79, 42, 0.06);
+
+  --brown:        #7a6a52;
+  --brown-mid:    #5c4e3a;
+  --brown-dark:   #3d3228;
+
+  --ink:          #1a140e;
+  --ink-mid:      #2d2218;
+
+  --gray:         #a09080;
+  --gray-light:   #c8bfaf;
+  --gray-faint:   #e0d8cc;
+
+  /* Typography */
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+  --font-serif-i: 'Crimson Pro', 'Spectral', Georgia, serif;
+}
+
+html, body {
+  width: 1440px;
+  min-height: 900px;
+  background: var(--paper);
+  font-family: var(--font-mono);
+  color: var(--ink);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── Paper grain — full-page overlay ────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 300px 300px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   DISPATCH SHEET — outermost container
+───────────────────────────────────────────────────────────────────────── */
+.dispatch-sheet {
+  width: 1440px;
+  min-height: 900px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-columns: 1fr;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TOP MAST — printed dispatch sheet masthead
+───────────────────────────────────────────────────────────────────────── */
+.mast {
+  grid-row: 1;
+  border-bottom: 2px solid var(--teal);
+  position: relative;
+  overflow: visible;
+}
+
+/* Thick rule stripe at top of mast */
+.mast-top-rule {
+  height: 6px;
+  background: var(--teal);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative inner striping on top rule */
+.mast-top-rule::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 3px,
+    rgba(255, 255, 255, 0.12) 3px,
+    rgba(255, 255, 255, 0.12) 6px
+  );
+}
+
+/* Second thin rule just below the thick one */
+.mast-sub-rule-top {
+  height: 1px;
+  background: var(--teal);
+  opacity: 0.35;
+  margin-top: 2px;
+}
+
+/* Main mast line */
+.mast-primary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 44px 7px 44px;
+  gap: 20px;
+  position: relative;
+}
+
+/* ONEFLEET DISPATCH — the masthead title */
+.mast-title {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 23px;
+  letter-spacing: 0.14em;
+  color: var(--teal);
+  text-transform: uppercase;
+  /* Ink-bleed glow */
+  text-shadow:
+    0 0 10px rgba(29, 79, 94, 0.28),
+    0 0 2px  rgba(29, 79, 94, 0.5);
+  /* Riso mis-registration — teal original with 1.5px vermilion ghost */
+  position: relative;
+}
+
+.mast-title::before {
+  content: 'ONEFLEET DISPATCH';
+  position: absolute;
+  inset: 0;
+  color: var(--vermilion);
+  opacity: 0.15;
+  transform: translate(1.8px, -1.2px);
+  pointer-events: none;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+/* Volume/number — journal-style dateline */
+.mast-dateline {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mast-vol {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--brown);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.mast-sep {
+  color: var(--teal);
+  opacity: 0.45;
+  margin: 0 3px;
+}
+
+.mast-date-right {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Sub-deck line below title */
+.mast-deck {
+  border-top: 1px solid var(--teal);
+  padding: 5px 44px 8px 44px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  color: var(--brown);
+  text-transform: lowercase;
+}
+
+.mast-deck-item {
+  color: var(--teal);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.mast-deck-dot {
+  margin: 0 9px;
+  color: var(--brown);
+  opacity: 0.5;
+}
+
+/* ── LIVE · OPS · 03:47 stamp ─────────────────────────────────────────── */
+.live-stamp {
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-44%) rotate(-5deg);
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.live-stamp-svg {
+  width: 76px;
+  height: 76px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §01 LIVE STATUS — hero metrics strip
+───────────────────────────────────────────────────────────────────────── */
+.status-bar {
+  grid-row: 2;
+  border-bottom: 1px solid var(--teal);
+  padding: 0 44px;
+  background: var(--paper-mid);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+}
+
+/* §01 section label block */
+.sec-head-block {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 22px 0 0;
+  border-right: 1.5px solid var(--teal);
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+.sec-mark {
+  color: var(--vermilion);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sec-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+/* Status tile row */
+.status-tiles {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+}
+
+.status-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10px 28px 10px 24px;
+  border-right: 1px solid rgba(29, 79, 94, 0.28);
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.status-tile:last-child {
+  border-right: none;
+}
+
+/* Hero numbers — newspaper-folio scale */
+.tile-num {
+  font-family: var(--font-mono);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  font-feature-settings: 'tnum' 1;
+}
+
+.tile-num.n-total   { color: var(--teal);       text-shadow: 0 0 12px rgba(29,79,94,0.25); }
+.tile-num.n-moving  { color: var(--vermilion);   text-shadow: 0 0 14px rgba(217,79,42,0.32); position: relative; }
+.tile-num.n-idle    { color: var(--brown); }
+.tile-num.n-stopped { color: var(--brown-mid); }
+.tile-num.n-offline { color: var(--gray); }
+
+/* Mis-registration on the big 184 */
+.tile-num.n-moving::before {
+  content: '184';
+  position: absolute;
+  inset: 0;
+  color: var(--teal);
+  opacity: 0.10;
+  transform: translate(-2.5px, 1.5px);
+  pointer-events: none;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.tile-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brown);
+}
+
+.tile-sublabel {
+  font-size: 8px;
+  font-weight: 400;
+  color: var(--gray);
+  letter-spacing: 0.04em;
+}
+
+.tile-sym-v { color: var(--vermilion); }
+.tile-sym-b { color: var(--brown); }
+.tile-sym-g { color: var(--gray); }
+
+/* Time block at far right */
+.time-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 0 8px 30px;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.time-big {
+  font-family: var(--font-mono);
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: -0.01em;
+  font-feature-settings: 'tnum' 1;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(29, 79, 94, 0.22);
+}
+
+.time-sub {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--brown);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.time-date {
+  font-size: 8.5px;
+  font-weight: 400;
+  color: var(--gray);
+  letter-spacing: 0.06em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   MAIN BODY — 3-column dispatch layout
+───────────────────────────────────────────────────────────────────────── */
+.main-body {
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: 332px 1fr 318px;
+  min-height: 0;
+  border-bottom: 1px solid var(--teal);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §02 LEFT COLUMN — active units table
+───────────────────────────────────────────────────────────────────────── */
+.left-col {
+  border-right: 1.5px solid var(--teal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Shared column header bar */
+.col-head {
+  padding: 9px 16px 8px 16px;
+  border-bottom: 1px solid var(--teal);
+  background: var(--paper-mid);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.col-head-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+  /* Subtle ink-bleed glow on section headers */
+  text-shadow: 0 0 7px rgba(29, 79, 94, 0.22);
+}
+
+.col-head-title .s-mark { color: var(--vermilion); font-weight: 700; }
+
+.col-head-meta {
+  font-size: 8.5px;
+  font-weight: 500;
+  color: var(--brown);
+  letter-spacing: 0.05em;
+}
+
+/* Units table */
+.units-scroller {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.units-scroller::-webkit-scrollbar { width: 3px; }
+.units-scroller::-webkit-scrollbar-track { background: var(--paper-mid); }
+.units-scroller::-webkit-scrollbar-thumb { background: var(--teal); opacity: 0.5; }
+
+/* Column header row */
+.uthead {
+  display: grid;
+  grid-template-columns: 18px 94px 38px 52px 1fr 28px;
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--teal);
+  background: var(--paper-deep);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.uth {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--brown);
+}
+
+.uth + .uth {
+  border-left: 1px solid rgba(29, 79, 94, 0.18);
+  padding-left: 5px;
+}
+
+/* Unit data row */
+.urow {
+  display: grid;
+  grid-template-columns: 18px 94px 38px 52px 1fr 28px;
+  padding: 0 14px;
+  min-height: 35px;
+  align-items: center;
+  border-bottom: 1px solid rgba(29, 79, 94, 0.10);
+  cursor: default;
+  transition: background 0.08s;
+}
+
+.urow:nth-child(odd)  { background: var(--paper); }
+.urow:nth-child(even) { background: var(--paper-mid); }
+
+.urow.is-selected {
+  background: rgba(29, 79, 94, 0.09);
+  border-left: 3px solid var(--teal);
+  padding-left: 11px;
+}
+
+.urow.is-alert {
+  border-left: 2.5px solid var(--vermilion);
+  padding-left: 11px;
+}
+
+/* Unit cells */
+.uc {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--ink);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.uc + .uc {
+  border-left: 1px solid rgba(29, 79, 94, 0.14);
+  padding-left: 5px;
+}
+
+.uc-sym  { font-size: 10px; }
+.uc-id   { font-weight: 700; font-size: 9px; color: var(--teal); letter-spacing: 0.04em; }
+.uc-id small { display: block; font-size: 7.5px; color: var(--brown); font-weight: 500; letter-spacing: 0; }
+.uc-spd  { font-weight: 700; font-feature-settings: 'tnum'; text-align: right; padding-right: 4px; }
+.uc-sta  { font-size: 8px; font-weight: 700; letter-spacing: 0.05em; }
+.uc-drv  { font-size: 8.5px; color: var(--brown); }
+.uc-ago  { font-size: 8px; color: var(--gray); text-align: right; }
+
+.col-v   { color: var(--vermilion); }
+.col-b   { color: var(--brown); }
+.col-bm  { color: var(--brown-mid); }
+.col-g   { color: var(--gray); }
+.col-t   { color: var(--teal); }
+
+/* Units table legend */
+.units-foot {
+  padding: 7px 16px 9px 16px;
+  border-top: 1px solid rgba(29, 79, 94, 0.22);
+  background: var(--paper-deep);
+  flex-shrink: 0;
+}
+
+.legend-head {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--brown);
+  margin-bottom: 5px;
+}
+
+.legend-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  color: var(--brown);
+  letter-spacing: 0.04em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §MAP CENTER COLUMN — engraved print-style SVG map
+───────────────────────────────────────────────────────────────────────── */
+.center-col {
+  border-right: 1.5px solid var(--teal);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-head {
+  padding: 9px 20px 8px 20px;
+  border-bottom: 1px solid var(--teal);
+  background: var(--paper-mid);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.map-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.map-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Pull-quote overlaid on map area */
+.pull-quote-wrap {
+  position: absolute;
+  bottom: 56px;
+  left: 22px;
+  max-width: 295px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.pull-quote {
+  font-family: var(--font-serif-i);
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.52;
+  color: var(--brown-mid);
+  opacity: 0.82;
+  border-left: 2px solid var(--vermilion);
+  padding: 6px 12px;
+  background: rgba(245, 235, 214, 0.88);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   RIGHT COLUMN — §03 ALERTS + §04 SELECTED DOSSIER
+───────────────────────────────────────────────────────────────────────── */
+.right-col {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* §03 ALERTS — errata box */
+.alerts-sec {
+  border-bottom: 2px solid var(--teal);
+  flex-shrink: 0;
+}
+
+.errata-wrap {
+  margin: 11px 14px;
+}
+
+.errata-box {
+  border: 1.5px solid var(--vermilion);
+  padding: 11px 12px 10px 12px;
+  background: var(--verm-faint);
+  position: relative;
+}
+
+.errata-box::before {
+  content: 'ERRATA · ACTIVE INCIDENTS';
+  position: absolute;
+  top: -7px;
+  left: 8px;
+  background: var(--paper);
+  padding: 0 7px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--vermilion);
+}
+
+/* Thin double rule inside errata (journal style) */
+.errata-box::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 6px;
+  height: 0;
+  border-top: 1px solid rgba(217, 79, 42, 0.18);
+}
+
+.alert-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(217, 79, 42, 0.22);
+}
+
+.alert-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.alert-glyph {
+  color: var(--vermilion);
+  font-size: 12px;
+  flex-shrink: 0;
+  line-height: 1.3;
+}
+
+.alert-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-type {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vermilion);
+  display: block;
+  line-height: 1.3;
+}
+
+.alert-detail {
+  font-size: 8.5px;
+  font-weight: 500;
+  color: var(--brown);
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  display: block;
+}
+
+.alert-time {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--teal);
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding-top: 1px;
+}
+
+/* §04 SELECTED VEHICLE DOSSIER */
+.dossier-sec {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dossier-sec::-webkit-scrollbar { width: 3px; }
+.dossier-sec::-webkit-scrollbar-track { background: var(--paper-mid); }
+.dossier-sec::-webkit-scrollbar-thumb { background: var(--teal); }
+
+.dossier-body {
+  padding: 11px 14px 14px 14px;
+  flex: 1;
+}
+
+/* Speed hero block */
+.speed-hero {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--vermilion);
+  background: var(--verm-faint);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  gap: 10px;
+  position: relative;
+}
+
+.speed-val-block {
+  flex: 1;
+}
+
+.speed-label {
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--brown);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.speed-number-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* 72px hero speed number */
+.speed-num {
+  font-family: var(--font-mono);
+  font-size: 60px;
+  font-weight: 800;
+  color: var(--vermilion);
+  line-height: 1;
+  font-feature-settings: 'tnum' 1;
+  text-shadow: 0 0 16px rgba(217, 79, 42, 0.3);
+  position: relative;
+}
+
+/* Mis-registration on speed number */
+.speed-num::before {
+  content: '67';
+  position: absolute;
+  inset: 0;
+  color: var(--teal);
+  opacity: 0.09;
+  transform: translate(2.2px, -1.8px);
+  pointer-events: none;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.speed-kmh {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brown);
+  letter-spacing: 0.04em;
+  padding-bottom: 5px;
+}
+
+.speed-dir-row {
+  margin-top: 2px;
+}
+
+.speed-dir {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--vermilion);
+  letter-spacing: 0.08em;
+}
+
+.speed-status-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.speed-status-tag {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--vermilion);
+  text-transform: uppercase;
+}
+
+.speed-delta {
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--teal);
+  letter-spacing: 0.05em;
+}
+
+/* Typed dossier form */
+.dossier-rule {
+  height: 1px;
+  background: var(--teal);
+  margin: 8px 0;
+}
+
+.dossier-sub-rule {
+  height: 1px;
+  background: rgba(29, 79, 94, 0.22);
+  margin: 7px 0;
+}
+
+.dossier-row {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 3.5px;
+}
+
+.d-label {
+  font-size: 8.5px;
+  font-weight: 500;
+  color: var(--brown);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  min-width: 78px;
+  flex-shrink: 0;
+}
+
+.d-leaders {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 8px;
+  color: var(--gray-light);
+  letter-spacing: 0.05em;
+  padding: 0 3px;
+  min-width: 0;
+}
+
+.d-value {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  text-align: right;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.d-value.verm { color: var(--vermilion); }
+.d-value.teal { color: var(--teal); }
+
+/* Telemetry tile grid */
+.telem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin: 8px 0;
+}
+
+.telem-tile {
+  border: 1px solid rgba(29, 79, 94, 0.22);
+  padding: 6px 9px;
+  background: var(--paper-mid);
+}
+
+.tt-label {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--brown);
+  margin-bottom: 2px;
+}
+
+.tt-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: 0.04em;
+  font-feature-settings: 'tnum' 1;
+  line-height: 1.2;
+}
+
+.tt-value.on-state {
+  color: var(--vermilion);
+}
+
+/* Fuel bar */
+.fuel-bar-wrap {
+  margin-top: 8px;
+}
+
+.fuel-bar-label {
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--brown);
+  margin-bottom: 4px;
+}
+
+.fuel-bar-track {
+  height: 9px;
+  background: var(--paper-deep);
+  border: 1px solid rgba(29, 79, 94, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.fuel-bar-fill {
+  height: 100%;
+  width: 68%;
+  background: var(--teal);
+  opacity: 0.6;
+  /* Hatching on fuel bar for print feel */
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.15) 0,
+    rgba(255,255,255,0.15) 2px,
+    transparent 2px,
+    transparent 8px
+  );
+}
+
+.fuel-bar-pct {
+  position: absolute;
+  right: 6px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  font-size: 7px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: 0.04em;
+}
+
+/* Today stats row */
+.today-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.today-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ts-label {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--brown);
+}
+
+.ts-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  font-feature-settings: 'tnum' 1;
+}
+
+.ts-value.highlight { color: var(--vermilion); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   FOOTER — dispatch sheet footer line
+───────────────────────────────────────────────────────────────────────── */
+.dispatch-footer {
+  grid-row: 4;
+  border-top: 2px solid var(--teal);
+  background: var(--paper-deeper, var(--paper-deep));
+  padding: 6px 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-text {
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--brown);
+  text-transform: lowercase;
+}
+
+.footer-text b {
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.footer-text em {
+  font-style: normal;
+  color: var(--gray);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SECTION HEADER MIS-REGISTRATION (riso effect on §04 header)
+───────────────────────────────────────────────────────────────────────── */
+.col-head-title[data-misreg] {
+  position: relative;
+}
+
+.col-head-title[data-misreg]::before {
+  content: attr(data-misreg);
+  position: absolute;
+  inset: 0;
+  color: var(--vermilion);
+  opacity: 0.10;
+  transform: translate(1.5px, -1px);
+  pointer-events: none;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+/* ── Errata box 2nd instance (smaller, for geofence summary) ──────────── */
+.mini-errata {
+  border: 1px solid rgba(29, 79, 94, 0.3);
+  padding: 6px 9px;
+  background: var(--teal-faint);
+  margin-top: 6px;
+  position: relative;
+  font-size: 8.5px;
+  color: var(--brown);
+  line-height: 1.5;
+}
+
+.mini-errata::before {
+  content: attr(data-caption);
+  position: absolute;
+  top: -6px;
+  left: 7px;
+  background: var(--paper);
+  padding: 0 5px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+/* ── Thin double rule (journalistic) ─────────────────────────────────── */
+.double-rule {
+  height: 4px;
+  border-top: 1px solid var(--teal);
+  border-bottom: 1px solid var(--teal);
+  margin: 0;
+  opacity: 0.5;
+}
+
+/* ── Print-style section divider ─────────────────────────────────────── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  color: var(--brown);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--teal);
+  opacity: 0.3;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   UTILITY CLASSES
+───────────────────────────────────────────────────────────────────────── */
+.hidden { display: none; }
+.no-select { user-select: none; }
+</style>
+</head>
+
+<body class="no-select">
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     INLINE SVG DEFS — paper/noise filter for map
+════════════════════════════════════════════════════════════════════════ -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden;pointer-events:none;">
+  <defs>
+    <filter id="ink-bleed-sm">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="selected-halo" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="alert-halo" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow-teal" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 Z" fill="#1d4f5e" opacity="0.7"/>
+    </marker>
+    <marker id="arrow-verm" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 Z" fill="#d94f2a" opacity="0.85"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     DISPATCH SHEET
+════════════════════════════════════════════════════════════════════════ -->
+<div class="dispatch-sheet">
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       TOP MAST
+  ──────────────────────────────────────────────────────────────────── -->
+  <header class="mast">
+    <!-- Thick top rule -->
+    <div class="mast-top-rule"></div>
+    <div class="mast-sub-rule-top"></div>
+
+    <!-- Primary mast line: ONEFLEET DISPATCH + dateline -->
+    <div class="mast-primary">
+      <div class="mast-title">ONEFLEET DISPATCH</div>
+
+      <div class="mast-dateline">
+        <span class="mast-vol">vol.&thinsp;xxiv</span>
+        <span class="mast-sep">·</span>
+        <span class="mast-vol">no.&thinsp;143</span>
+        <span class="mast-sep mast-date-right" style="margin:0 14px;">&nbsp;</span>
+        <span class="mast-date-right">fri&nbsp;may&nbsp;23&nbsp;2026</span>
+      </div>
+
+      <!-- leave space for stamp -->
+      <div style="width:90px;"></div>
+    </div>
+
+    <!-- Deck line (sub-title) -->
+    <div class="mast-deck">
+      <span class="mast-deck-item">jakarta operations</span>
+      <span class="mast-deck-dot">·</span>
+      <span class="mast-deck-item">sektor tujuh</span>
+      <span class="mast-deck-dot">·</span>
+      <span>operational dispatch log</span>
+      <span class="mast-deck-dot">·</span>
+      <span class="mast-deck-item">03:47 wib</span>
+      <span class="mast-deck-dot">·</span>
+      <span>shift: overnight</span>
+      <span class="mast-deck-dot">·</span>
+      <span>dispatcher on duty</span>
+    </div>
+
+    <!-- LIVE · OPS stamp — circular SVG ink stamp -->
+    <div class="live-stamp">
+      <svg class="live-stamp-svg" viewBox="0 0 76 76" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer ring -->
+        <circle cx="38" cy="38" r="35" fill="#f5ebd6" stroke="#1d4f5e" stroke-width="1.8"/>
+        <!-- Inner dashed ring -->
+        <circle cx="38" cy="38" r="30" fill="none" stroke="#1d4f5e" stroke-width="0.8"
+                stroke-dasharray="3,3"/>
+        <!-- Stamp text: circular path top -->
+        <defs>
+          <path id="stamp-arc-top" d="M 14,38 A 24,24 0 0 1 62,38"/>
+          <path id="stamp-arc-bot" d="M 62,38 A 24,24 0 0 1 14,38"/>
+        </defs>
+        <text font-family="'JetBrains Mono', monospace" font-size="7" font-weight="700"
+              fill="#1d4f5e" letter-spacing="0.14em" text-transform="uppercase">
+          <textPath href="#stamp-arc-top" startOffset="8%">LIVE · OPS ·</textPath>
+        </text>
+        <text font-family="'JetBrains Mono', monospace" font-size="7" font-weight="700"
+              fill="#1d4f5e" letter-spacing="0.14em">
+          <textPath href="#stamp-arc-bot" startOffset="8%">JAKARTA ·</textPath>
+        </text>
+        <!-- Center time -->
+        <text x="38" y="36" text-anchor="middle"
+              font-family="'JetBrains Mono', monospace" font-size="10" font-weight="800"
+              fill="#d94f2a" letter-spacing="0.04em" id="stamp-time">03:47</text>
+        <!-- Center sub -->
+        <text x="38" y="46" text-anchor="middle"
+              font-family="'JetBrains Mono', monospace" font-size="6" font-weight="600"
+              fill="#1d4f5e" letter-spacing="0.08em" opacity="0.75">WIB</text>
+      </svg>
+    </div>
+  </header>
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       §01 LIVE STATUS — hero numbers strip
+  ──────────────────────────────────────────────────────────────────── -->
+  <div class="status-bar">
+
+    <!-- Section label -->
+    <div class="sec-head-block">
+      <span class="sec-mark">§</span>
+      <span class="sec-label">01&thinsp;·&thinsp;Live Status</span>
+    </div>
+
+    <!-- Tiles -->
+    <div class="status-tiles">
+
+      <div class="status-tile">
+        <span class="tile-label">
+          <span class="tile-sym-b">■&thinsp;</span>Total Units
+        </span>
+        <div class="tile-num n-total">247</div>
+        <span class="tile-sublabel">fleet active · 3 sectors</span>
+      </div>
+
+      <div class="status-tile">
+        <span class="tile-label">
+          <span class="tile-sym-v">▲&thinsp;</span>Moving
+        </span>
+        <div class="tile-num n-moving">184</div>
+        <span class="tile-sublabel">74.5% in motion</span>
+      </div>
+
+      <div class="status-tile">
+        <span class="tile-label">
+          <span class="tile-sym-b">■&thinsp;</span>Idle
+        </span>
+        <div class="tile-num n-idle">41</div>
+        <span class="tile-sublabel">16.6% engine on</span>
+      </div>
+
+      <div class="status-tile">
+        <span class="tile-label">
+          <span class="tile-sym-b">□&thinsp;</span>Stopped
+        </span>
+        <div class="tile-num n-stopped">18</div>
+        <span class="tile-sublabel">7.3% parked</span>
+      </div>
+
+      <div class="status-tile">
+        <span class="tile-label">
+          <span class="tile-sym-g">·&thinsp;</span>Offline
+        </span>
+        <div class="tile-num n-offline">4</div>
+        <span class="tile-sublabel">no signal</span>
+      </div>
+
+    </div><!-- /status-tiles -->
+
+    <!-- Time block -->
+    <div class="time-block">
+      <div class="time-big" id="time-display">03:47:21</div>
+      <div class="time-sub">WIB&thinsp;·&thinsp;Jakarta</div>
+      <div class="time-date">fri, 23 may 2026</div>
+    </div>
+
+  </div><!-- /status-bar -->
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       MAIN BODY — 3-column dispatch layout
+  ──────────────────────────────────────────────────────────────────── -->
+  <div class="main-body">
+
+    <!-- ──────────────────────────────────────────────────────────────
+         LEFT: §02 ACTIVE UNITS
+    ────────────────────────────────────────────────────────────────── -->
+    <div class="left-col">
+      <div class="col-head">
+        <div class="col-head-title">
+          <span class="s-mark">§</span>&thinsp;02&thinsp;·&thinsp;Active Units
+        </div>
+        <div class="col-head-meta">10 visible · 247 total</div>
+      </div>
+
+      <div class="units-scroller">
+
+        <!-- Column header -->
+        <div class="uthead">
+          <div class="uth">S</div>
+          <div class="uth">Unit · Plate</div>
+          <div class="uth">km/h</div>
+          <div class="uth">Status</div>
+          <div class="uth">Driver</div>
+          <div class="uth">Ago</div>
+        </div>
+
+        <!-- TRUCK-247 — selected -->
+        <div class="urow is-selected">
+          <div class="uc uc-sym col-v">▲</div>
+          <div class="uc uc-id col-t">
+            TRUCK-247
+            <small>B 9421 KGV</small>
+          </div>
+          <div class="uc uc-spd col-v">67</div>
+          <div class="uc uc-sta col-v">MOVING</div>
+          <div class="uc uc-drv">Ahmad W.</div>
+          <div class="uc uc-ago">12s</div>
+        </div>
+
+        <!-- VAN-118 — alert: geofence exit -->
+        <div class="urow is-alert">
+          <div class="uc uc-sym col-v">▲</div>
+          <div class="uc uc-id col-v">
+            VAN-118
+            <small>D 7734 AKJ</small>
+          </div>
+          <div class="uc uc-spd col-v">54</div>
+          <div class="uc uc-sta col-v">⚑ ALERT</div>
+          <div class="uc uc-drv">Budi S.</div>
+          <div class="uc uc-ago">8s</div>
+        </div>
+
+        <!-- TRUCK-203 -->
+        <div class="urow">
+          <div class="uc uc-sym col-v">▲</div>
+          <div class="uc uc-id">
+            TRUCK-203
+            <small>B 2291 LMN</small>
+          </div>
+          <div class="uc uc-spd col-v">41</div>
+          <div class="uc uc-sta" style="color:var(--vermilion);">MOVING</div>
+          <div class="uc uc-drv">Rudi H.</div>
+          <div class="uc uc-ago">22s</div>
+        </div>
+
+        <!-- VAN-095 -->
+        <div class="urow">
+          <div class="uc uc-sym col-b">■</div>
+          <div class="uc uc-id">
+            VAN-095
+            <small>F 4410 PKT</small>
+          </div>
+          <div class="uc uc-spd col-b">0</div>
+          <div class="uc uc-sta col-b">IDLE</div>
+          <div class="uc uc-drv">Eko W.</div>
+          <div class="uc uc-ago">1m</div>
+        </div>
+
+        <!-- TRUCK-189 — alert: speed -->
+        <div class="urow is-alert">
+          <div class="uc uc-sym col-v">▲</div>
+          <div class="uc uc-id col-v">
+            TRUCK-189
+            <small>B 8813 GHY</small>
+          </div>
+          <div class="uc uc-spd col-v" style="font-size:11px;">92</div>
+          <div class="uc uc-sta col-v">⚑ SPEED</div>
+          <div class="uc uc-drv">Joko P.</div>
+          <div class="uc uc-ago">6s</div>
+        </div>
+
+        <!-- PICKUP-042 — alert: idling -->
+        <div class="urow is-alert">
+          <div class="uc uc-sym col-b">■</div>
+          <div class="uc uc-id col-v">
+            PICKUP-042
+            <small>T 3301 KSA</small>
+          </div>
+          <div class="uc uc-spd col-b">0</div>
+          <div class="uc uc-sta col-v">⚑ IDLE+</div>
+          <div class="uc uc-drv">Anton M.</div>
+          <div class="uc uc-ago">2m</div>
+        </div>
+
+        <!-- TRUCK-221 -->
+        <div class="urow">
+          <div class="uc uc-sym col-v">▲</div>
+          <div class="uc uc-id">
+            TRUCK-221
+            <small>B 5590 MNA</small>
+          </div>
+          <div class="uc uc-spd col-v">38</div>
+          <div class="uc uc-sta" style="color:var(--vermilion);">MOVING</div>
+          <div class="uc uc-drv">Sari N.</div>
+          <div class="uc uc-ago">15s</div>
+        </div>
+
+        <!-- VAN-176 -->
+        <div class="urow">
+          <div class="uc uc-sym col-b">■</div>
+          <div class="uc uc-id">
+            VAN-176
+            <small>E 1122 PRA</small>
+          </div>
+          <div class="uc uc-spd col-b">0</div>
+          <div class="uc uc-sta col-b">IDLE</div>
+          <div class="uc uc-drv">Dewi A.</div>
+          <div class="uc uc-ago">3m</div>
+        </div>
+
+        <!-- TRUCK-198 -->
+        <div class="urow">
+          <div class="uc uc-sym col-v">▲</div>
+          <div class="uc uc-id">
+            TRUCK-198
+            <small>B 7743 LPQ</small>
+          </div>
+          <div class="uc uc-spd col-v">29</div>
+          <div class="uc uc-sta" style="color:var(--vermilion);">MOVING</div>
+          <div class="uc uc-drv">Fari I.</div>
+          <div class="uc uc-ago">30s</div>
+        </div>
+
+        <!-- PICKUP-067 -->
+        <div class="urow">
+          <div class="uc uc-sym col-bm">□</div>
+          <div class="uc uc-id">
+            PICKUP-067
+            <small>B 9010 ATR</small>
+          </div>
+          <div class="uc uc-spd col-bm">0</div>
+          <div class="uc uc-sta col-bm">STOPPED</div>
+          <div class="uc uc-drv">Yoga K.</div>
+          <div class="uc uc-ago">8m</div>
+        </div>
+
+        <!-- TRUCK-133 -->
+        <div class="urow">
+          <div class="uc uc-sym col-v">▲</div>
+          <div class="uc uc-id">
+            TRUCK-133
+            <small>B 4412 KRN</small>
+          </div>
+          <div class="uc uc-spd col-v">55</div>
+          <div class="uc uc-sta" style="color:var(--vermilion);">MOVING</div>
+          <div class="uc uc-drv">Heru T.</div>
+          <div class="uc uc-ago">5s</div>
+        </div>
+
+        <!-- VAN-088 -->
+        <div class="urow">
+          <div class="uc uc-sym col-g">·</div>
+          <div class="uc uc-id col-g">
+            VAN-088
+            <small>B 3344 XPZ</small>
+          </div>
+          <div class="uc uc-spd col-g">—</div>
+          <div class="uc uc-sta col-g">OFFLINE</div>
+          <div class="uc uc-drv col-g">—</div>
+          <div class="uc uc-ago col-g">4h</div>
+        </div>
+
+      </div><!-- /units-scroller -->
+
+      <!-- Symbol legend -->
+      <div class="units-foot">
+        <div class="legend-head">symbol legend · status indicators</div>
+        <div class="legend-row">
+          <div class="legend-item">
+            <span style="color:var(--vermilion);">▲</span> moving
+          </div>
+          <div class="legend-item">
+            <span style="color:var(--brown);">■</span> idle
+          </div>
+          <div class="legend-item">
+            <span style="color:var(--brown-mid);">□</span> stopped
+          </div>
+          <div class="legend-item">
+            <span style="color:var(--gray);">·</span> offline
+          </div>
+          <div class="legend-item">
+            <span style="color:var(--vermilion);font-size:9px;">⚑</span> alert
+          </div>
+        </div>
+      </div>
+    </div><!-- /left-col -->
+
+    <!-- ──────────────────────────────────────────────────────────────
+         CENTER: ENGRAVED MAP
+    ────────────────────────────────────────────────────────────────── -->
+    <div class="center-col">
+      <div class="map-head">
+        <div class="col-head-title">
+          <span class="s-mark">§</span>&thinsp;MAP&thinsp;·&thinsp;Jakarta–Bandung Corridor
+        </div>
+        <div class="col-head-meta">15 markers · engraved print · woodblock style</div>
+      </div>
+
+      <div class="map-area">
+
+        <!-- ════════════════════════════════════════════════════════
+             SVG MAP — woodblock / engraved print aesthetic
+             cream paper, deep-teal hairlines, hatched water,
+             serif italic labels, classical compass rose
+        ════════════════════════════════════════════════════════════ -->
+        <svg class="map-svg" viewBox="0 0 790 595" xmlns="http://www.w3.org/2000/svg"
+             preserveAspectRatio="xMidYMid slice">
+          <defs>
+
+            <!-- Water hatching: diagonal lines /// -->
+            <pattern id="water-hatch" x="0" y="0" width="7" height="7"
+                     patternUnits="userSpaceOnUse" patternTransform="rotate(42)">
+              <line x1="0" y1="0" x2="0" y2="7" stroke="#1d4f5e"
+                    stroke-width="0.55" opacity="0.38"/>
+            </pattern>
+
+            <!-- Dense urban stipple -->
+            <pattern id="urban-stipple" x="0" y="0" width="5" height="5"
+                     patternUnits="userSpaceOnUse">
+              <circle cx="1.5" cy="1.5" r="0.55" fill="#1d4f5e" opacity="0.2"/>
+            </pattern>
+
+            <!-- Light land texture -->
+            <pattern id="land-texture" x="0" y="0" width="14" height="14"
+                     patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
+              <line x1="0" y1="0" x2="0" y2="14" stroke="#1d4f5e"
+                    stroke-width="0.25" opacity="0.10"/>
+            </pattern>
+
+            <!-- Montane crosshatch -->
+            <pattern id="hill-hatch" x="0" y="0" width="6" height="6"
+                     patternUnits="userSpaceOnUse" patternTransform="rotate(52)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#1d4f5e"
+                    stroke-width="0.5" opacity="0.22"/>
+            </pattern>
+
+            <!-- Selected vehicle glow filter -->
+            <filter id="sel-glow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3.5" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <!-- Alert glow filter -->
+            <filter id="alr-glow" x="-70%" y="-70%" width="240%" height="240%">
+              <feGaussianBlur stdDeviation="2.5" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <!-- Subtle paper grain on map -->
+            <filter id="map-grain-f" x="0%" y="0%" width="100%" height="100%"
+                    color-interpolation-filters="linearRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.9 0.9"
+                            numOctaves="3" seed="11" stitchTiles="stitch" result="noise"/>
+              <feColorMatrix type="saturate" values="0" in="noise" result="gnoise"/>
+              <feBlend in="SourceGraphic" in2="gnoise" mode="multiply" result="blend"/>
+              <feComposite in="blend" in2="SourceGraphic" operator="in"/>
+            </filter>
+
+          </defs>
+
+          <!-- ── Background: warm paper ────────────────────────── -->
+          <rect width="790" height="595" fill="#f5ebd6"/>
+
+          <!-- ── Map grain texture overlay ─────────────────────── -->
+          <rect width="790" height="595" fill="#ddd0b4" opacity="0.10"
+                filter="url(#map-grain-f)"/>
+
+          <!-- ── JAVA SEA (north) ──────────────────────────────── -->
+          <!-- Sea body -->
+          <path d="M0,0 L790,0 L790,82 Q660,65 500,72 Q340,79 200,74 Q100,70 0,67 Z"
+                fill="#d8edf0" opacity="0.45"/>
+          <!-- Water hatching -->
+          <path d="M0,0 L790,0 L790,82 Q660,65 500,72 Q340,79 200,74 Q100,70 0,67 Z"
+                fill="url(#water-hatch)"/>
+          <!-- Sea coastline -->
+          <path d="M0,67 Q100,70 200,74 Q340,79 500,72 Q660,65 790,82"
+                fill="none" stroke="#1d4f5e" stroke-width="1.4" opacity="0.65"/>
+          <!-- Additional coastal dashes -->
+          <path d="M0,67 Q100,70 200,74 Q340,79 500,72 Q660,65 790,82"
+                fill="none" stroke="#1d4f5e" stroke-width="0.6"
+                stroke-dasharray="6,5" opacity="0.25"/>
+          <!-- Sea label -->
+          <text x="395" y="42" text-anchor="middle"
+                font-family="'Crimson Pro', Georgia, serif"
+                font-style="italic" font-size="13" fill="#1d4f5e" opacity="0.55"
+                letter-spacing="0.14em">Laut Jawa</text>
+          <!-- Sea annotation line -->
+          <line x1="270" y1="44" x2="330" y2="44" stroke="#1d4f5e" stroke-width="0.5" opacity="0.28"/>
+          <line x1="460" y1="44" x2="520" y2="44" stroke="#1d4f5e" stroke-width="0.5" opacity="0.28"/>
+
+          <!-- ── JAVA ISLAND LANDMASS ─────────────────────────── -->
+          <path d="M0,67 Q100,70 200,74 Q340,79 500,72 Q660,65 790,82
+                   L790,595 L0,595 Z"
+                fill="#f0e6ce" stroke="none"/>
+
+          <!-- Land texture layer -->
+          <path d="M0,67 Q100,70 200,74 Q340,79 500,72 Q660,65 790,82
+                   L790,595 L0,595 Z"
+                fill="url(#land-texture)" opacity="0.8"/>
+
+          <!-- ── MOUNTAIN RANGES (stylized hachure marks) ──────── -->
+          <!-- Bogor/Puncak highlands -->
+          <g opacity="0.42">
+            <path d="M270,300 L287,272 L304,300" fill="url(#hill-hatch)" stroke="#1d4f5e" stroke-width="0.8"/>
+            <path d="M295,296 L314,265 L333,296" fill="url(#hill-hatch)" stroke="#1d4f5e" stroke-width="0.8"/>
+            <path d="M320,292 L340,260 L360,292" fill="url(#hill-hatch)" stroke="#1d4f5e" stroke-width="0.8"/>
+            <path d="M348,287 L368,255 L388,287" fill="url(#hill-hatch)" stroke="#1d4f5e" stroke-width="0.8"/>
+          </g>
+          <!-- Gunung Gede peak -->
+          <path d="M330,262 L341,240 L352,262" fill="url(#hill-hatch)"
+                stroke="#1d4f5e" stroke-width="1.2" opacity="0.55"/>
+          <text x="341" y="236" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8" fill="#1d4f5e" opacity="0.52">G. Gede</text>
+
+          <!-- Gunung Pangrango -->
+          <path d="M356,270 L368,246 L380,270" fill="url(#hill-hatch)"
+                stroke="#1d4f5e" stroke-width="1.1" opacity="0.48"/>
+          <text x="368" y="242" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.46">G. Pangrango</text>
+
+          <!-- Bandung plateau mountains -->
+          <g opacity="0.38">
+            <path d="M490,355 L510,325 L530,355" fill="url(#hill-hatch)" stroke="#1d4f5e" stroke-width="0.8"/>
+            <path d="M520,350 L542,318 L564,350" fill="url(#hill-hatch)" stroke="#1d4f5e" stroke-width="0.8"/>
+            <path d="M550,346 L572,312 L594,346" fill="url(#hill-hatch)" stroke="#1d4f5e" stroke-width="0.8"/>
+          </g>
+          <text x="543" y="309" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8" fill="#1d4f5e" opacity="0.42">Dataran Tinggi Bandung</text>
+
+          <!-- ── RIVERS ──────────────────────────────────────────── -->
+          <!-- Ciliwung River (Jakarta → Bogor) -->
+          <path d="M298,73 Q302,110 306,148 Q310,186 316,220 Q322,254 330,285
+                   Q340,315 355,338 Q368,356 382,372"
+                fill="none" stroke="#1d4f5e" stroke-width="1.5" opacity="0.42"
+                stroke-linecap="round"/>
+          <!-- Ciliwung label -->
+          <text x="295" y="175" font-family="'Crimson Pro', serif"
+                font-style="italic" font-size="7.5" fill="#1d4f5e" opacity="0.42"
+                transform="rotate(-78 295 175)">Ci. Liwung</text>
+
+          <!-- Cisadane River -->
+          <path d="M215,80 Q218,120 222,165 Q226,210 232,255 Q238,290 248,325"
+                fill="none" stroke="#1d4f5e" stroke-width="1.2" opacity="0.32"
+                stroke-linecap="round"/>
+
+          <!-- Citarum River (Bandung → coast) -->
+          <path d="M598,270 Q592,315 590,360 Q588,408 582,450
+                   Q575,490 562,525 Q548,555 528,570"
+                fill="none" stroke="#1d4f5e" stroke-width="1.4" opacity="0.35"
+                stroke-linecap="round"/>
+          <text x="608" y="380" font-family="'Crimson Pro', serif"
+                font-style="italic" font-size="7" fill="#1d4f5e" opacity="0.36"
+                transform="rotate(78 608 380)">Ci. Tarum</text>
+
+          <!-- ── DISTRICT OUTLINES ──────────────────────────────── -->
+          <!-- Jakarta (urban stipple fill) -->
+          <path d="M200,74 Q250,70 310,75 Q340,78 345,90
+                   L345,165 Q310,172 275,168 Q240,164 215,155
+                   Q200,145 200,130 Z"
+                fill="url(#urban-stipple)" stroke="#1d4f5e" stroke-width="1.4"
+                opacity="0.72"/>
+          <!-- Jakarta inner label -->
+          <text x="260" y="122" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="9" fill="#1d4f5e" opacity="0.52" font-weight="600">Jakarta</text>
+
+          <!-- Tangerang -->
+          <path d="M115,78 Q165,75 200,74 L200,155 Q175,160 145,156
+                   Q120,150 118,132 Z"
+                fill="url(#urban-stipple)" stroke="#1d4f5e" stroke-width="1"
+                opacity="0.55"/>
+          <text x="160" y="115" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8" fill="#1d4f5e" opacity="0.45">Tangerang</text>
+
+          <!-- Bekasi / Karawang -->
+          <path d="M345,78 Q420,74 475,80 L478,170 Q435,174 380,170
+                   Q350,167 345,155 Z"
+                fill="url(#urban-stipple)" stroke="#1d4f5e" stroke-width="1"
+                opacity="0.52"/>
+          <text x="412" y="125" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8" fill="#1d4f5e" opacity="0.42">Bekasi&thinsp;·&thinsp;Karawang</text>
+
+          <!-- Depok -->
+          <path d="M240,165 Q285,162 316,165 L316,210 Q280,215 248,210 Z"
+                fill="none" stroke="#1d4f5e" stroke-width="0.9"
+                stroke-dasharray="5,3" opacity="0.42"/>
+          <text x="280" y="193" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.38">Depok</text>
+
+          <!-- Bogor -->
+          <path d="M258,210 Q308,205 352,210 L356,278 Q315,286 278,282
+                   Q252,277 250,258 Z"
+                fill="none" stroke="#1d4f5e" stroke-width="0.9"
+                stroke-dasharray="5,3" opacity="0.45"/>
+          <text x="305" y="250" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8" fill="#1d4f5e" opacity="0.4">Bogor</text>
+
+          <!-- Bandung -->
+          <path d="M488,338 Q548,333 605,338 L610,410 Q560,418 508,414
+                   Q485,406 484,384 Z"
+                fill="url(#urban-stipple)" stroke="#1d4f5e" stroke-width="1.3"
+                opacity="0.6"/>
+          <text x="548" y="383" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="9" fill="#1d4f5e" opacity="0.5" font-weight="600">Bandung</text>
+
+          <!-- Sukabumi -->
+          <path d="M388,310 Q430,306 462,312 L465,365 Q428,370 395,366
+                   Q382,360 380,344 Z"
+                fill="none" stroke="#1d4f5e" stroke-width="0.8"
+                stroke-dasharray="4,3" opacity="0.38"/>
+          <text x="424" y="343" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.35">Sukabumi</text>
+
+          <!-- ── ROADS ───────────────────────────────────────────── -->
+
+          <!-- PANTURA — North Coast Highway (primary, east-west) -->
+          <path d="M0,110 Q80,104 160,106 Q220,107 265,110 Q310,112 400,110
+                   Q490,108 580,112 Q670,114 740,118 Q765,119 790,122"
+                fill="none" stroke="#1d4f5e" stroke-width="2.2" opacity="0.52"/>
+          <text x="620" y="103" font-family="'JetBrains Mono', monospace"
+                font-size="7.5" fill="#1d4f5e" opacity="0.42" font-weight="600"
+                letter-spacing="0.08em">PANTURA</text>
+
+          <!-- CIPULARANG Toll Road (Jakarta–Bandung) -->
+          <path d="M306,148 Q332,175 358,205 Q386,238 416,268
+                   Q448,298 476,325 Q488,340 490,348"
+                fill="none" stroke="#1d4f5e" stroke-width="2.8" opacity="0.55"/>
+          <!-- Center line dashes (highway style) -->
+          <path d="M306,148 Q332,175 358,205 Q386,238 416,268
+                   Q448,298 476,325 Q488,340 490,348"
+                fill="none" stroke="#f5ebd6" stroke-width="0.9"
+                stroke-dasharray="8,5" opacity="0.5"/>
+          <text x="416" y="250" font-family="'JetBrains Mono', monospace"
+                font-size="7.5" fill="#1d4f5e" opacity="0.52" font-weight="600"
+                transform="rotate(48 416 250)" letter-spacing="0.06em">TOL CIPULARANG</text>
+
+          <!-- Jl. Sudirman (selected vehicle's street) — prominent -->
+          <path d="M252,80 Q255,108 257,135 Q258,158 260,180 Q261,198 262,215"
+                fill="none" stroke="#1d4f5e" stroke-width="2" opacity="0.62"/>
+          <!-- Street label — rotated, italic serif -->
+          <text x="270" y="138" font-family="'Crimson Pro', serif"
+                font-style="italic" font-size="8" fill="#1d4f5e" opacity="0.6"
+                transform="rotate(-85 270 138)">Jl. Sudirman</text>
+
+          <!-- TB Simatupang (inner ring road) -->
+          <path d="M215,155 Q250,162 282,170 Q318,175 345,165"
+                fill="none" stroke="#1d4f5e" stroke-width="1.4" opacity="0.4"
+                stroke-dasharray="7,4"/>
+
+          <!-- Jl. MT Haryono -->
+          <path d="M275,130 Q316,134 358,136 Q398,137 432,134"
+                fill="none" stroke="#1d4f5e" stroke-width="1.2" opacity="0.38"/>
+
+          <!-- Pulogadung access road -->
+          <path d="M346,90 Q368,98 384,116 Q396,132 395,155 Q394,172 393,190"
+                fill="none" stroke="#1d4f5e" stroke-width="1.5" opacity="0.4"/>
+
+          <!-- Senayan road (S Jakarta) -->
+          <path d="M240,142 Q244,158 247,174 Q249,188 250,200"
+                fill="none" stroke="#1d4f5e" stroke-width="1.2" opacity="0.38"/>
+
+          <!-- Secondary roads around Bogor -->
+          <path d="M298,212 Q316,220 336,222 Q354,224 366,218"
+                fill="none" stroke="#1d4f5e" stroke-width="1" opacity="0.32"/>
+          <path d="M286,224 Q295,238 302,255 Q308,268 312,280"
+                fill="none" stroke="#1d4f5e" stroke-width="1" opacity="0.28"/>
+
+          <!-- Bandung ring road -->
+          <path d="M490,380 Q520,368 548,365 Q575,365 600,375 Q612,382 612,395"
+                fill="none" stroke="#1d4f5e" stroke-width="1.2" opacity="0.35"
+                stroke-dasharray="6,4"/>
+
+          <!-- Cikampek industrial road (east) -->
+          <path d="M475,130 Q520,128 566,130 Q610,132 650,130"
+                fill="none" stroke="#1d4f5e" stroke-width="1.3" opacity="0.35"/>
+
+          <!-- ── GEOFENCES ─────────────────────────────────────── -->
+          <!-- Pulogadung Warehouse geofence -->
+          <rect x="352" y="82" width="75" height="56" rx="0"
+                fill="rgba(29,79,94,0.04)" stroke="#1d4f5e" stroke-width="1"
+                stroke-dasharray="6,4" opacity="0.72"/>
+          <text x="390" y="78" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8.5" fill="#1d4f5e" opacity="0.62">Pulogadung Whs.</text>
+          <!-- Geofence exit marker (VAN-118 alert) -->
+          <line x1="390" y1="82" x2="390" y2="76" stroke="#d94f2a" stroke-width="2" opacity="0.75"/>
+          <polyline points="387,77 390,73 393,77" fill="none" stroke="#d94f2a"
+                    stroke-width="1.5" opacity="0.75"/>
+          <text x="408" y="76" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#d94f2a" font-weight="700" opacity="0.7">EXIT</text>
+
+          <!-- Senayan district (PICKUP-042 alert) -->
+          <rect x="236" y="168" width="48" height="38" rx="0"
+                fill="rgba(29,79,94,0.03)" stroke="#1d4f5e" stroke-width="0.8"
+                stroke-dasharray="4,3" opacity="0.5"/>
+          <text x="260" y="165" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.48">Senayan</text>
+
+          <!-- ── ROUTE TRAIL — TRUCK-247 ─────────────────────── -->
+          <!-- Fade from old → new position, dotted crimson path -->
+          <!-- Oldest points (very faint) -->
+          <path d="M230,235 Q238,218 245,202 Q252,186 256,170"
+                fill="none" stroke="#d94f2a" stroke-width="1.5"
+                stroke-dasharray="3,5" opacity="0.25" stroke-linecap="round"/>
+          <!-- Middle segment -->
+          <path d="M256,170 Q258,157 260,144 Q261,132 262,121"
+                fill="none" stroke="#d94f2a" stroke-width="1.8"
+                stroke-dasharray="4,4" opacity="0.42" stroke-linecap="round"/>
+          <!-- Recent segment (stronger) -->
+          <path d="M262,121 Q263,114 264,107 Q264,103 265,99"
+                fill="none" stroke="#d94f2a" stroke-width="2.2"
+                stroke-dasharray="5,3" opacity="0.6" stroke-linecap="round"/>
+          <!-- Ghost dots along trail -->
+          <circle cx="232" cy="234" r="1.8" fill="#d94f2a" opacity="0.18"/>
+          <circle cx="240" cy="220" r="2"   fill="#d94f2a" opacity="0.22"/>
+          <circle cx="247" cy="206" r="2.2" fill="#d94f2a" opacity="0.28"/>
+          <circle cx="253" cy="192" r="2.4" fill="#d94f2a" opacity="0.34"/>
+          <circle cx="257" cy="178" r="2.5" fill="#d94f2a" opacity="0.40"/>
+          <circle cx="260" cy="163" r="2.5" fill="#d94f2a" opacity="0.46"/>
+          <circle cx="262" cy="148" r="2.5" fill="#d94f2a" opacity="0.52"/>
+
+          <!-- ── VEHICLE MARKERS (non-selected) ────────────────── -->
+
+          <!-- VAN-118 — alert (geofence exit, near Pulogadung) -->
+          <g filter="url(#alr-glow)">
+            <circle cx="384" cy="108" r="5.5" fill="#d94f2a" opacity="0.92"/>
+            <circle cx="384" cy="108" r="9.5" fill="none" stroke="#d94f2a"
+                    stroke-width="0.9" opacity="0.35"/>
+          </g>
+          <text x="397" y="106" font-family="'JetBrains Mono', monospace"
+                font-size="7" fill="#d94f2a" font-weight="700" opacity="0.88">VAN-118</text>
+          <text x="397" y="115" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#d94f2a" opacity="0.65">⚑ fence exit</text>
+
+          <!-- TRUCK-189 — alert (speed violation, east) -->
+          <g filter="url(#alr-glow)">
+            <circle cx="450" cy="132" r="5.5" fill="#d94f2a" opacity="0.92"/>
+            <circle cx="450" cy="132" r="9.5" fill="none" stroke="#d94f2a"
+                    stroke-width="0.9" opacity="0.35"/>
+          </g>
+          <text x="463" y="130" font-family="'JetBrains Mono', monospace"
+                font-size="7" fill="#d94f2a" font-weight="700" opacity="0.88">TRUCK-189</text>
+          <text x="463" y="139" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#d94f2a" opacity="0.65">⚑ 92 km/h</text>
+
+          <!-- PICKUP-042 — alert (idle Senayan) -->
+          <g filter="url(#alr-glow)">
+            <circle cx="250" cy="182" r="5" fill="#d94f2a" opacity="0.88"/>
+            <circle cx="250" cy="182" r="8.5" fill="none" stroke="#d94f2a"
+                    stroke-width="0.8" opacity="0.3"/>
+          </g>
+          <text x="262" y="180" font-family="'JetBrains Mono', monospace"
+                font-size="7" fill="#d94f2a" font-weight="700" opacity="0.82">P-042</text>
+          <text x="262" y="189" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#d94f2a" opacity="0.6">⚑ idle 10m</text>
+
+          <!-- TRUCK-203 moving -->
+          <circle cx="418" cy="166" r="4.2" fill="#d94f2a" opacity="0.72"/>
+          <line cx="418" cy="166" x1="418" y1="166" x2="421" y2="158"
+                stroke="#d94f2a" stroke-width="1.5" opacity="0.6"
+                marker-end="url(#arrow-verm)"/>
+          <text x="426" y="165" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#7a6a52" opacity="0.72">T-203</text>
+
+          <!-- VAN-095 idle -->
+          <circle cx="322" cy="150" r="4.2" fill="#7a6a52" opacity="0.68"/>
+          <text x="330" y="149" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#7a6a52" opacity="0.68">V-095</text>
+
+          <!-- TRUCK-221 moving -->
+          <circle cx="362" cy="172" r="4.2" fill="#d94f2a" opacity="0.68"/>
+          <line x1="362" y1="172" x2="357" y2="164" stroke="#d94f2a"
+                stroke-width="1.5" opacity="0.55" marker-end="url(#arrow-verm)"/>
+          <text x="370" y="171" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#7a6a52" opacity="0.68">T-221</text>
+
+          <!-- VAN-176 idle -->
+          <circle cx="276" cy="145" r="4.2" fill="#7a6a52" opacity="0.62"/>
+          <text x="284" y="144" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#7a6a52" opacity="0.62">V-176</text>
+
+          <!-- TRUCK-198 moving -->
+          <circle cx="494" cy="195" r="4.2" fill="#d94f2a" opacity="0.65"/>
+          <text x="502" y="194" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#7a6a52" opacity="0.65">T-198</text>
+
+          <!-- PICKUP-067 stopped — open square marker -->
+          <rect x="332" y="186" width="9" height="9" rx="0"
+                fill="none" stroke="#5c4e3a" stroke-width="1.5" opacity="0.62"/>
+          <text x="346" y="194" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#7a6a52" opacity="0.62">P-067</text>
+
+          <!-- TRUCK-133 moving -->
+          <circle cx="196" cy="118" r="4" fill="#d94f2a" opacity="0.62"/>
+          <text x="204" y="117" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#7a6a52" opacity="0.6">T-133</text>
+
+          <!-- Extra background dots for fleet density -->
+          <circle cx="435" cy="103" r="3.5" fill="#d94f2a" opacity="0.5"/>
+          <circle cx="480" cy="118" r="3.5" fill="#d94f2a" opacity="0.45"/>
+          <circle cx="534" cy="362" r="3.8" fill="#d94f2a" opacity="0.48"/>
+          <circle cx="545" cy="376" r="3.5" fill="#7a6a52" opacity="0.48"/>
+          <circle cx="518" cy="392" r="3.5" fill="#7a6a52" opacity="0.45"/>
+          <circle cx="562" cy="388" r="3.5" fill="#7a6a52" opacity="0.42"/>
+          <circle cx="148" cy="108" r="3.5" fill="#d94f2a" opacity="0.48"/>
+          <circle cx="165" cy="142" r="3.5" fill="#d94f2a" opacity="0.42"/>
+          <circle cx="346" cy="106" r="3.5" fill="#d94f2a" opacity="0.5"/>
+          <circle cx="508" cy="148" r="3.5" fill="#d94f2a" opacity="0.45"/>
+
+          <!-- VAN-088 offline — gray ghost dot -->
+          <circle cx="414" cy="145" r="4" fill="none" stroke="#a09080"
+                  stroke-width="1.2" opacity="0.5" stroke-dasharray="2,2"/>
+          <text x="422" y="144" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#a09080" opacity="0.5">V-088</text>
+
+          <!-- ── SELECTED VEHICLE: TRUCK-247 ────────────────────── -->
+          <!-- Outermost ripple ring -->
+          <circle cx="265" cy="98" r="22" fill="none" stroke="#d94f2a"
+                  stroke-width="0.8" opacity="0.22"/>
+          <!-- Selection ring -->
+          <circle cx="265" cy="98" r="15" fill="none" stroke="#d94f2a"
+                  stroke-width="1.8" opacity="0.78" filter="url(#sel-glow)"/>
+          <!-- Inner selection tick marks -->
+          <line x1="265" y1="82" x2="265" y2="78" stroke="#d94f2a" stroke-width="1.5" opacity="0.7"/>
+          <line x1="265" y1="114" x2="265" y2="118" stroke="#d94f2a" stroke-width="1.5" opacity="0.7"/>
+          <line x1="249" y1="98" x2="245" y2="98" stroke="#d94f2a" stroke-width="1.5" opacity="0.7"/>
+          <line x1="281" y1="98" x2="285" y2="98" stroke="#d94f2a" stroke-width="1.5" opacity="0.7"/>
+          <!-- Main dot -->
+          <circle cx="265" cy="98" r="7.5" fill="#d94f2a" opacity="1"
+                  filter="url(#sel-glow)"/>
+          <circle cx="265" cy="98" r="3.5" fill="#f5ebd6"/>
+          <!-- NW heading arrow -->
+          <line x1="265" y1="98" x2="252" y2="85"
+                stroke="#d94f2a" stroke-width="2.2" opacity="0.9"
+                stroke-linecap="round" marker-end="url(#arrow-verm)"/>
+
+          <!-- Leader line to callout box -->
+          <line x1="280" y1="90" x2="318" y2="78" stroke="#d94f2a"
+                stroke-width="0.9" stroke-dasharray="3,3" opacity="0.52"/>
+
+          <!-- Diegetic callout box: TRUCK-247 -->
+          <rect x="318" y="60" width="148" height="50" rx="0"
+                fill="#f5ebd6" stroke="#d94f2a" stroke-width="1.4" opacity="0.98"/>
+          <!-- Callout top accent bar -->
+          <rect x="318" y="60" width="148" height="4" fill="#d94f2a" opacity="0.75"/>
+          <text x="326" y="74" font-family="'JetBrains Mono', monospace"
+                font-size="9.5" fill="#1d4f5e" font-weight="800"
+                letter-spacing="0.05em">TRUCK-247</text>
+          <text x="326" y="85" font-family="'JetBrains Mono', monospace"
+                font-size="8" fill="#d94f2a" font-weight="700">▲ 67 km/h · NW</text>
+          <text x="326" y="95" font-family="'JetBrains Mono', monospace"
+                font-size="7" fill="#7a6a52">Ahmad Wijaya · B 9421 KGV</text>
+          <text x="326" y="104" font-family="'JetBrains Mono', monospace"
+                font-size="7" fill="#7a6a52">Jl. Sudirman · 12s ago</text>
+
+          <!-- ── LANDMARK LABELS ─────────────────────────────────── -->
+          <!-- Jakarta Pusat -->
+          <text x="262" y="115" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8.5" fill="#1d4f5e" opacity="0.52" font-weight="600">Jakarta Pusat</text>
+          <!-- Jakarta Selatan -->
+          <text x="245" y="155" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.42">Jakarta Selatan</text>
+          <!-- Jakarta Timur -->
+          <text x="405" y="138" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.38">Jakarta Timur</text>
+          <!-- Jakarta Barat -->
+          <text x="170" y="120" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.38">Jakarta Barat</text>
+          <!-- Cibinong -->
+          <text x="340" y="220" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7" fill="#1d4f5e" opacity="0.35">Cibinong</text>
+          <!-- Cikaret -->
+          <text x="430" y="200" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7" fill="#1d4f5e" opacity="0.32">Cikaret</text>
+          <!-- Cikampek -->
+          <text x="554" y="122" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.36">Cikampek</text>
+          <!-- Cirebon (far east) -->
+          <text x="700" y="108" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="8" fill="#1d4f5e" opacity="0.35">Cirebon</text>
+
+          <!-- ── MICROGRAPHIC MAP LEGEND ─────────────────────────── -->
+          <g transform="translate(14, 518)">
+            <rect width="192" height="68" fill="#f5ebd6"
+                  stroke="#1d4f5e" stroke-width="0.9" opacity="0.95"/>
+            <text x="9" y="13" font-family="'JetBrains Mono', monospace"
+                  font-size="7" fill="#1d4f5e" font-weight="700"
+                  letter-spacing="0.12em" opacity="0.72">MAP LEGEND</text>
+            <line x1="9" y1="17" x2="183" y2="17" stroke="#1d4f5e"
+                  stroke-width="0.6" opacity="0.38"/>
+
+            <!-- Column 1 -->
+            <circle cx="18" cy="28" r="4" fill="#d94f2a" opacity="0.85"/>
+            <text x="28" y="32" font-family="'JetBrains Mono', monospace"
+                  font-size="7" fill="#1a140e" opacity="0.7">moving unit</text>
+
+            <circle cx="18" cy="42" r="4" fill="#7a6a52" opacity="0.78"/>
+            <text x="28" y="46" font-family="'JetBrains Mono', monospace"
+                  font-size="7" fill="#1a140e" opacity="0.7">idle unit</text>
+
+            <rect x="14" y="52" width="8" height="8" rx="0" fill="none"
+                  stroke="#5c4e3a" stroke-width="1.3" opacity="0.65"/>
+            <text x="28" y="60" font-family="'JetBrains Mono', monospace"
+                  font-size="7" fill="#1a140e" opacity="0.7">stopped unit</text>
+
+            <!-- Column 2 -->
+            <circle cx="106" cy="28" r="7" fill="none" stroke="#d94f2a"
+                    stroke-width="1.5" opacity="0.8"/>
+            <text x="120" y="32" font-family="'JetBrains Mono', monospace"
+                  font-size="7" fill="#1a140e" opacity="0.7">selected</text>
+
+            <rect x="100" y="36" width="12" height="9" rx="0"
+                  fill="rgba(29,79,94,0.04)" stroke="#1d4f5e" stroke-dasharray="3,2"
+                  stroke-width="0.8" opacity="0.65"/>
+            <text x="120" y="45" font-family="'JetBrains Mono', monospace"
+                  font-size="7" fill="#1a140e" opacity="0.7">geofence</text>
+
+            <line x1="100" y1="56" x2="112" y2="56" stroke="#d94f2a"
+                  stroke-width="1.2" stroke-dasharray="3,2" opacity="0.6"/>
+            <text x="120" y="60" font-family="'JetBrains Mono', monospace"
+                  font-size="7" fill="#1a140e" opacity="0.7">route trail</text>
+          </g>
+
+          <!-- ── SCALE BAR ──────────────────────────────────────── -->
+          <g transform="translate(614, 565)">
+            <line x1="0" y1="0" x2="88" y2="0" stroke="#1d4f5e" stroke-width="1.1" opacity="0.6"/>
+            <line x1="0" y1="-4" x2="0" y2="4" stroke="#1d4f5e" stroke-width="1.1" opacity="0.6"/>
+            <line x1="44" y1="-3" x2="44" y2="3" stroke="#1d4f5e" stroke-width="0.7" opacity="0.45"/>
+            <line x1="88" y1="-4" x2="88" y2="4" stroke="#1d4f5e" stroke-width="1.1" opacity="0.6"/>
+            <text x="0"  y="13" font-family="'JetBrains Mono', monospace"
+                  font-size="7.5" fill="#1d4f5e" opacity="0.58">0</text>
+            <text x="35" y="13" font-family="'JetBrains Mono', monospace"
+                  font-size="7.5" fill="#1d4f5e" opacity="0.58">25</text>
+            <text x="68" y="13" font-family="'JetBrains Mono', monospace"
+                  font-size="7.5" fill="#1d4f5e" opacity="0.58">50 km</text>
+          </g>
+
+          <!-- ── COMPASS ROSE — classical 16-point engraved ────── -->
+          <g transform="translate(728, 535)">
+            <!-- Base filled circle -->
+            <circle r="36" fill="#f0e6ce" stroke="#1d4f5e" stroke-width="1.3" opacity="0.95"/>
+            <!-- Inner ring -->
+            <circle r="31" fill="none" stroke="#1d4f5e" stroke-width="0.6" opacity="0.28"/>
+            <!-- Fine tick ring -->
+            <circle r="26" fill="none" stroke="#1d4f5e" stroke-width="0.4" opacity="0.2"/>
+
+            <!-- Primary 4 cardinal points (N·S·E·W) -->
+            <!-- N — vermilion half -->
+            <polygon points="0,-30  -5,-12  0,-18  5,-12"
+                     fill="#d94f2a" opacity="0.88"/>
+            <!-- N — teal half -->
+            <polygon points="0,-30  0,-18  5,-12"
+                     fill="#1d4f5e" opacity="0.5"/>
+            <!-- S -->
+            <polygon points="0,30   -5,12  0,18   5,12"
+                     fill="#1d4f5e" opacity="0.5"/>
+            <!-- E -->
+            <polygon points="30,0   12,-5  18,0   12,5"
+                     fill="#1d4f5e" opacity="0.5"/>
+            <!-- W -->
+            <polygon points="-30,0  -12,-5 -18,0  -12,5"
+                     fill="#1d4f5e" opacity="0.5"/>
+
+            <!-- Intercardinals (NE · NW · SE · SW) -->
+            <polygon points="0,-22 -3,-8 0,-14 3,-8"
+                     fill="#1d4f5e" opacity="0.32" transform="rotate(45)"/>
+            <polygon points="0,-22 -3,-8 0,-14 3,-8"
+                     fill="#1d4f5e" opacity="0.32" transform="rotate(-45)"/>
+            <polygon points="0,-22 -3,-8 0,-14 3,-8"
+                     fill="#1d4f5e" opacity="0.32" transform="rotate(135)"/>
+            <polygon points="0,-22 -3,-8 0,-14 3,-8"
+                     fill="#1d4f5e" opacity="0.32" transform="rotate(-135)"/>
+
+            <!-- 8 secondary intercardinal tick lines -->
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(22.5)"/>
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(67.5)"/>
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(112.5)"/>
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(157.5)"/>
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(202.5)"/>
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(247.5)"/>
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(292.5)"/>
+            <line x1="0" y1="-33" x2="0" y2="-25" stroke="#1d4f5e"
+                  stroke-width="0.7" opacity="0.22" transform="rotate(337.5)"/>
+
+            <!-- Center jewel -->
+            <circle r="3.5" fill="#1d4f5e" opacity="0.75"/>
+            <circle r="1.8" fill="#f5ebd6"/>
+
+            <!-- Cardinal labels -->
+            <text y="-18" text-anchor="middle" font-family="'JetBrains Mono', monospace"
+                  font-size="7.5" font-weight="800" fill="#d94f2a" opacity="0.88">N</text>
+            <text y="25"  text-anchor="middle" font-family="'JetBrains Mono', monospace"
+                  font-size="7" font-weight="600" fill="#1d4f5e" opacity="0.6">S</text>
+            <text x="20"  y="3" text-anchor="middle" font-family="'JetBrains Mono', monospace"
+                  font-size="7" font-weight="600" fill="#1d4f5e" opacity="0.6">E</text>
+            <text x="-20" y="3" text-anchor="middle" font-family="'JetBrains Mono', monospace"
+                  font-size="7" font-weight="600" fill="#1d4f5e" opacity="0.6">W</text>
+          </g>
+
+          <!-- ── ADDITIONAL ROADS & MAP DETAIL ────────────────────── -->
+          <!-- Jl. Gatot Subroto -->
+          <path d="M222,135 Q248,138 270,140 Q292,142 310,140"
+                fill="none" stroke="#1d4f5e" stroke-width="1.2" opacity="0.4"/>
+          <text x="270" y="153" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7" fill="#1d4f5e" opacity="0.38"
+                transform="rotate(-3 270 153)">Jl. Gatot Subroto</text>
+
+          <!-- Jl. Thamrin (continuation) -->
+          <path d="M256,80 Q258,90 259,100 Q260,108 261,115"
+                fill="none" stroke="#1d4f5e" stroke-width="1.8" opacity="0.52"/>
+
+          <!-- Jl. Casablanca / Ring Road -->
+          <path d="M258,148 Q272,152 290,156 Q310,158 330,155 Q342,152 348,146"
+                fill="none" stroke="#1d4f5e" stroke-width="1" opacity="0.32"
+                stroke-dasharray="5,3"/>
+
+          <!-- Jakarta outer ring road toward Bogor -->
+          <path d="M200,155 Q218,168 238,180 Q258,190 275,202 Q290,214 300,225"
+                fill="none" stroke="#1d4f5e" stroke-width="2" opacity="0.42"/>
+          <path d="M200,155 Q218,168 238,180 Q258,190 275,202 Q290,214 300,225"
+                fill="none" stroke="#f5ebd6" stroke-width="0.7"
+                stroke-dasharray="6,4" opacity="0.38"/>
+
+          <!-- Jl. Raya Kalimalang (east) -->
+          <path d="M310,140 Q346,140 380,141 Q412,142 442,142"
+                fill="none" stroke="#1d4f5e" stroke-width="1.2" opacity="0.35"/>
+
+          <!-- Puncak Pass (mountain road) -->
+          <path d="M300,225 Q316,238 330,252 Q344,266 352,280"
+                fill="none" stroke="#1d4f5e" stroke-width="1.3" opacity="0.38"
+                stroke-dasharray="5,3"/>
+          <text x="308" y="252" font-family="'Crimson Pro', serif"
+                font-style="italic" font-size="7" fill="#1d4f5e" opacity="0.36"
+                transform="rotate(52 308 252)">Puncak Pass</text>
+
+          <!-- Extra Bandung city roads -->
+          <path d="M490,380 Q512,388 538,390 Q560,390 580,381"
+                fill="none" stroke="#1d4f5e" stroke-width="1" opacity="0.3"/>
+          <path d="M488,395 Q504,408 520,415 Q538,420 558,418"
+                fill="none" stroke="#1d4f5e" stroke-width="1" opacity="0.27"/>
+
+          <!-- Cikampek–Karawang road -->
+          <path d="M475,128 Q522,127 568,129 Q612,131 655,129"
+                fill="none" stroke="#1d4f5e" stroke-width="1.2" opacity="0.34"/>
+
+          <!-- ── SECOND GEOFENCE: Cikarang Industrial Zone ───────── -->
+          <rect x="463" y="114" width="66" height="45"
+                fill="rgba(29,79,94,0.03)" stroke="#1d4f5e" stroke-width="0.9"
+                stroke-dasharray="5,3" opacity="0.52"/>
+          <text x="496" y="110" text-anchor="middle"
+                font-family="'Crimson Pro', serif" font-style="italic"
+                font-size="7.5" fill="#1d4f5e" opacity="0.48">Cikarang Ind.</text>
+
+          <!-- Distance markers along Cipularang -->
+          <circle cx="396" cy="237" r="2.5" fill="#1d4f5e" opacity="0.26"/>
+          <text x="403" y="240" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#1d4f5e" opacity="0.38">km 42</text>
+
+          <circle cx="446" cy="288" r="2.5" fill="#1d4f5e" opacity="0.26"/>
+          <text x="453" y="291" font-family="'JetBrains Mono', monospace"
+                font-size="6.5" fill="#1d4f5e" opacity="0.38">km 72</text>
+
+          <!-- ── MAP CARTOUCHE (engraved title block) ───────────── -->
+          <g transform="translate(610, 76)">
+            <rect width="160" height="51" fill="#f5ebd6"
+                  stroke="#1d4f5e" stroke-width="1" opacity="0.86"/>
+            <rect x="3" y="3" width="154" height="45" fill="none"
+                  stroke="#1d4f5e" stroke-width="0.5" opacity="0.32"/>
+            <text x="80" y="18" text-anchor="middle"
+                  font-family="'JetBrains Mono', monospace" font-size="8.5"
+                  font-weight="700" fill="#1d4f5e" opacity="0.82"
+                  letter-spacing="0.07em">JAKARTA–BANDUNG</text>
+            <text x="80" y="29" text-anchor="middle"
+                  font-family="'Crimson Pro', serif" font-style="italic"
+                  font-size="8" fill="#1d4f5e" opacity="0.6">Operational Area · 2026</text>
+            <line x1="10" y1="33" x2="150" y2="33" stroke="#1d4f5e"
+                  stroke-width="0.6" opacity="0.28"/>
+            <text x="80" y="44" text-anchor="middle"
+                  font-family="'JetBrains Mono', monospace" font-size="7"
+                  fill="#7a6a52" opacity="0.58">sektor tujuh · onefleet</text>
+          </g>
+
+          <!-- ── COORDINATE GRATICULE — very subtle ─────────────── -->
+          <!-- Horizontal grid lines (parallels) -->
+          <line x1="0" y1="150" x2="790" y2="150"
+                stroke="#1d4f5e" stroke-width="0.3" opacity="0.08" stroke-dasharray="8,8"/>
+          <line x1="0" y1="250" x2="790" y2="250"
+                stroke="#1d4f5e" stroke-width="0.3" opacity="0.08" stroke-dasharray="8,8"/>
+          <line x1="0" y1="350" x2="790" y2="350"
+                stroke="#1d4f5e" stroke-width="0.3" opacity="0.08" stroke-dasharray="8,8"/>
+          <line x1="0" y1="450" x2="790" y2="450"
+                stroke="#1d4f5e" stroke-width="0.3" opacity="0.08" stroke-dasharray="8,8"/>
+          <!-- Vertical grid lines (meridians) -->
+          <line x1="198" y1="0" x2="198" y2="595"
+                stroke="#1d4f5e" stroke-width="0.3" opacity="0.08" stroke-dasharray="8,8"/>
+          <line x1="395" y1="0" x2="395" y2="595"
+                stroke="#1d4f5e" stroke-width="0.3" opacity="0.08" stroke-dasharray="8,8"/>
+          <line x1="592" y1="0" x2="592" y2="595"
+                stroke="#1d4f5e" stroke-width="0.3" opacity="0.08" stroke-dasharray="8,8"/>
+
+        </svg><!-- end map SVG -->
+
+        <!-- Pull-quote overlaid on map -->
+        <div class="pull-quote-wrap">
+          <div class="pull-quote">
+            "two hundred forty-seven units · seventy-four percent in motion · this hour."
+          </div>
+        </div>
+
+      </div><!-- /map-area -->
+    </div><!-- /center-col -->
+
+    <!-- ──────────────────────────────────────────────────────────────
+         RIGHT: §03 ALERTS + §04 SELECTED DOSSIER
+    ────────────────────────────────────────────────────────────────── -->
+    <div class="right-col">
+
+      <!-- § 03 · ALERTS -->
+      <div class="alerts-sec">
+        <div class="col-head">
+          <div class="col-head-title">
+            <span class="s-mark">§</span>&thinsp;03&thinsp;·&thinsp;Alerts
+          </div>
+          <div class="col-head-meta" style="color:var(--vermilion);font-weight:700;">
+            3 active
+          </div>
+        </div>
+
+        <div class="errata-wrap">
+          <div class="errata-box">
+
+            <!-- Alert 1 — Speed violation -->
+            <div class="alert-row">
+              <div class="alert-glyph">※</div>
+              <div class="alert-body">
+                <span class="alert-type">Speed Limit</span>
+                <span class="alert-detail">TRUCK-189 · 92 km/h in 60 zone · Cipularang</span>
+              </div>
+              <div class="alert-time">02:51</div>
+            </div>
+
+            <!-- Alert 2 — Geofence exit -->
+            <div class="alert-row">
+              <div class="alert-glyph">※</div>
+              <div class="alert-body">
+                <span class="alert-type">Geofence Exit</span>
+                <span class="alert-detail">VAN-118 · Pulogadung Warehouse</span>
+              </div>
+              <div class="alert-time">03:14</div>
+            </div>
+
+            <!-- Alert 3 — Idling -->
+            <div class="alert-row">
+              <div class="alert-glyph">※</div>
+              <div class="alert-body">
+                <span class="alert-type">Idling &gt;10m</span>
+                <span class="alert-detail">PICKUP-042 · Senayan · engine on</span>
+              </div>
+              <div class="alert-time">03:36</div>
+            </div>
+
+          </div><!-- /errata-box -->
+        </div><!-- /errata-wrap -->
+      </div><!-- /alerts-sec -->
+
+      <!-- § 04 · SELECTED — TRUCK-247 dossier -->
+      <div class="dossier-sec">
+
+        <div class="col-head">
+          <div class="col-head-title">
+            <span class="s-mark">§</span>&thinsp;04&thinsp;·&thinsp;Selected&thinsp;·
+            <span style="color:var(--vermilion);">TRUCK-247</span>
+          </div>
+          <div class="col-head-meta">last seen 12s ago</div>
+        </div>
+
+        <div class="dossier-body">
+
+          <!-- Speed hero block -->
+          <div class="speed-hero">
+            <div class="speed-val-block">
+              <span class="speed-label">Current Speed</span>
+              <div class="speed-number-row">
+                <div class="speed-num">67</div>
+                <div class="speed-kmh">km/h</div>
+                <div class="speed-dir">▲ NW</div>
+              </div>
+            </div>
+            <div class="speed-status-block">
+              <div class="speed-status-tag">MOVING</div>
+              <div class="speed-delta">▲ +2 km/h</div>
+            </div>
+          </div>
+
+          <!-- ─── Typed dossier form ──────────────────────────── -->
+          <div class="dossier-rule"></div>
+
+          <div class="dossier-row">
+            <span class="d-label">plate</span>
+            <span class="d-leaders">.............</span>
+            <span class="d-value teal">B 9421 KGV</span>
+          </div>
+
+          <div class="dossier-row">
+            <span class="d-label">driver</span>
+            <span class="d-leaders">............</span>
+            <span class="d-value">ahmad wijaya</span>
+          </div>
+
+          <div class="dossier-row">
+            <span class="d-label">driver id</span>
+            <span class="d-leaders">..........</span>
+            <span class="d-value">#4471</span>
+          </div>
+
+          <div class="dossier-row">
+            <span class="d-label">phone</span>
+            <span class="d-leaders">............</span>
+            <span class="d-value">+62 812-4471</span>
+          </div>
+
+          <div class="dossier-sub-rule"></div>
+
+          <div class="dossier-row">
+            <span class="d-label">location</span>
+            <span class="d-leaders">.........</span>
+            <span class="d-value teal" style="font-size:8.5px;">Jl. Sudirman, JKT</span>
+          </div>
+
+          <div class="dossier-row">
+            <span class="d-label">coords</span>
+            <span class="d-leaders">...........</span>
+            <span class="d-value" style="font-size:8.5px;color:var(--brown);">-6.2087, 106.8456</span>
+          </div>
+
+          <div class="dossier-sub-rule"></div>
+
+          <!-- Telemetry tiles 2×2 -->
+          <div class="telem-grid">
+            <div class="telem-tile">
+              <div class="tt-label">Ignition</div>
+              <div class="tt-value on-state">ON · 03:12</div>
+            </div>
+            <div class="telem-tile">
+              <div class="tt-label">Fuel</div>
+              <div class="tt-value">68% ~340L</div>
+            </div>
+            <div class="telem-tile">
+              <div class="tt-label">Battery</div>
+              <div class="tt-value">12.4 V</div>
+            </div>
+            <div class="telem-tile">
+              <div class="tt-label">Engine Temp</div>
+              <div class="tt-value">24 °C</div>
+            </div>
+          </div>
+
+          <!-- Fuel bar (visual) -->
+          <div class="fuel-bar-wrap">
+            <div class="fuel-bar-label">Fuel Level · 68% (~340 L remaining)</div>
+            <div class="fuel-bar-track">
+              <div class="fuel-bar-fill"></div>
+              <div class="fuel-bar-pct">68%</div>
+            </div>
+          </div>
+
+          <div class="dossier-sub-rule"></div>
+
+          <!-- Today stats 2-column grid -->
+          <div class="today-stats">
+            <div class="today-stat">
+              <div class="ts-label">Today Distance</div>
+              <div class="ts-value highlight">247 km</div>
+            </div>
+            <div class="today-stat">
+              <div class="ts-label">Driving Time</div>
+              <div class="ts-value">6h 12m</div>
+            </div>
+            <div class="today-stat" style="margin-top:5px;">
+              <div class="ts-label">Stops Today</div>
+              <div class="ts-value">4</div>
+            </div>
+            <div class="today-stat" style="margin-top:5px;">
+              <div class="ts-label">Alerts Today</div>
+              <div class="ts-value" style="color:var(--vermilion);">1</div>
+            </div>
+          </div>
+
+          <!-- Dossier separator -->
+          <div class="dossier-sub-rule" style="margin-top:10px;"></div>
+
+          <!-- Additional typed form rows -->
+          <div class="dossier-row">
+            <span class="d-label">last update</span>
+            <span class="d-leaders">.........</span>
+            <span class="d-value">12 seconds ago</span>
+          </div>
+          <div class="dossier-row">
+            <span class="d-label">ignition on</span>
+            <span class="d-leaders">.........</span>
+            <span class="d-value teal">since 03:12 WIB</span>
+          </div>
+          <div class="dossier-row">
+            <span class="d-label">heading</span>
+            <span class="d-leaders">...........</span>
+            <span class="d-value verm">NW · 315°</span>
+          </div>
+
+          <div class="dossier-sub-rule" style="margin-top:10px;"></div>
+
+          <!-- ── Recent Events sub-log ──────────────────────────── -->
+          <div style="font-size:7.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--brown);margin-bottom:6px;">
+            Recent Events · TRUCK-247
+          </div>
+
+          <div style="border:1px solid rgba(29,79,94,0.2);background:var(--paper-mid);padding:0;">
+
+            <!-- Event rows — styled like a printed log -->
+            <div style="display:grid;grid-template-columns:42px 1fr;border-bottom:1px solid rgba(29,79,94,0.12);min-height:22px;align-items:center;">
+              <div style="padding:3px 6px;font-size:8px;font-weight:700;color:var(--teal);border-right:1px solid rgba(29,79,94,0.18);font-feature-settings:'tnum';">03:47</div>
+              <div style="padding:3px 7px;font-size:8px;color:var(--ink);">▲ Moving · 67 km/h · Jl. Sudirman</div>
+            </div>
+            <div style="display:grid;grid-template-columns:42px 1fr;border-bottom:1px solid rgba(29,79,94,0.12);min-height:22px;align-items:center;background:var(--paper);">
+              <div style="padding:3px 6px;font-size:8px;font-weight:700;color:var(--teal);border-right:1px solid rgba(29,79,94,0.18);font-feature-settings:'tnum';">03:36</div>
+              <div style="padding:3px 7px;font-size:8px;color:var(--brown);">■ Speed increase · 58 → 67 km/h</div>
+            </div>
+            <div style="display:grid;grid-template-columns:42px 1fr;border-bottom:1px solid rgba(29,79,94,0.12);min-height:22px;align-items:center;">
+              <div style="padding:3px 6px;font-size:8px;font-weight:700;color:var(--teal);border-right:1px solid rgba(29,79,94,0.18);font-feature-settings:'tnum';">03:22</div>
+              <div style="padding:3px 7px;font-size:8px;color:var(--brown);">□ Stop · 4 min · Jl. Gatot Subroto</div>
+            </div>
+            <div style="display:grid;grid-template-columns:42px 1fr;border-bottom:1px solid rgba(29,79,94,0.12);min-height:22px;align-items:center;background:var(--paper);">
+              <div style="padding:3px 6px;font-size:8px;font-weight:700;color:var(--teal);border-right:1px solid rgba(29,79,94,0.18);font-feature-settings:'tnum';">03:12</div>
+              <div style="padding:3px 7px;font-size:8px;color:var(--ink);">▲ Ignition ON · start of run</div>
+            </div>
+            <div style="display:grid;grid-template-columns:42px 1fr;min-height:22px;align-items:center;">
+              <div style="padding:3px 6px;font-size:8px;font-weight:700;color:var(--gray);border-right:1px solid rgba(29,79,94,0.18);font-feature-settings:'tnum';">02:54</div>
+              <div style="padding:3px 7px;font-size:8px;color:var(--gray);">· Ignition OFF · parked 18 min</div>
+            </div>
+
+          </div><!-- /event log -->
+
+          <div class="dossier-sub-rule" style="margin-top:10px;"></div>
+
+          <!-- ── Shift Summary ──────────────────────────────────── -->
+          <div style="font-size:7.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--brown);margin-bottom:5px;">
+            Shift Summary · Overnight
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px;">
+
+            <div style="border:1px solid rgba(29,79,94,0.2);padding:5px 7px;background:var(--paper-mid);text-align:center;">
+              <div style="font-size:7px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--brown);margin-bottom:2px;">Avg Speed</div>
+              <div style="font-size:16px;font-weight:800;color:var(--teal);font-feature-settings:'tnum';line-height:1;">42</div>
+              <div style="font-size:7px;color:var(--gray);">km/h</div>
+            </div>
+
+            <div style="border:1px solid rgba(29,79,94,0.2);padding:5px 7px;background:var(--paper-mid);text-align:center;">
+              <div style="font-size:7px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--brown);margin-bottom:2px;">Max Speed</div>
+              <div style="font-size:16px;font-weight:800;color:var(--vermilion);font-feature-settings:'tnum';line-height:1;">84</div>
+              <div style="font-size:7px;color:var(--gray);">km/h</div>
+            </div>
+
+            <div style="border:1px solid rgba(29,79,94,0.2);padding:5px 7px;background:var(--paper-mid);text-align:center;">
+              <div style="font-size:7px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--brown);margin-bottom:2px;">Idle Time</div>
+              <div style="font-size:16px;font-weight:800;color:var(--brown);font-feature-settings:'tnum';line-height:1;">48m</div>
+              <div style="font-size:7px;color:var(--gray);">total idle</div>
+            </div>
+
+          </div>
+
+          <!-- ── Driver contact block ───────────────────────────── -->
+          <div style="border:1px solid rgba(29,79,94,0.22);padding:8px 10px;background:var(--paper);">
+            <div style="font-size:7.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--brown);margin-bottom:5px;">Driver Contact</div>
+            <div class="dossier-row">
+              <span class="d-label">name</span>
+              <span class="d-leaders">.............</span>
+              <span class="d-value">Ahmad Wijaya</span>
+            </div>
+            <div class="dossier-row">
+              <span class="d-label">employee</span>
+              <span class="d-leaders">...........</span>
+              <span class="d-value">#4471</span>
+            </div>
+            <div class="dossier-row">
+              <span class="d-label">mobile</span>
+              <span class="d-leaders">............</span>
+              <span class="d-value">+62 812 4471 2208</span>
+            </div>
+            <div class="dossier-row">
+              <span class="d-label">status</span>
+              <span class="d-leaders">.............</span>
+              <span class="d-value" style="color:var(--vermilion);">On Duty</span>
+            </div>
+          </div>
+
+        </div><!-- /dossier-body -->
+      </div><!-- /dossier-sec -->
+
+    </div><!-- /right-col -->
+
+  </div><!-- /main-body -->
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       FOOTER — printed dispatch sheet footer
+  ──────────────────────────────────────────────────────────────────── -->
+  <footer class="dispatch-footer">
+
+    <div class="footer-text">
+      <b>ONEFLEET</b>&thinsp;·&thinsp;dispatch sheet&thinsp;·&thinsp;printed
+      <b id="footer-time">03:47:21</b> wib&thinsp;·&thinsp;page <b>1 of 1</b>
+      &thinsp;·&thinsp;for operational use
+    </div>
+
+    <div class="footer-text" style="text-align:center;">
+      <em>confidential</em>&thinsp;·&thinsp;sektor tujuh operations&thinsp;·&thinsp;jakarta&thinsp;·&thinsp;2026
+    </div>
+
+    <div class="footer-text" style="text-align:right;">
+      jakarta operations center&thinsp;·&thinsp;<b>shift: overnight</b>
+    </div>
+
+  </footer>
+
+</div><!-- /dispatch-sheet -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Minimal JS — keeps clock ticking in WIB
+════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  var displayEl  = document.getElementById('time-display');
+  var footerEl   = document.getElementById('footer-time');
+  var stampEl    = document.getElementById('stamp-time');
+
+  function z(n) { return n < 10 ? '0' + n : String(n); }
+
+  function tick() {
+    // WIB = UTC+7
+    var now = new Date();
+    var utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    var wib = new Date(utc + 7 * 3600000);
+    var hh  = z(wib.getHours());
+    var mm  = z(wib.getMinutes());
+    var ss  = z(wib.getSeconds());
+    var full = hh + ':' + mm + ':' + ss;
+    var short = hh + ':' + mm;
+
+    if (displayEl)  displayEl.textContent  = full;
+    if (footerEl)   footerEl.textContent   = full;
+    if (stampEl)    stampEl.textContent    = short;
+  }
+
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+
+</body>
+</html>
