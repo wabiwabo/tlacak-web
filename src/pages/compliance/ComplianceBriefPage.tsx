@@ -7,10 +7,13 @@ import {
   useFleetQuotaQuery,
   useFleetKirQuery,
   useFleetOdolQuery,
+  useFleetB40Query,
   formatRupiahCompact,
   formatKirCountdown,
+  formatB40Countdown,
   type QuotaRow,
   type KirRow,
+  type B40Row,
 } from '@/features/compliance';
 import { Badge } from '@/shared/ui';
 import { cn } from '@/shared/lib/cn';
@@ -347,12 +350,145 @@ function OdolPanel() {
   );
 }
 
+function B40Panel() {
+  const { t } = useTranslation();
+  const { rows, summary, isLoading } = useFleetB40Query();
+
+  // Worst-first: overdue then due-soon, sorted by the binding axis.
+  const attention = useMemo<B40Row[]>(
+    () =>
+      rows
+        .filter((r) => r.snapshot.status === 'overdue' || r.snapshot.status === 'due-soon')
+        .sort((a, b) => {
+          const aOrder = a.snapshot.status === 'overdue' ? 0 : 1;
+          const bOrder = b.snapshot.status === 'overdue' ? 0 : 1;
+          if (aOrder !== bOrder) return aOrder - bOrder;
+          const ak =
+            a.snapshot.axis === 'km'
+              ? (a.snapshot.kmUntilDue ?? 0)
+              : (a.snapshot.daysUntilDue ?? 0);
+          const bk =
+            b.snapshot.axis === 'km'
+              ? (b.snapshot.kmUntilDue ?? 0)
+              : (b.snapshot.daysUntilDue ?? 0);
+          return ak - bk;
+        })
+        .slice(0, 5),
+    [rows],
+  );
+
+  let badge = '';
+  let badgeTone: 'primary' | 'warning' | 'alert' = 'primary';
+  if (summary.counts.overdue > 0) {
+    badge = `${summary.counts.overdue} ${t('briefOverdue')}`;
+    badgeTone = 'alert';
+  } else if (summary.counts['due-soon'] > 0) {
+    badge = `${summary.counts['due-soon']} ${t('briefDueSoon')}`;
+    badgeTone = 'warning';
+  } else if (summary.counts.unknown === summary.total && summary.total > 0) {
+    badge = t('briefUnconfigured');
+    badgeTone = 'warning';
+  } else {
+    badge = t('briefAllValid');
+  }
+
+  return (
+    <div className="depth-elevated-shallow relative flex flex-col gap-3 p-4">
+      <span className="pointer-events-none absolute inset-0 depth-toplight" aria-hidden />
+      <div className="relative">
+        <BriefHeader
+          label={t('complianceB40')}
+          badge={badge}
+          badgeTone={badgeTone}
+          to="/compliance/b40"
+        />
+      </div>
+
+      <div className="relative grid grid-cols-3 gap-2">
+        <div>
+          <div className="cyber-label text-[9px]">{t('b40StatusValid')}</div>
+          <div className="font-mono text-lg font-bold tabular-nums text-primary">
+            {summary.counts.valid}
+          </div>
+        </div>
+        <div>
+          <div className="cyber-label text-[9px]">{t('b40StatusDueSoon')}</div>
+          <div
+            className={cn(
+              'font-mono text-lg font-bold tabular-nums',
+              summary.counts['due-soon'] > 0
+                ? 'text-[var(--color-warning)]'
+                : 'text-muted-foreground',
+            )}
+          >
+            {summary.counts['due-soon']}
+          </div>
+        </div>
+        <div>
+          <div className="cyber-label text-[9px]">{t('b40StatusOverdue')}</div>
+          <div
+            className={cn(
+              'font-mono text-lg font-bold tabular-nums',
+              summary.counts.overdue > 0
+                ? 'text-destructive cyber-glow-alert'
+                : 'text-muted-foreground',
+            )}
+          >
+            {summary.counts.overdue}
+          </div>
+        </div>
+      </div>
+
+      {attention.length > 0 && (
+        <div className="relative border-t border-border pt-3">
+          <div className="cyber-label text-[9px] mb-2">{t('briefAttention')}</div>
+          <ul className="flex flex-col gap-1.5 font-mono text-xs">
+            {attention.map((r) => {
+              const value =
+                r.snapshot.axis === 'km' ? r.snapshot.kmUntilDue : r.snapshot.daysUntilDue;
+              const axis = r.snapshot.axis === 'time' ? 'time' : 'km';
+              return (
+                <li
+                  key={r.deviceId}
+                  className="flex items-center justify-between border-b border-border/40 pb-1.5 last:border-0"
+                >
+                  <span className="text-foreground tracking-wide truncate max-w-[16rem]">
+                    {r.deviceName}
+                    {r.uniqueId && (
+                      <span className="text-muted-foreground tracking-[0.14em] ms-2 text-[10px] uppercase">
+                        {r.uniqueId}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      'tabular-nums tracking-wider font-semibold',
+                      r.snapshot.status === 'overdue'
+                        ? 'text-destructive cyber-glow-alert'
+                        : 'text-[var(--color-warning)]',
+                    )}
+                  >
+                    {formatB40Countdown(value, axis)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {isLoading && attention.length === 0 && (
+        <div className="relative cyber-label">{t('sharedLoading')}</div>
+      )}
+    </div>
+  );
+}
+
 function UpcomingPanel() {
   const { t } = useTranslation();
   // Roadmap items still queued — render as recessed tiles. Each item is
   // a real Indonesia regulation surfaced by the May 2026 research.
   const upcoming: { key: string; titleKey: string; descKey: string }[] = [
-    { key: 'b40', titleKey: 'briefB40Title', descKey: 'briefB40Desc' },
     { key: 'halal', titleKey: 'briefHalalTitle', descKey: 'briefHalalDesc' },
     { key: 'banjir', titleKey: 'briefBanjirTitle', descKey: 'briefBanjirDesc' },
   ];
@@ -361,7 +497,7 @@ function UpcomingPanel() {
       <div className="cyber-label flex items-center gap-2 border-b border-border pb-2">
         <span className="text-primary">//</span> {t('briefUpcomingTitle')}
       </div>
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {upcoming.map((u) => (
           <div
             key={u.key}
@@ -413,11 +549,12 @@ export default function ComplianceBriefPage() {
           </div>
         </div>
 
-        {/* Active modules: Fuel Quota · KIR · ODOL */}
-        <div className="grid gap-4 lg:grid-cols-3">
+        {/* Active modules: Fuel Quota · KIR · ODOL · B40 */}
+        <div className="grid gap-4 lg:grid-cols-2">
           <FuelQuotaPanel />
           <KirPanel />
           <OdolPanel />
+          <B40Panel />
         </div>
 
         {/* Upcoming compliance modules */}

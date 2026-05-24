@@ -242,6 +242,10 @@ export const routes: RouteObject[] = [
         path: 'compliance/odol',
         element: lazyRoute(() => import('@/pages/compliance/OdolPage')),
       },
+      {
+        path: 'compliance/b40',
+        element: lazyRoute(() => import('@/pages/compliance/B40Page')),
+      },
     ],
   },
   { path: '*', element: lazyRoute(() => import('@/pages/NotFoundPage')) },

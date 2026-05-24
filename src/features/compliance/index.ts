@@ -40,3 +40,20 @@ export {
   type OdolRow,
   type CargoMap,
 } from './lib/use-fleet-odol';
+
+export {
+  B40_DEFAULT_INTERVAL_KM,
+  B40_DEFAULT_INTERVAL_MONTHS,
+  B40_WARN_KM,
+  B40_WARN_DAYS,
+  computeB40Status,
+  summarizeB40Fleet,
+  formatB40Countdown,
+  type B40Snapshot,
+  type B40Status,
+  type B40Axis,
+  type B40Input,
+  type B40Thresholds,
+  type FleetB40Summary,
+} from './lib/b40';
+export { useFleetB40Query, type B40Row } from './lib/use-fleet-b40';
