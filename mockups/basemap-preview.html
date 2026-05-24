@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>OneFleet · Cyber Ops basemap preview</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100vh; width: 100vw; background: #000814; color: #d6e6ff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
+  #map { position: absolute; inset: 0; }
+  /* CYBER OPS canvas filter — final cyan saturation push on top of paint repaint */
+  .maplibregl-canvas { filter: saturate(1.3) contrast(1.05); }
+  .chrome { position: absolute; z-index: 5; pointer-events: none; }
+  .top-left { top: 14px; left: 14px; }
+  .top-right { top: 14px; right: 14px; text-align: right; }
+  .bot-left { bottom: 14px; left: 14px; }
+  .bot-right { bottom: 14px; right: 14px; text-align: right; }
+  .label { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(214,230,255,0.42); }
+  .brand { font-size: 13px; letter-spacing: 0.22em; color: #00ffc8; text-shadow: 0 0 12px rgba(0,255,200,0.55); font-weight: 700; }
+  .pill { display: inline-block; padding: 4px 8px; border: 1px solid rgba(0,255,200,0.32); background: rgba(0,8,20,0.7); backdrop-filter: blur(4px); font-size: 10px; letter-spacing: 0.14em; }
+  .grid-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0.35;
+    background-image:
+      linear-gradient(rgba(0,255,200,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,200,0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .vehicle-dot { width: 12px; height: 12px; border-radius: 50%; background: #00ffc8; box-shadow: 0 0 0 1.5px #00ffc8, 0 0 16px rgba(0,255,200,0.7); }
+  .vehicle-idle .vehicle-dot { background: #ffaa00; box-shadow: 0 0 0 1.5px #ffaa00, 0 0 16px rgba(255,170,0,0.7); }
+  .vehicle-stopped .vehicle-dot { background: #b026ff; box-shadow: 0 0 0 1.5px #b026ff, 0 0 16px rgba(176,38,255,0.7); }
+  .vehicle-alert .vehicle-dot { background: #ff3864; box-shadow: 0 0 0 1.5px #ff3864, 0 0 24px rgba(255,56,100,0.85); animation: pulse-alert 1.4s ease-in-out infinite; }
+  .vehicle-selected .vehicle-dot { width: 18px; height: 18px; box-shadow: 0 0 0 2px #00ffc8, 0 0 30px rgba(0,255,200,0.95); }
+  .vehicle-label { position: absolute; left: 16px; top: -10px; white-space: nowrap; font-size: 10px; letter-spacing: 0.14em; color: #00ffc8; background: rgba(0,8,20,0.9); padding: 3px 7px; border: 1px solid rgba(0,255,200,0.4); }
+  @keyframes pulse-alert { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  .credit { font-size: 9px; color: rgba(214,230,255,0.32); }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="grid-overlay"></div>
+
+<div class="chrome top-left">
+  <div class="label" style="margin-bottom: 6px;">// ONEFLEET · basemap preview</div>
+  <div class="brand">CYBER OPS · DARK</div>
+  <div class="label" style="margin-top: 6px;">SECTOR 07 · JKT–BDG CORRIDOR</div>
+</div>
+
+<div class="chrome top-right">
+  <div class="pill" style="margin-bottom: 6px;">
+    <span style="color: #00ffc8;">●</span>
+    <span style="color: #d6e6ff; margin-left: 4px;">247 LIVE</span>
+  </div>
+  <div class="label">03:47 WIB · 24 MAY</div>
+</div>
+
+<div class="chrome bot-left">
+  <div class="label" style="margin-bottom: 4px;">VEHICLE STATUS</div>
+  <div style="display: flex; gap: 10px; font-size: 10px; letter-spacing: 0.14em;">
+    <span><span style="color: #00ffc8;">●</span> MOVING 184</span>
+    <span><span style="color: #ffaa00;">●</span> IDLE 41</span>
+    <span><span style="color: #b026ff;">●</span> STOPPED 18</span>
+    <span><span style="color: #ff3864;">●</span> ALERT 3</span>
+  </div>
+</div>
+
+<div class="chrome bot-right">
+  <div class="credit">carto dark matter · openmaptiles · © openstreetmap</div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script>
+(async () => {
+  // Match production behaviour: load Carto Dark Matter style, swap glyphs to
+  // Traccar's CORS-open CDN, drop sprite refs (we don't ship a sprite).
+  const style = await (await fetch('https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json')).json();
+  style.glyphs = 'https://cdn.traccar.com/map/fonts/{fontstack}/{range}.pbf';
+
+  // CYBER OPS palette
+  const CY = {
+    void: '#000814',
+    voidDeep: '#02060f',
+    land: '#0a1024',
+    landResidential: '#10173a',
+    landPark: '#0a1a14',
+    building: '#1a2148',
+    buildingOutline: '#26305c',
+    roadCasing: 'rgba(0,255,200,0.18)',
+    roadInner: 'rgba(0,255,200,0.55)',
+    roadMotorway: 'rgba(0,255,200,0.85)',
+    roadMinor: 'rgba(0,255,200,0.22)',
+    roadPath: 'rgba(214,230,255,0.12)',
+    rail: 'rgba(176,38,255,0.5)',
+    boundary: 'rgba(214,230,255,0.18)',
+    boundaryCountry: 'rgba(0,255,200,0.42)',
+    textCity: '#d6e6ff',
+    textWater: 'rgba(0,212,255,0.65)',
+    textRoad: 'rgba(0,255,200,0.75)',
+    textPlace: 'rgba(214,230,255,0.7)',
+    textDim: 'rgba(214,230,255,0.5)',
+    textHalo: '#000814',
+  };
+
+  for (const layer of style.layers) {
+    const id = layer.id;
+    const paint = layer.paint ?? (layer.paint = {});
+    const layout = layer.layout ?? {};
+
+    // Fonts → Roboto Regular (the only file on Traccar's CDN)
+    if (layer.type === 'symbol' && Array.isArray(layout['text-font'])) {
+      layout['text-font'] = ['Roboto Regular'];
+    }
+
+    if (layer.type === 'background') {
+      paint['background-color'] = CY.void;
+      continue;
+    }
+
+    if (id === 'water' || id.startsWith('water_')) {
+      if (layer.type === 'fill') {
+        paint['fill-color'] = CY.voidDeep;
+        paint['fill-opacity'] = 1;
+        delete paint['fill-outline-color'];
+      }
+      continue;
+    }
+
+    if (id === 'waterway') {
+      paint['line-color'] = 'rgba(0,212,255,0.4)';
+      continue;
+    }
+
+    if (id.includes('park') || id.includes('landcover') || id.includes('wood') || id.includes('grass')) {
+      if (layer.type === 'fill') {
+        paint['fill-color'] = CY.landPark;
+        paint['fill-opacity'] = 0.7;
+      }
+      continue;
+    }
+
+    if (id.includes('landuse_residential') || id === 'landuse' || id === 'urban_area') {
+      if (layer.type === 'fill') {
+        paint['fill-color'] = CY.landResidential;
+        paint['fill-opacity'] = 0.6;
+      }
+      continue;
+    }
+
+    if (id.includes('building')) {
+      if (layer.type === 'fill') {
+        paint['fill-color'] = CY.building;
+        paint['fill-outline-color'] = CY.buildingOutline;
+      }
+      if (layer.type === 'fill-extrusion') {
+        paint['fill-extrusion-color'] = CY.building;
+      }
+      continue;
+    }
+
+    if (layer.type === 'line' && layer['source-layer'] === 'transportation') {
+      const isCasing = id.endsWith('_case') || id.endsWith('-case') || id.includes('casing');
+      if (id.includes('motorway') || id.includes('trunk')) {
+        paint['line-color'] = isCasing ? CY.roadCasing : CY.roadMotorway;
+      } else if (
+        id.includes('primary') || id.includes('secondary') || id.includes('tertiary') ||
+        id.includes('road_pri') || id.includes('road_sec') || id.includes('road_ter')
+      ) {
+        paint['line-color'] = isCasing ? CY.roadCasing : CY.roadInner;
+      } else if (id.includes('rail') || id.includes('transit')) {
+        paint['line-color'] = CY.rail;
+      } else if (id.includes('path') || id.includes('pedestrian')) {
+        paint['line-color'] = CY.roadPath;
+      } else {
+        paint['line-color'] = CY.roadMinor;
+      }
+      continue;
+    }
+
+    if (id.startsWith('boundary')) {
+      if (layer.type === 'line') {
+        paint['line-color'] = id.includes('country') ? CY.boundaryCountry : CY.boundary;
+      }
+      continue;
+    }
+
+    if (layer.type === 'symbol') {
+      if (id.includes('water') || id.includes('ocean') || id.includes('sea')) {
+        paint['text-color'] = CY.textWater;
+      } else if (id.includes('road') || id.includes('roadname') || id.includes('highway')) {
+        paint['text-color'] = CY.textRoad;
+      } else if (id.includes('city') || id.includes('capital') || id.includes('country')) {
+        paint['text-color'] = CY.textCity;
+      } else if (id.includes('state') || id.includes('province')) {
+        paint['text-color'] = CY.textDim;
+      } else {
+        paint['text-color'] = CY.textPlace;
+      }
+      paint['text-halo-color'] = CY.textHalo;
+      paint['text-halo-width'] = 1.4;
+      paint['text-halo-blur'] = 0;
+      if (layout['icon-image']) delete layout['icon-image'];
+    }
+  }
+
+  const M = window.maplibregl;
+  const map = new M.Map({
+    container: 'map',
+    style,
+    center: [107.0, -6.5],
+    zoom: 9,
+    attributionControl: false,
+  });
+
+  const vehicles = [
+    [106.8456, -6.2087, 'TRUCK-247', 'selected'],
+    [106.8210, -6.1944, 'VAN-118', 'alert'],
+    [106.9134, -6.2615, 'TRUCK-203', 'idle'],
+    [106.7754, -6.2382, 'VAN-095', 'moving'],
+    [107.1500, -6.4500, 'TRUCK-189', 'alert'],
+    [106.8050, -6.2280, 'PICKUP-042', 'stopped'],
+    [107.3000, -6.5000, 'TRUCK-221', 'moving'],
+    [106.9500, -6.3000, 'VAN-176', 'idle'],
+    [107.4500, -6.6000, 'TRUCK-198', 'moving'],
+    [107.5800, -6.8300, 'PICKUP-067', 'moving'],
+    [107.6191, -6.9175, 'TRUCK-301', 'moving'],
+    [106.7500, -6.1500, 'VAN-202', 'moving'],
+    [106.8800, -6.1800, 'TRUCK-145', 'moving'],
+    [107.0500, -6.3500, 'PICKUP-088', 'moving'],
+    [107.2200, -6.4800, 'TRUCK-220', 'moving'],
+  ];
+
+  map.on('load', () => {
+    for (const [lng, lat, name, status] of vehicles) {
+      const el = document.createElement('div');
+      el.className = 'vehicle-marker vehicle-' + status;
+      el.style.position = 'relative';
+      const dot = document.createElement('div');
+      dot.className = 'vehicle-dot';
+      el.appendChild(dot);
+      if (status === 'selected') {
+        const label = document.createElement('div');
+        label.className = 'vehicle-label';
+        label.textContent = name + ' · 67 km/h';
+        el.appendChild(label);
+      }
+      new M.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+    }
+  });
+})();
+</script>
+</body>
+</html>

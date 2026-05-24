@@ -1,4 +1,5 @@
 import type { StyleSpecification } from 'maplibre-gl';
+import { loadCyberOpsMapStyle } from './cyber-ops-style';
 
 export interface MapStyleKeys {
   locationIqKey?: string;
@@ -10,11 +11,17 @@ export interface MapStyleKeys {
   googleKey?: string;
 }
 
+/** A style is either a URL, an inline spec, or a loader that returns one. */
+export type MapStyleResolvable =
+  | string
+  | StyleSpecification
+  | (() => Promise<StyleSpecification>);
+
 export interface MapStyle {
   id: string;
   titleKey: string;
   title?: string;
-  style: string | StyleSpecification;
+  style: MapStyleResolvable;
   available: boolean;
 }
 
@@ -54,6 +61,12 @@ export function buildMapStyles(keys: MapStyleKeys): MapStyle[] {
     '© <a target="_top" rel="noopener" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, © <a target="_top" rel="noopener" href="https://carto.com/attribution">CARTO</a>';
 
   return [
+    {
+      id: 'cyberOps',
+      titleKey: 'mapCyberOps',
+      style: loadCyberOpsMapStyle,
+      available: true,
+    },
     {
       id: 'openFreeMap',
       titleKey: 'mapOpenFreeMap',

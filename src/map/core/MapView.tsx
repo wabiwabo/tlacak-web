@@ -111,9 +111,17 @@ export function MapView({ children }: { children?: ReactNode }) {
       };
       waitForLoad();
     };
-    map.setStyle(active.style);
-    map.once('styledata', handler);
+    let cancelled = false;
+    const applyStyle = async () => {
+      const raw = active.style;
+      const resolved = typeof raw === 'function' ? await raw() : raw;
+      if (cancelled) return;
+      map.setStyle(resolved);
+      map.once('styledata', handler);
+    };
+    void applyStyle();
     return () => {
+      cancelled = true;
       map.off('styledata', handler);
     };
   }, [mapStyles, selectedMapStyle, switcher]);
@@ -132,8 +140,10 @@ export function MapView({ children }: { children?: ReactNode }) {
     };
   }, []);
 
+  const viewClass = `map-view${selectedMapStyle === 'cyberOps' ? ' map-view--cyber-ops' : ''}`;
+
   return (
-    <div className="map-view" ref={containerRef}>
+    <div className={viewClass} ref={containerRef}>
       {mapReady && children}
     </div>
   );

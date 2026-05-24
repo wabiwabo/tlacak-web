@@ -13,7 +13,7 @@ interface MapUiState {
 export const useMapUiStore = create<MapUiState>()(
   persist(
     (set) => ({
-      selectedMapStyle: 'openFreeMap',
+      selectedMapStyle: 'cyberOps',
       devicesOpen: true,
       eventsOpen: false,
       setSelectedMapStyle: (id) => set({ selectedMapStyle: id }),

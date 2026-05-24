@@ -1,6 +1,14 @@
 .map-view {
   width: 100%;
   height: 100%;
+  position: relative;
+}
+
+/* Cyber Ops basemap — gentle saturate + contrast push on top of the paint
+   repaint that already pushes the basemap into cyan-mint. Keeps the result
+   feeling vivid without distorting hues. */
+.map-view--cyber-ops .maplibregl-canvas {
+  filter: saturate(1.3) contrast(1.05);
 }
 
 .map-switcher {
@@ -15,9 +23,19 @@
   color: var(--color-foreground);
   border: none;
   cursor: pointer;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: background-color 120ms ease, color 120ms ease;
 }
 
 .map-switcher button.active {
-  font-weight: 600;
-  background: var(--color-muted);
+  font-weight: 700;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.map-switcher button:hover {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
 }
