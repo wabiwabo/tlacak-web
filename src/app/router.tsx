@@ -225,10 +225,18 @@ export const routes: RouteObject[] = [
       },
 
       // Compliance — Indonesia-specific regulatory features.
-      { path: 'compliance', element: <Navigate to="/compliance/fuel-quota" replace /> },
+      // The index is the dispatcher's morning-brief landing page.
+      {
+        path: 'compliance',
+        element: lazyRoute(() => import('@/pages/compliance/ComplianceBriefPage')),
+      },
       {
         path: 'compliance/fuel-quota',
         element: lazyRoute(() => import('@/pages/compliance/FuelQuotaPage')),
+      },
+      {
+        path: 'compliance/kir',
+        element: lazyRoute(() => import('@/pages/compliance/KirPage')),
       },
     ],
   },

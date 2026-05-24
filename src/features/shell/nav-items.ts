@@ -14,7 +14,7 @@ export interface NavItem {
 export const primaryNavItems: NavItem[] = [
   { id: 'map', labelKey: 'mapTitle', path: '/' },
   { id: 'reports', labelKey: 'reportTitle', path: '/reports/combined' },
-  { id: 'compliance', labelKey: 'complianceTitle', path: '/compliance/fuel-quota' },
+  { id: 'compliance', labelKey: 'complianceTitle', path: '/compliance' },
   { id: 'settings', labelKey: 'settingsTitle', path: '/settings/preferences' },
   { id: 'account', labelKey: 'settingsUser' },
 ];
