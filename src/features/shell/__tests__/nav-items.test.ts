@@ -6,10 +6,11 @@ const baseUser = { attributes: {} } as User;
 const baseServer = { attributes: {} } as Server;
 
 describe('nav-items', () => {
-  it('exposes the four primary destinations', () => {
+  it('exposes the five primary destinations in display order', () => {
     expect(primaryNavItems.map((item) => item.id)).toEqual([
       'map',
       'reports',
+      'compliance',
       'settings',
       'account',
     ]);

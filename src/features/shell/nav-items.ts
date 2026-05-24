@@ -1,6 +1,6 @@
 import type { Server, User } from '@/entities/session';
 
-export type NavItemId = 'map' | 'reports' | 'settings' | 'account' | 'logout';
+export type NavItemId = 'map' | 'reports' | 'compliance' | 'settings' | 'account' | 'logout';
 
 export interface NavItem {
   id: NavItemId;
@@ -14,6 +14,7 @@ export interface NavItem {
 export const primaryNavItems: NavItem[] = [
   { id: 'map', labelKey: 'mapTitle', path: '/' },
   { id: 'reports', labelKey: 'reportTitle', path: '/reports/combined' },
+  { id: 'compliance', labelKey: 'complianceTitle', path: '/compliance/fuel-quota' },
   { id: 'settings', labelKey: 'settingsTitle', path: '/settings/preferences' },
   { id: 'account', labelKey: 'settingsUser' },
 ];

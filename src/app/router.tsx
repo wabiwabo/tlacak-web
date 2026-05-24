@@ -223,6 +223,13 @@ export const routes: RouteObject[] = [
         path: 'reports/scheduled',
         element: lazyRoute(() => import('@/pages/reports/ScheduledPage')),
       },
+
+      // Compliance — Indonesia-specific regulatory features.
+      { path: 'compliance', element: <Navigate to="/compliance/fuel-quota" replace /> },
+      {
+        path: 'compliance/fuel-quota',
+        element: lazyRoute(() => import('@/pages/compliance/FuelQuotaPage')),
+      },
     ],
   },
   { path: '*', element: lazyRoute(() => import('@/pages/NotFoundPage')) },
