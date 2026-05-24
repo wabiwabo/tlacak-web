@@ -15,8 +15,14 @@ interface TelemetryTileProps {
 }
 
 function TelemetryTile({ label, value, meta, icon, tone = 'primary' }: TelemetryTileProps) {
+  const depth =
+    tone === 'primary'
+      ? 'depth-elevated-shallow'
+      : tone === 'warn'
+        ? 'depth-flat'
+        : 'depth-recessed-shallow';
   return (
-    <div className="border border-border bg-background/40 p-3 flex flex-col gap-1">
+    <div className={cn('p-3 flex flex-col gap-1 transition-all', depth)}>
       <span className="cyber-label flex items-center gap-1.5 text-[9px]">
         <span
           className={cn(
@@ -87,11 +93,12 @@ export function StatusCard({ deviceId }: { deviceId: number }) {
   return (
     <aside
       className={cn(
-        'pointer-events-auto flex h-full w-full flex-col border-s border-border bg-card text-foreground',
-        'overflow-hidden',
+        'pointer-events-auto relative flex h-full w-full flex-col text-foreground',
+        'overflow-hidden depth-floating',
       )}
       aria-label={t('sharedDevice')}
     >
+      <span className="pointer-events-none absolute inset-0 depth-toplight" aria-hidden />
       {/* Header */}
       <div className="border-b border-border px-4 pt-4 pb-3">
         <div className="flex items-start justify-between gap-2">

@@ -9,21 +9,22 @@ const buttonVariants = cva(
     'inline-flex shrink-0 items-center justify-center gap-2',
     'border whitespace-nowrap font-mono font-semibold uppercase tracking-[0.08em]',
     'text-xs',
-    'transition-[background-color,border-color,color,box-shadow,opacity] duration-150',
+    'transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-150',
     'outline-none focus-visible:ring-2 focus-visible:ring-ring/55 focus-visible:ring-offset-0',
     'disabled:pointer-events-none disabled:opacity-40',
     'aria-invalid:border-destructive aria-invalid:ring-destructive/30',
+    'active:translate-y-px',
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   ].join(' '),
   {
     variants: {
       variant: {
         default:
-          'border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_18px_rgba(0,255,200,0.45)]',
+          'border-primary bg-primary text-primary-foreground shadow-[0_2px_0_rgba(0,0,0,0.45)] hover:bg-primary/90 hover:-translate-y-px hover:shadow-[0_4px_18px_rgba(0,255,200,0.55),0_0_0_1px_rgba(0,255,200,0.5)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.45)]',
         destructive:
-          'border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-[0_0_18px_rgba(255,56,100,0.45)]',
+          'border-destructive bg-destructive text-destructive-foreground shadow-[0_2px_0_rgba(0,0,0,0.45)] hover:bg-destructive/90 hover:-translate-y-px hover:shadow-[0_4px_18px_rgba(255,56,100,0.55)]',
         warning:
-          'border-[var(--color-warning)] bg-[var(--color-warning)] text-[var(--color-warning-foreground)] hover:opacity-90 hover:shadow-[0_0_18px_rgba(255,170,0,0.45)]',
+          'border-[var(--color-warning)] bg-[var(--color-warning)] text-[var(--color-warning-foreground)] shadow-[0_2px_0_rgba(0,0,0,0.45)] hover:opacity-90 hover:-translate-y-px hover:shadow-[0_4px_18px_rgba(255,170,0,0.55)]',
         outline:
           'border-border bg-transparent text-foreground hover:border-primary/70 hover:text-primary hover:bg-card',
         secondary:

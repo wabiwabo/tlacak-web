@@ -23,12 +23,21 @@ function batteryIcon(level: number) {
   return <BatteryLow className="h-3.5 w-3.5 text-destructive" />;
 }
 
+type RowStatus = 'moving' | 'idle' | 'stopped' | 'offline';
+
 function statusVariant(status: string | undefined, speed: number, hasPosition: boolean) {
-  if (status !== 'online') return { variant: 'offline' as const, label: 'OFFLINE' };
-  if (speed > 1) return { variant: 'moving' as const, label: 'MOVING' };
-  if (hasPosition) return { variant: 'idle' as const, label: 'IDLE' };
-  return { variant: 'stopped' as const, label: 'STOPPED' };
+  if (status !== 'online') return { variant: 'offline' as RowStatus, label: 'OFFLINE' };
+  if (speed > 1) return { variant: 'moving' as RowStatus, label: 'MOVING' };
+  if (hasPosition) return { variant: 'idle' as RowStatus, label: 'IDLE' };
+  return { variant: 'stopped' as RowStatus, label: 'STOPPED' };
 }
+
+const DEPTH_BY_STATUS: Record<RowStatus, string> = {
+  moving: 'depth-elevated-shallow',
+  idle: '',
+  stopped: 'depth-recessed-shallow',
+  offline: 'depth-recessed-deep',
+};
 
 export function DeviceRow({ index, style, devices }: DeviceRowProps) {
   const { t } = useTranslation();
@@ -50,18 +59,21 @@ export function DeviceRow({ index, style, devices }: DeviceRowProps) {
   const isSelected = selectedDeviceId === device.id;
   const plate = (device as unknown as { uniqueId?: string }).uniqueId;
 
+  const depthClass = isSelected
+    ? 'depth-elevated-tall'
+    : DEPTH_BY_STATUS[status.variant];
+
   return (
-    <div style={style}>
+    <div style={style} className="px-1.5 py-px">
       <button
         type="button"
         onClick={() => select(device.id as number)}
         aria-current={isSelected}
         className={cn(
-          'group relative flex h-[72px] w-full items-center gap-3 px-3 text-left transition-colors',
-          'border-b border-border/60',
-          isSelected
-            ? 'bg-primary/10 text-foreground'
-            : 'hover:bg-primary/[0.04] text-foreground/90',
+          'group relative flex h-[68px] w-full items-center gap-3 px-3 text-left transition-all',
+          depthClass,
+          'depth-interactive',
+          isSelected ? 'text-foreground' : 'text-foreground/90 hover:depth-elevated-shallow',
         )}
       >
         {isSelected && <span className="absolute inset-y-0 start-0 w-0.5 bg-primary cyber-box-glow" />}
