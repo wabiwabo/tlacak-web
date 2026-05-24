@@ -227,10 +227,13 @@ export function StatusCard({ deviceId }: { deviceId: number }) {
         />
       </div>
 
-      {/* Sparkline */}
+      {/* Sparkline — placeholder until motion history is wired through */}
       <div className="border-b border-border px-4 py-3">
         <div className="flex items-center justify-between cyber-label text-[9px]">
-          <span>SPEED · LAST 60 MIN</span>
+          <span>
+            SPEED · LAST 60 MIN
+            <span className="ms-2 text-[var(--color-warning)] tracking-[0.18em]">· DEMO</span>
+          </span>
           <span className="font-mono text-muted-foreground tracking-wider">km/h</span>
         </div>
         <svg viewBox="0 0 220 32" className="mt-2 h-8 w-full" preserveAspectRatio="none">

@@ -17,7 +17,8 @@ import { formatTime } from '@/shared/lib/format';
 import { SelectField } from '@/features/settings';
 import { ReportLayout, ReportFilter } from '@/features/reports';
 
-const LINE_COLORS = ['#0ea5e9', '#ef4444', '#f59e0b', '#22c55e', '#a855f7'];
+// Cyber Ops chart palette — cyan primary then the alert/warn/purple accents.
+const LINE_COLORS = ['#00ffc8', '#ff3864', '#ffaa00', '#b026ff', '#00d4ff'];
 
 /** Flattens a position + its attributes and keeps only numeric, non-id keys. */
 function numericKeys(positions: Position[]): string[] {
