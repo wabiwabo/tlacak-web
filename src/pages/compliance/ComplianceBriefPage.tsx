@@ -6,6 +6,7 @@ import { ComplianceLayout } from '@/features/compliance/ui/ComplianceLayout';
 import {
   useFleetQuotaQuery,
   useFleetKirQuery,
+  useFleetOdolQuery,
   formatRupiahCompact,
   formatKirCountdown,
   type QuotaRow,
@@ -276,13 +277,81 @@ function KirPanel() {
   );
 }
 
+function OdolPanel() {
+  const { t } = useTranslation();
+  // Brief view doesn't drive cargo input — we surface the *configuration*
+  // state (how many vehicles have JBI set) and link out to the dispatcher
+  // tool. Real per-trip cargo lives on the OdolPage.
+  const { summary, isLoading } = useFleetOdolQuery();
+
+  const unconfigured = summary.counts.unknown;
+  const badge = unconfigured > 0 ? `${unconfigured} ${t('briefMissingJbi')}` : t('briefAllConfigured');
+  const badgeTone: 'primary' | 'warning' = unconfigured > 0 ? 'warning' : 'primary';
+
+  return (
+    <div className="depth-elevated-shallow relative flex flex-col gap-3 p-4">
+      <span className="pointer-events-none absolute inset-0 depth-toplight" aria-hidden />
+      <div className="relative">
+        <BriefHeader
+          label={t('complianceOdol')}
+          badge={badge}
+          badgeTone={badgeTone}
+          to="/compliance/odol"
+        />
+      </div>
+
+      <div className="relative grid grid-cols-3 gap-2">
+        <div>
+          <div className="cyber-label text-[9px]">{t('odolConfigured')}</div>
+          <div className="font-mono text-lg font-bold tabular-nums text-primary">
+            {summary.configured}
+            <span className="text-muted-foreground"> / {summary.total}</span>
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground tracking-wider">
+            {t('odolHaveJbi')}
+          </div>
+        </div>
+        <div>
+          <div className="cyber-label text-[9px]">{t('briefOdolTitle')}</div>
+          <div className="font-mono text-[11px] text-foreground tracking-wide leading-snug">
+            {t('briefOdolReady')}
+          </div>
+        </div>
+        <div>
+          <div className="cyber-label text-[9px]">{t('briefOdolEnforcement')}</div>
+          <div className="font-mono text-[11px] text-[var(--color-warning)] tracking-wide">
+            {t('briefOdolWindow')}
+          </div>
+        </div>
+      </div>
+
+      {unconfigured > 0 && (
+        <div className="relative border-t border-border pt-3">
+          <div className="cyber-label text-[9px] mb-2">{t('briefAttention')}</div>
+          <div className="font-mono text-[11px] text-foreground tracking-wide leading-snug">
+            {t('briefOdolMissing', { count: unconfigured })}
+            <Link
+              to="/settings/devices"
+              className="ms-2 text-primary cyber-glow hover:underline"
+            >
+              {t('briefOpenDevices')} →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="relative cyber-label">{t('sharedLoading')}</div>
+      )}
+    </div>
+  );
+}
+
 function UpcomingPanel() {
   const { t } = useTranslation();
-  // Placeholder modules to set up the visual shape; each is a roadmap item
-  // from the May 2026 Indonesia research. They render as
-  // recessed-shallow tiles to signal "ready to expand, not active yet".
+  // Roadmap items still queued — render as recessed tiles. Each item is
+  // a real Indonesia regulation surfaced by the May 2026 research.
   const upcoming: { key: string; titleKey: string; descKey: string }[] = [
-    { key: 'odol', titleKey: 'briefOdolTitle', descKey: 'briefOdolDesc' },
     { key: 'b40', titleKey: 'briefB40Title', descKey: 'briefB40Desc' },
     { key: 'halal', titleKey: 'briefHalalTitle', descKey: 'briefHalalDesc' },
     { key: 'banjir', titleKey: 'briefBanjirTitle', descKey: 'briefBanjirDesc' },
@@ -292,7 +361,7 @@ function UpcomingPanel() {
       <div className="cyber-label flex items-center gap-2 border-b border-border pb-2">
         <span className="text-primary">//</span> {t('briefUpcomingTitle')}
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
         {upcoming.map((u) => (
           <div
             key={u.key}
@@ -344,10 +413,11 @@ export default function ComplianceBriefPage() {
           </div>
         </div>
 
-        {/* Active modules: Fuel Quota + KIR side-by-side */}
-        <div className="grid gap-4 md:grid-cols-2">
+        {/* Active modules: Fuel Quota · KIR · ODOL */}
+        <div className="grid gap-4 lg:grid-cols-3">
           <FuelQuotaPanel />
           <KirPanel />
+          <OdolPanel />
         </div>
 
         {/* Upcoming compliance modules */}

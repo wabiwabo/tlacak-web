@@ -12,6 +12,7 @@ const ENTRIES = [
   { path: '/compliance', labelKey: 'complianceMorningBrief', end: true },
   { path: '/compliance/fuel-quota', labelKey: 'complianceFuelQuota' },
   { path: '/compliance/kir', labelKey: 'complianceKir' },
+  { path: '/compliance/odol', labelKey: 'complianceOdol' },
 ];
 
 export function ComplianceLayout({ titleKey, children }: ComplianceLayoutProps) {

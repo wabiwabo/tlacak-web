@@ -24,3 +24,19 @@ export {
   type FleetKirSummary,
 } from './lib/kir';
 export { useFleetKirQuery, type KirRow } from './lib/use-fleet-kir';
+
+export {
+  computeOdolStatus,
+  summarizeOdolFleet,
+  formatTonnage,
+  type OdolSnapshot,
+  type OdolStatus,
+  type FleetOdolSummary,
+  type OdolInput,
+} from './lib/odol';
+export {
+  useFleetOdolQuery,
+  useCargoMap,
+  type OdolRow,
+  type CargoMap,
+} from './lib/use-fleet-odol';
