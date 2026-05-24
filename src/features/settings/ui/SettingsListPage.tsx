@@ -84,21 +84,28 @@ export function SettingsListPage<T extends CrudEntity>({
     ];
   }, [columns, editPath, removeMutation, customActions, readonly]);
 
+  const count = filtered.length;
+
   return (
     <SettingsLayout titleKey={titleKey}>
-      <div className="mb-3">
+      <div className="mb-4 flex items-center gap-3">
         <Input
           placeholder={t('sharedSearch')}
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
           className="max-w-xs"
         />
+        <span className="cyber-label text-[10px]">
+          {count} <span className="text-muted-foreground/60">[ RECORD{count === 1 ? '' : 'S'} ]</span>
+        </span>
       </div>
-      <DataTable
-        columns={allColumns}
-        data={filtered}
-        emptyMessage={isLoading ? t('sharedLoading') : t('sharedNoData')}
-      />
+      <div className="depth-flat border border-border">
+        <DataTable
+          columns={allColumns}
+          data={filtered}
+          emptyMessage={isLoading ? t('sharedLoading') : t('sharedNoData')}
+        />
+      </div>
       {editPath ? <CollectionFab editPath={editPath} disabled={readonly || addDisabled} /> : null}
     </SettingsLayout>
   );

@@ -79,9 +79,12 @@ export function EditItemView<T extends CrudEntity>({
 
   return (
     <SettingsLayout titleKey={titleKey}>
-      <Card className="mx-auto flex max-w-xl flex-col gap-4 p-4">
-        {item ? children : <p className="text-sm text-muted-foreground">{t('sharedLoading')}</p>}
-        <div className="flex justify-end gap-2">
+      <Card className="relative mx-auto flex max-w-xl flex-col gap-5 p-6 depth-elevated-shallow">
+        <span className="pointer-events-none absolute inset-0 depth-toplight" aria-hidden />
+        <div className="relative flex flex-col gap-4">
+          {item ? children : <p className="font-mono text-xs text-muted-foreground tracking-wider">{t('sharedLoading')}</p>}
+        </div>
+        <div className="relative flex justify-end gap-2 border-t border-border pt-4">
           <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={saving}>
             {t('sharedCancel')}
           </Button>

@@ -44,12 +44,14 @@ export function ReportTable<T>({
   );
 
   return (
-    <DataTable
-      columns={tableColumns}
-      data={data}
-      emptyMessage={loading ? t('sharedLoading') : t('sharedNoData')}
-      onRowClick={onRowClick}
-      selectedRow={selectedRow}
-    />
+    <div className="depth-flat min-h-0 flex-1 overflow-auto border border-border">
+      <DataTable
+        columns={tableColumns}
+        data={data}
+        emptyMessage={loading ? t('sharedLoading') : t('sharedNoData')}
+        onRowClick={onRowClick}
+        selectedRow={selectedRow}
+      />
+    </div>
   );
 }

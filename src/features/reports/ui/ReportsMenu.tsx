@@ -28,24 +28,32 @@ export function ReportsMenu() {
     { path: '/reports/audit', labelKey: 'reportAudit', visible: admin },
   ];
 
+  const visible = entries.filter((entry) => entry.visible);
+
   return (
-    <nav className="flex flex-col py-2">
-      {entries
-        .filter((entry) => entry.visible)
-        .map((entry) => (
-          <NavLink
-            key={entry.path}
-            to={entry.path}
-            className={({ isActive }) =>
-              cn(
-                'px-4 py-2 text-sm transition-colors hover:bg-muted',
-                isActive && 'bg-muted font-medium text-primary',
-              )
-            }
-          >
-            {t(entry.labelKey)}
-          </NavLink>
-        ))}
+    <nav className="flex flex-col py-4">
+      <div className="cyber-label px-4 pb-3">// REPORTS</div>
+      {visible.map((entry) => (
+        <NavLink
+          key={entry.path}
+          to={entry.path}
+          className={({ isActive }) =>
+            cn(
+              'relative px-4 py-2 text-[11px] font-mono font-semibold uppercase tracking-[0.16em] transition-colors',
+              isActive ? 'text-primary cyber-glow' : 'text-muted-foreground hover:text-foreground',
+            )
+          }
+        >
+          {({ isActive }) => (
+            <>
+              {isActive && (
+                <span className="absolute inset-y-0 start-0 w-0.5 bg-primary cyber-box-glow" />
+              )}
+              {t(entry.labelKey)}
+            </>
+          )}
+        </NavLink>
+      ))}
     </nav>
   );
 }

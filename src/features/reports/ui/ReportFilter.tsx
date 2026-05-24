@@ -59,7 +59,7 @@ export function ReportFilter({
   const disabled = loading || deviceMissing || customMissing;
 
   return (
-    <div className="flex flex-wrap items-end gap-3 border-b p-3 print:hidden">
+    <div className="flex flex-wrap items-end gap-3 border-b border-border bg-card/40 px-4 py-3 print:hidden">
       {deviceType !== 'none' ? (
         <div className="min-w-48">
           <SelectField
