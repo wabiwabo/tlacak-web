@@ -10,6 +10,9 @@ import {
   type FloodFeature,
   type FloodSeverity,
 } from '@/features/banjir';
+import { MapView, MapPositions, MapDefaultCamera } from '@/map';
+import { MapBanjir } from '@/map/layers/MapBanjir';
+import { useLiveStore } from '@/features/main/model/live-store';
 import { Badge } from '@/shared/ui';
 import { cn } from '@/shared/lib/cn';
 
@@ -114,6 +117,9 @@ export default function BanjirPage() {
     [snapshot.features],
   );
 
+  const positions = useLiveStore((state) => state.positions);
+  const positionList = useMemo(() => Object.values(positions), [positions]);
+
   const someError = !!(reportsError || floodsError || nowcastError);
 
   return (
@@ -183,6 +189,14 @@ export default function BanjirPage() {
             </div>
           </div>
         )}
+
+        <div className="mt-4 depth-flat border border-border overflow-hidden" style={{ height: '50vh' }}>
+          <MapView>
+            <MapBanjir />
+            <MapPositions positions={positionList} />
+            <MapDefaultCamera positions={positionList} />
+          </MapView>
+        </div>
 
         <div className="mt-4 depth-flat border border-border overflow-x-auto">
           <table className="w-full caption-bottom text-sm">

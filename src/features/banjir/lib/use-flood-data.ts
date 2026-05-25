@@ -49,14 +49,14 @@ const EMPTY_SEVERITY: Record<FloodSeverity, number> = {
   extreme: 0,
 };
 
-async function fetchJson(url: string): Promise<unknown> {
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+async function fetchJson(url: string, signal?: AbortSignal): Promise<unknown> {
+  const res = await fetch(url, { headers: { Accept: 'application/json' }, signal });
   if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`);
   return res.json();
 }
 
-async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url);
+async function fetchText(url: string, signal?: AbortSignal): Promise<string> {
+  const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`);
   return res.text();
 }
@@ -89,28 +89,36 @@ export interface UseFloodDataReturn {
   isFetching: boolean;
 }
 
-/** `now` is injectable for deterministic stale-flag tests. */
-export function useFloodData(now: Date = new Date()): UseFloodDataReturn {
+const STALE_INTERVAL_MS =
+  Math.max(REPORTS_INTERVAL_MS, FLOODS_INTERVAL_MS, NOWCAST_INTERVAL_MS) * STALE_MULTIPLIER;
+
+/** `now` is injectable for deterministic stale-flag tests; pass a Date
+ *  to override the wall clock used when computing `snapshot.stale`. */
+export function useFloodData(now?: Date): UseFloodDataReturn {
   const reportsQuery = useQuery({
     queryKey: ['banjir', 'reports'],
-    queryFn: () => fetchJson(REPORTS_URL),
+    queryFn: ({ signal }) => fetchJson(REPORTS_URL, signal),
     staleTime: REPORTS_INTERVAL_MS,
     refetchInterval: REPORTS_INTERVAL_MS,
   });
   const floodsQuery = useQuery({
     queryKey: ['banjir', 'floods'],
-    queryFn: () => fetchJson(FLOODS_URL),
+    queryFn: ({ signal }) => fetchJson(FLOODS_URL, signal),
     staleTime: FLOODS_INTERVAL_MS,
     refetchInterval: FLOODS_INTERVAL_MS,
   });
   const nowcastQuery = useQuery({
     queryKey: ['banjir', 'nowcast'],
-    queryFn: () => fetchText(NOWCAST_URL),
+    queryFn: ({ signal }) => fetchText(NOWCAST_URL, signal),
     staleTime: NOWCAST_INTERVAL_MS,
     refetchInterval: NOWCAST_INTERVAL_MS,
   });
 
-  const snapshot = useMemo<FloodSnapshot>(() => {
+  // Memo on data + dataUpdatedAt only — `now` is deliberately excluded so
+  // a fresh `new Date()` per render does not invalidate the snapshot.
+  // The stale flag is evaluated on each render against the cached newest
+  // update timestamp; the work is O(1).
+  const snapshot = useMemo<Omit<FloodSnapshot, 'stale'> & { newestMs: number }>(() => {
     const reports = reportsQuery.data
       ? normalizeReports(reportsQuery.data as Parameters<typeof normalizeReports>[0])
       : [];
@@ -138,12 +146,7 @@ export function useFloodData(now: Date = new Date()): UseFloodDataReturn {
     const newestMs = updates.length ? Math.max(...updates) : 0;
     const updatedAt = newestMs ? new Date(newestMs).toISOString() : '';
 
-    const intervalMaxMs =
-      Math.max(REPORTS_INTERVAL_MS, FLOODS_INTERVAL_MS, NOWCAST_INTERVAL_MS) *
-      STALE_MULTIPLIER;
-    const stale = newestMs > 0 && now.getTime() - newestMs > intervalMaxMs;
-
-    return { features, bySource, bySeverity, updatedAt, stale };
+    return { features, bySource, bySeverity, updatedAt, newestMs };
   }, [
     reportsQuery.data,
     floodsQuery.data,
@@ -151,11 +154,20 @@ export function useFloodData(now: Date = new Date()): UseFloodDataReturn {
     reportsQuery.dataUpdatedAt,
     floodsQuery.dataUpdatedAt,
     nowcastQuery.dataUpdatedAt,
-    now,
   ]);
 
+  const nowMs = now ? now.getTime() : Date.now();
+  const stale = snapshot.newestMs > 0 && nowMs - snapshot.newestMs > STALE_INTERVAL_MS;
+  const finalSnapshot: FloodSnapshot = {
+    features: snapshot.features,
+    bySource: snapshot.bySource,
+    bySeverity: snapshot.bySeverity,
+    updatedAt: snapshot.updatedAt,
+    stale,
+  };
+
   return {
-    snapshot,
+    snapshot: finalSnapshot,
     reportsError: reportsQuery.error,
     floodsError: floodsQuery.error,
     nowcastError: nowcastQuery.error,
