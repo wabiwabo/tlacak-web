@@ -18,6 +18,10 @@ vi.mock('@/map', () => ({
   getStatusColor: () => 'neutral',
 }));
 
+vi.mock('@/map/layers/MapBanjir', () => ({
+  MapBanjir: () => null,
+}));
+
 beforeEach(async () => {
   const { useLiveStore } = await import('../model/live-store');
   useLiveStore.setState({ devices: {}, positions: {}, history: {}, events: [] });

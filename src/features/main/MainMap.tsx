@@ -8,6 +8,7 @@ import {
   MapSelectedDevice,
   MapDefaultCamera,
 } from '@/map';
+import { MapBanjir } from '@/map/layers/MapBanjir';
 import { useSelectionStore } from './model/selection-store';
 import type { Position } from '@/entities/position';
 
@@ -22,6 +23,7 @@ export function MainMap({ positions }: { positions: Position[] }) {
   return (
     <MapView>
       <MapGeofence />
+      <MapBanjir />
       <MapAccuracy positions={positions} />
       <MapLiveRoutes deviceIds={deviceIds} />
       <MapPositions positions={positions} onMarkerClick={onMarkerClick} />

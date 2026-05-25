@@ -1,7 +1,11 @@
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import en from './locales/en.json';
+
+dayjs.extend(relativeTime);
 
 // Lazy-load every non-English locale on demand. English ships with the main
 // chunk so initial render never blocks on a fetch. Other locales become

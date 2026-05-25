@@ -14,6 +14,7 @@ const ENTRIES = [
   { path: '/compliance/kir', labelKey: 'complianceKir' },
   { path: '/compliance/odol', labelKey: 'complianceOdol' },
   { path: '/compliance/b40', labelKey: 'complianceB40' },
+  { path: '/compliance/banjir', labelKey: 'complianceBanjir' },
 ];
 
 export function ComplianceLayout({ titleKey, children }: ComplianceLayoutProps) {

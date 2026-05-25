@@ -15,6 +15,7 @@ import {
   type KirRow,
   type B40Row,
 } from '@/features/compliance';
+import { BanjirPanel } from '@/features/banjir';
 import { Badge } from '@/shared/ui';
 import { cn } from '@/shared/lib/cn';
 
@@ -490,14 +491,13 @@ function UpcomingPanel() {
   // a real Indonesia regulation surfaced by the May 2026 research.
   const upcoming: { key: string; titleKey: string; descKey: string }[] = [
     { key: 'halal', titleKey: 'briefHalalTitle', descKey: 'briefHalalDesc' },
-    { key: 'banjir', titleKey: 'briefBanjirTitle', descKey: 'briefBanjirDesc' },
   ];
   return (
     <div className="depth-recessed-shallow relative flex flex-col gap-3 p-4">
       <div className="cyber-label flex items-center gap-2 border-b border-border pb-2">
         <span className="text-primary">//</span> {t('briefUpcomingTitle')}
       </div>
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2">
         {upcoming.map((u) => (
           <div
             key={u.key}
@@ -549,12 +549,13 @@ export default function ComplianceBriefPage() {
           </div>
         </div>
 
-        {/* Active modules: Fuel Quota · KIR · ODOL · B40 */}
-        <div className="grid gap-4 lg:grid-cols-2">
+        {/* Active modules: Fuel Quota · KIR · ODOL · B40 · Banjir */}
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <FuelQuotaPanel />
           <KirPanel />
           <OdolPanel />
           <B40Panel />
+          <BanjirPanel />
         </div>
 
         {/* Upcoming compliance modules */}
