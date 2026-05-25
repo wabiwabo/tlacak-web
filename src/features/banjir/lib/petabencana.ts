@@ -57,22 +57,37 @@ interface ReportProps {
 
 interface FloodPolygonProps {
   area_id?: string | number;
+  /** RT-level identifier in the real API (e.g. "RT 013"). */
   area_name?: string;
+  /** Kelurahan name (e.g. "LUBANG BUAYA"). */
   parent_name?: string;
+  /** Kecamatan name (e.g. "CIPAYUNG"). */
+  city_name?: string;
   state?: number;
   last_updated?: string;
   [key: string]: unknown;
+}
+
+/** Defensive feature-list extraction. The PetaBencana API sometimes
+ *  wraps GeoJSON in a `{statusCode, result}` envelope (the fetch
+ *  helper unwraps it), and other consumers may pass a raw
+ *  FeatureCollection. Either way, this returns an array — empty if
+ *  the shape is unexpected, so the caller never throws. */
+function featuresOf(fc: unknown): Feature[] {
+  if (!fc || typeof fc !== 'object') return [];
+  const features = (fc as { features?: unknown }).features;
+  return Array.isArray(features) ? (features as Feature[]) : [];
 }
 
 /** Map PetaBencana /reports → FloodFeature[]. `now` is reserved for
  *  future age-based filtering (e.g. dropping reports older than 6 h)
  *  and is currently unused. */
 export function normalizeReports(
-  fc: FeatureCollection,
+  fc: FeatureCollection | unknown,
   _now: Date = new Date(),
 ): FloodFeature[] {
   const out: FloodFeature[] = [];
-  for (const feature of fc.features) {
+  for (const feature of featuresOf(fc)) {
     if (!isFeature(feature) || !feature.geometry) continue;
     const props = (feature.properties ?? {}) as ReportProps;
     if (props.disaster_type !== 'flood') continue;
@@ -95,10 +110,12 @@ export function normalizeReports(
   return out;
 }
 
-/** Map PetaBencana /floods (Jakarta polygons) → FloodFeature[]. */
-export function normalizeFloods(fc: FeatureCollection): FloodFeature[] {
+/** Map PetaBencana /floods (Jakarta polygons) → FloodFeature[].
+ *  Real schema uses `area_name` for RT, `parent_name` for kelurahan,
+ *  `city_name` for kecamatan — meta fields named accordingly. */
+export function normalizeFloods(fc: FeatureCollection | unknown): FloodFeature[] {
   const out: FloodFeature[] = [];
-  for (const feature of fc.features) {
+  for (const feature of featuresOf(fc)) {
     if (!isFeature(feature) || !feature.geometry) continue;
     const props = (feature.properties ?? {}) as FloodPolygonProps;
     const state = typeof props.state === 'number' ? props.state : 0;
@@ -113,7 +130,12 @@ export function normalizeFloods(fc: FeatureCollection): FloodFeature[] {
       reportedAt: props.last_updated ?? new Date(0).toISOString(),
       source: 'petabencana',
       attribution: PETABENCANA_ATTRIBUTION,
-      meta: { kelurahan: props.area_name, kota: props.parent_name, state },
+      meta: {
+        rt: props.area_name,
+        kelurahan: props.parent_name,
+        kecamatan: props.city_name,
+        state,
+      },
     });
   }
   return out;

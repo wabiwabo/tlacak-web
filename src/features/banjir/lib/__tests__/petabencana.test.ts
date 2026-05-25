@@ -20,12 +20,16 @@ const NON_FLOOD_FEATURE = {
   properties: { ...REPORT_FEATURE.properties, pkey: 'r-124', disaster_type: 'haze' },
 };
 
+// Real PetaBencana /floods schema (verified 2026-05-25): properties
+// contain area_id (string), area_name (RT-level), parent_name (kelurahan),
+// city_name (kecamatan), state (1-4), last_updated (ISO).
 const POLYGON_FEATURE = {
   type: 'Feature' as const,
   properties: {
-    area_id: 3171010001,
-    parent_name: 'Jakarta Pusat',
-    area_name: 'Gambir',
+    area_id: '2945',
+    area_name: 'RT 013',
+    parent_name: 'LUBANG BUAYA',
+    city_name: 'CIPAYUNG',
     state: 3,
     last_updated: '2026-05-24T11:45:00Z',
   },
@@ -38,6 +42,20 @@ const POLYGON_FEATURE = {
 describe('normalizeReports', () => {
   it('returns an empty array for an empty FeatureCollection', () => {
     expect(normalizeReports({ type: 'FeatureCollection', features: [] })).toEqual([]);
+  });
+
+  it('returns an empty array when fc is null, undefined, or malformed', () => {
+    expect(normalizeReports(null)).toEqual([]);
+    expect(normalizeReports(undefined)).toEqual([]);
+    expect(normalizeReports({})).toEqual([]);
+    // The PetaBencana envelope {statusCode, result} should NOT crash if it
+    // somehow reaches the parser unwrapped (e.g. caller forgot).
+    expect(
+      normalizeReports({
+        statusCode: 200,
+        result: { type: 'FeatureCollection', features: [REPORT_FEATURE] },
+      }),
+    ).toEqual([]);
   });
 
   it('drops non-flood disaster types', () => {
@@ -104,10 +122,10 @@ describe('normalizeReports', () => {
 });
 
 describe('normalizeFloods', () => {
-  it('maps a Jakarta kelurahan polygon to a FloodFeature', () => {
+  it('maps a Jakarta polygon to a FloodFeature with real-schema meta', () => {
     const [feature] = normalizeFloods({ type: 'FeatureCollection', features: [POLYGON_FEATURE] });
     expect(feature).toMatchObject({
-      id: 'p-3171010001',
+      id: 'p-2945',
       kind: 'polygon',
       severity: 'severe',
       source: 'petabencana',
@@ -115,7 +133,29 @@ describe('normalizeFloods', () => {
       reportedAt: '2026-05-24T11:45:00Z',
     });
     expect(feature!.geometry).toEqual(POLYGON_FEATURE.geometry);
-    expect(feature!.meta?.kelurahan).toBe('Gambir');
+    expect(feature!.meta).toMatchObject({
+      rt: 'RT 013',
+      kelurahan: 'LUBANG BUAYA',
+      kecamatan: 'CIPAYUNG',
+      state: 3,
+    });
+  });
+
+  it('survives the live PetaBencana {statusCode, result} envelope when callers forget to unwrap', () => {
+    // The fetch helper unwraps, but parsers should be defensive against
+    // raw envelope passthrough so no consumer can crash with a TypeError.
+    const envelope = {
+      statusCode: 200,
+      result: { type: 'FeatureCollection', features: [POLYGON_FEATURE] },
+    };
+    expect(normalizeFloods(envelope)).toEqual([]);
+  });
+
+  it('returns an empty array when fc is null, undefined, or malformed', () => {
+    expect(normalizeFloods(null)).toEqual([]);
+    expect(normalizeFloods(undefined)).toEqual([]);
+    expect(normalizeFloods({})).toEqual([]);
+    expect(normalizeFloods({ features: 'not an array' })).toEqual([]);
   });
 
   it('classifies state 1-4 → minor/moderate/severe/extreme', () => {

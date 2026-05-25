@@ -49,10 +49,27 @@ const EMPTY_SEVERITY: Record<FloodSeverity, number> = {
   extreme: 0,
 };
 
+/**
+ * PetaBencana wraps its GeoJSON in a `{statusCode, result: ...}` envelope.
+ * Some other public APIs return a raw FeatureCollection. Accept both:
+ * unwrap `.result` when present, otherwise pass through the raw payload.
+ */
+function unwrapEnvelope(payload: unknown): unknown {
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    !Array.isArray(payload) &&
+    'result' in payload
+  ) {
+    return (payload as { result: unknown }).result;
+  }
+  return payload;
+}
+
 async function fetchJson(url: string, signal?: AbortSignal): Promise<unknown> {
   const res = await fetch(url, { headers: { Accept: 'application/json' }, signal });
   if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`);
-  return res.json();
+  return unwrapEnvelope(await res.json());
 }
 
 async function fetchText(url: string, signal?: AbortSignal): Promise<string> {

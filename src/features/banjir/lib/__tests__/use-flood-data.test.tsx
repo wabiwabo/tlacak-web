@@ -52,14 +52,22 @@ function textResponse(body: string): Response {
 afterEach(() => vi.restoreAllMocks());
 
 describe('useFloodData', () => {
-  it('composes reports + floods + nowcast into a single FloodSnapshot', async () => {
+  it('composes reports + floods + nowcast into a single FloodSnapshot (real PetaBencana {statusCode,result} envelope)', async () => {
+    // PetaBencana wraps GeoJSON in `{statusCode, result: FC}` — the hook
+    // must unwrap. Mock returns the real envelope shape.
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = String(input);
       if (url.includes('/reports')) {
-        return jsonResponse({ type: 'FeatureCollection', features: [SAMPLE_REPORT] });
+        return jsonResponse({
+          statusCode: 200,
+          result: { type: 'FeatureCollection', features: [SAMPLE_REPORT] },
+        });
       }
       if (url.includes('/floods')) {
-        return jsonResponse({ type: 'FeatureCollection', features: [SAMPLE_POLYGON] });
+        return jsonResponse({
+          statusCode: 200,
+          result: { type: 'FeatureCollection', features: [SAMPLE_POLYGON] },
+        });
       }
       if (url.includes('nowcast')) {
         return textResponse(SAMPLE_RSS);
@@ -75,6 +83,22 @@ describe('useFloodData', () => {
     expect(result.current.snapshot.bySource.bmkg).toHaveLength(0);
     expect(result.current.snapshot.bySeverity.moderate).toBe(1);
     expect(result.current.snapshot.bySeverity.severe).toBe(1);
+  });
+
+  it('also works when the response is a raw FeatureCollection (no envelope)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes('/reports')) {
+        return jsonResponse({ type: 'FeatureCollection', features: [SAMPLE_REPORT] });
+      }
+      if (url.includes('/floods')) {
+        return jsonResponse({ type: 'FeatureCollection', features: [SAMPLE_POLYGON] });
+      }
+      return textResponse(SAMPLE_RSS);
+    });
+    const { result } = renderHook(() => useFloodData(), { wrapper });
+    await waitFor(() => expect(result.current.snapshot.features.length).toBeGreaterThan(0));
+    expect(result.current.snapshot.bySource.petabencana).toHaveLength(2);
   });
 
   it('keeps data from healthy sources when one source fails', async () => {
