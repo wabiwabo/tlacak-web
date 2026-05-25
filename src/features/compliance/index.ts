@@ -57,3 +57,15 @@ export {
   type FleetB40Summary,
 } from './lib/b40';
 export { useFleetB40Query, type B40Row } from './lib/use-fleet-b40';
+
+export {
+  HALAL_CERT_VALIDITY_YEARS,
+  HALAL_WARN_DAYS,
+  computeHalalStatus,
+  summarizeHalalFleet,
+  formatHalalCountdown,
+  type HalalSnapshot,
+  type HalalStatus,
+  type FleetHalalSummary,
+} from './lib/halal';
+export { useFleetHalalQuery, type HalalRow } from './lib/use-fleet-halal';

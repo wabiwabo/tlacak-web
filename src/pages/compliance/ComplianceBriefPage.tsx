@@ -8,12 +8,15 @@ import {
   useFleetKirQuery,
   useFleetOdolQuery,
   useFleetB40Query,
+  useFleetHalalQuery,
   formatRupiahCompact,
   formatKirCountdown,
   formatB40Countdown,
+  formatHalalCountdown,
   type QuotaRow,
   type KirRow,
   type B40Row,
+  type HalalRow,
 } from '@/features/compliance';
 import { BanjirPanel } from '@/features/banjir';
 import { Badge } from '@/shared/ui';
@@ -485,39 +488,118 @@ function B40Panel() {
   );
 }
 
-function UpcomingPanel() {
+function HalalPanel() {
   const { t } = useTranslation();
-  // Roadmap items still queued — render as recessed tiles. Each item is
-  // a real Indonesia regulation surfaced by the May 2026 research.
-  const upcoming: { key: string; titleKey: string; descKey: string }[] = [
-    { key: 'halal', titleKey: 'briefHalalTitle', descKey: 'briefHalalDesc' },
-  ];
+  const { rows, summary, isLoading } = useFleetHalalQuery();
+
+  const expiredOrSoon = useMemo<HalalRow[]>(
+    () =>
+      rows
+        .filter((r) => r.snapshot.status === 'expired' || r.snapshot.status === 'due-soon')
+        .sort((a, b) => (a.snapshot.daysUntilExpiry ?? 0) - (b.snapshot.daysUntilExpiry ?? 0))
+        .slice(0, 5),
+    [rows],
+  );
+
+  let badge = '';
+  let badgeTone: 'primary' | 'warning' | 'alert' = 'primary';
+  if (summary.counts.expired > 0) {
+    badge = `${summary.counts.expired} ${t('briefExpired')}`;
+    badgeTone = 'alert';
+  } else if (summary.counts['due-soon'] > 0) {
+    badge = `${summary.counts['due-soon']} ${t('briefDueSoon')}`;
+    badgeTone = 'warning';
+  } else {
+    badge = t('briefAllCertified');
+  }
+
   return (
-    <div className="depth-recessed-shallow relative flex flex-col gap-3 p-4">
-      <div className="cyber-label flex items-center gap-2 border-b border-border pb-2">
-        <span className="text-primary">//</span> {t('briefUpcomingTitle')}
+    <div className="depth-elevated-shallow relative flex flex-col gap-3 p-4">
+      <span className="pointer-events-none absolute inset-0 depth-toplight" aria-hidden />
+      <div className="relative">
+        <BriefHeader
+          label={t('complianceHalal')}
+          badge={badge}
+          badgeTone={badgeTone}
+          to="/compliance/halal"
+        />
       </div>
-      <div className="grid grid-cols-1 gap-2">
-        {upcoming.map((u) => (
-          <div
-            key={u.key}
-            className="border border-border bg-background/40 p-3 flex flex-col gap-1"
-          >
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/80">
-              {t(u.titleKey)}
-            </span>
-            <span className="font-mono text-[10px] text-muted-foreground tracking-wider leading-snug">
-              {t(u.descKey)}
-            </span>
-            <span className="cyber-label text-[9px] text-primary/70 mt-1">
-              · roadmap
-            </span>
+
+      <div className="relative grid grid-cols-3 gap-2">
+        <div>
+          <div className="cyber-label text-[9px]">{t('halalStatusCertified')}</div>
+          <div className="font-mono text-lg font-bold tabular-nums text-primary">
+            {summary.counts.certified}
           </div>
-        ))}
+        </div>
+        <div>
+          <div className="cyber-label text-[9px]">{t('halalStatusDueSoon')}</div>
+          <div
+            className={cn(
+              'font-mono text-lg font-bold tabular-nums',
+              summary.counts['due-soon'] > 0
+                ? 'text-[var(--color-warning)]'
+                : 'text-muted-foreground',
+            )}
+          >
+            {summary.counts['due-soon']}
+          </div>
+        </div>
+        <div>
+          <div className="cyber-label text-[9px]">{t('halalStatusExpired')}</div>
+          <div
+            className={cn(
+              'font-mono text-lg font-bold tabular-nums',
+              summary.counts.expired > 0
+                ? 'text-destructive cyber-glow-alert'
+                : 'text-muted-foreground',
+            )}
+          >
+            {summary.counts.expired}
+          </div>
+        </div>
       </div>
+
+      {expiredOrSoon.length > 0 && (
+        <div className="relative border-t border-border pt-3">
+          <div className="cyber-label text-[9px] mb-2">{t('briefAttention')}</div>
+          <ul className="flex flex-col gap-1.5 font-mono text-xs">
+            {expiredOrSoon.map((r) => (
+              <li
+                key={r.deviceId}
+                className="flex items-center justify-between border-b border-border/40 pb-1.5 last:border-0"
+              >
+                <span className="text-foreground tracking-wide truncate max-w-[16rem]">
+                  {r.deviceName}
+                  {r.uniqueId && (
+                    <span className="text-muted-foreground tracking-[0.14em] ms-2 text-[10px] uppercase">
+                      {r.uniqueId}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    'tabular-nums tracking-wider font-semibold',
+                    r.snapshot.status === 'expired'
+                      ? 'text-destructive cyber-glow-alert'
+                      : 'text-[var(--color-warning)]',
+                  )}
+                >
+                  {formatHalalCountdown(r.snapshot.daysUntilExpiry)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {isLoading && expiredOrSoon.length === 0 && (
+        <div className="relative cyber-label">{t('sharedLoading')}</div>
+      )}
     </div>
   );
 }
+
 
 export default function ComplianceBriefPage() {
   const { t } = useTranslation();
@@ -549,18 +631,14 @@ export default function ComplianceBriefPage() {
           </div>
         </div>
 
-        {/* Active modules: Fuel Quota · KIR · ODOL · B40 · Banjir */}
+        {/* Active modules: Fuel Quota · KIR · ODOL · B40 · Banjir · Halal */}
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <FuelQuotaPanel />
           <KirPanel />
           <OdolPanel />
           <B40Panel />
           <BanjirPanel />
-        </div>
-
-        {/* Upcoming compliance modules */}
-        <div className="mt-4">
-          <UpcomingPanel />
+          <HalalPanel />
         </div>
       </div>
     </ComplianceLayout>
