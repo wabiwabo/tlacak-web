@@ -80,7 +80,7 @@
     ]
   },
   "devDependencies": {
-    "@eslint-react/eslint-plugin": "^5.7.2",
+    "@eslint-react/eslint-plugin": "^5.8.3",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.3.0",
